@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user['display_name'] }} — Qata{% endblock %}
+
+{% block content %}
+<div class="blog-header">
+    <h1>{{ user['display_name'] }}</h1>
+    {% if landing_page and landing_page['content_html'] %}
+        <div class="blog-landing-content">
+            {{ landing_page['content_html'] | safe }}
+        </div>
+    {% endif %}
+    <div class="blog-nav">
+        <a href="{{ url_for('public.user_blog', username=user['username']) }}">Tulisan</a>
+        <a href="{{ url_for('public.user_about', username=user['username']) }}">Tentang</a>
+        {% for cp in custom_pages %}
+        <a href="{{ url_for('public.user_page', username=user['username'], slug=cp['slug']) }}">{{ cp['title'] }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<section class="post-list">
+    {% if posts %}
+        {% for post in posts %}
+        <article class="post-item">
+            <h3>
+                <a href="{{ url_for('public.post_detail', username=user['username'], slug=post['slug']) }}">
+                    {{ post['title'] }}
+                </a>
+            </h3>
+            <div class="post-meta">
+                <span>{{ post['created_at'] | tanggal }}</span>
+                <span>&middot;</span>
+                <span>♥ {{ post['like_count'] }}</span>
+            </div>
+        </article>
+        {% endfor %}
+    {% else %}
+        <p class="empty-state">Belum ada tulisan yang diterbitkan.</p>
+    {% endif %}
+</section>
+{% endblock %}

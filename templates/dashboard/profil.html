@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Pengaturan Profil — Qata{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>Pengaturan Profil</h1>
+    <form method="POST">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" value="{{ current_user.username }}" disabled>
+            <small>Username tidak dapat diubah.</small>
+        </div>
+        <div class="form-group">
+            <label for="display_name">Nama Tampilan</label>
+            <input type="text" id="display_name" name="display_name" required
+                   value="{{ current_user.display_name or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="bio">Bio</label>
+            <textarea id="bio" name="bio" rows="4">{{ current_user.bio or '' }}</textarea>
+            <small>Ceritakan sedikit tentang diri Anda.</small>
+        </div>
+        <div class="form-group">
+            <label for="website">Website</label>
+            <input type="url" id="website" name="website"
+                   value="{{ current_user.website or '' }}"
+                   placeholder="https://contoh.com">
+        </div>
+        <div class="form-group">
+            <label for="twitter">Twitter/X</label>
+            <input type="text" id="twitter" name="twitter"
+                   value="{{ current_user.twitter or '' }}"
+                   placeholder="username tanpa @">
+        </div>
+        <div class="form-group">
+            <label for="instagram">Instagram</label>
+            <input type="text" id="instagram" name="instagram"
+                   value="{{ current_user.instagram or '' }}"
+                   placeholder="username tanpa @">
+        </div>
+        <div class="editor-actions">
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Kembali</a>
+            <button type="submit" class="btn">Simpan</button>
+        </div>
+    </form>
+    <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid #e0e0e0;">
+        <a href="{{ url_for('public.user_about', username=current_user.username) }}"
+           target="_blank">Lihat halaman Tentang saya &rarr;</a>
+    </div>
+</div>
+{% endblock %}

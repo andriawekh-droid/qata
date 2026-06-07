@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Kode Undangan — Qata{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Kode Undangan</h1>
+    <form method="POST" action="{{ url_for('dashboard.create_invite_code') }}">
+        <button type="submit" class="btn">Buat Kode Baru</button>
+    </form>
+</div>
+
+<section class="post-list">
+    {% if codes %}
+        <table class="post-table">
+            <thead>
+                <tr>
+                    <th>Kode</th>
+                    <th>Status</th>
+                    <th>Dibuat</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for code in codes %}
+                <tr>
+                    <td><code>{{ code['code'] }}</code></td>
+                    <td>
+                        <span class="badge badge-{{ 'published' if not code['used'] else 'draft' }}">
+                            {{ 'Belum dipakai' if not code['used'] else 'Sudah dipakai' }}
+                        </span>
+                    </td>
+                    <td>{{ code['created_at'] | tanggal }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state">Belum ada kode undangan. Buat kode baru untuk mengundang pengguna.</p>
+    {% endif %}
+</section>
+
+<a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Kembali</a>
+{% endblock %}

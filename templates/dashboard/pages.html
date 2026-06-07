@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Halaman Saya — Qata{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Halaman Saya</h1>
+    {% if bisa_buat %}
+    <a href="{{ url_for('dashboard.new_page') }}" class="btn">Buat Halaman Baru</a>
+    {% endif %}
+</div>
+
+<section class="post-list">
+    {% if pages %}
+    <table class="post-table">
+        <thead>
+            <tr>
+                <th>Judul</th>
+                <th>Jenis</th>
+                <th>Terakhir Diperbarui</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for page in pages %}
+            <tr>
+                <td>
+                    {% if page['type'] == 'tentang' %}
+                        <a href="{{ url_for('public.user_about', username=current_user.username) }}">
+                            {{ page['title'] }}
+                        </a>
+                    {% elif page['type'] == 'landing' %}
+                        <a href="{{ url_for('public.user_blog', username=current_user.username) }}">
+                            {{ page['title'] }}
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('public.user_page', username=current_user.username, slug=page['slug']) }}">
+                            {{ page['title'] }}
+                        </a>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge badge-published">
+                        {% if page['type'] == 'landing' %}Utama
+                        {% elif page['type'] == 'tentang' %}Tentang
+                        {% else %}Bebas{% endif %}
+                    </span>
+                </td>
+                <td>{{ page['updated_at'] | tanggal }}</td>
+                <td class="post-actions">
+                    <a href="{{ url_for('dashboard.edit_page', page_id=page['id']) }}">Edit</a>
+                    {% if page['type'] == 'custom' %}
+                    <form method="POST"
+                          action="{{ url_for('dashboard.delete_page', page_id=page['id']) }}"
+                          onsubmit="return confirm('Yakin ingin menghapus halaman ini?')">
+                        <button type="submit" class="btn-link btn-hapus">Hapus</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">Belum ada halaman.</p>
+    {% endif %}
+</section>
+
+<section class="dashboard-nav">
+    <a href="{{ url_for('dashboard.index') }}">Kembali ke Dashboard</a>
+</section>
+{% endblock %}

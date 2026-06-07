@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Masuk — Qata{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>Masuk</h1>
+    <form method="POST">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required autofocus>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn">Masuk</button>
+    </form>
+    <p class="auth-link">Belum punya akun? Hubungi admin untuk mendapatkan kode undangan.</p>
+</div>
+{% endblock %}

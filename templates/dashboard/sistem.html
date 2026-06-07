@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Status Sistem — Qata{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Status Sistem</h1>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Kembali</a>
+</div>
+
+<section class="sistem-section">
+    <h2>Statistik Qata</h2>
+    <div class="sistem-grid">
+        <div class="sistem-card">
+            <span class="sistem-label">Pengguna</span>
+            <span class="sistem-value">{{ stats.total_users }}</span>
+        </div>
+        <div class="sistem-card">
+            <span class="sistem-label">Tulisan Terbit</span>
+            <span class="sistem-value">{{ stats.total_posts }}</span>
+        </div>
+        <div class="sistem-card">
+            <span class="sistem-label">Draf</span>
+            <span class="sistem-value">{{ stats.total_drafts }}</span>
+        </div>
+        <div class="sistem-card">
+            <span class="sistem-label">Total Kunjungan</span>
+            <span class="sistem-value">{{ stats.total_views }}</span>
+        </div>
+        <div class="sistem-card">
+            <span class="sistem-label">Total Like</span>
+            <span class="sistem-value">{{ stats.total_likes }}</span>
+        </div>
+    </div>
+</section>
+
+<section class="sistem-section">
+    <h2>Resource VPS</h2>
+    <div class="sistem-grid">
+        <div class="sistem-card">
+            <span class="sistem-label">CPU</span>
+            <span class="sistem-value">{{ stats.cpu }}%</span>
+            <div class="sistem-bar">
+                <div class="sistem-bar-fill" style="width: {{ stats.cpu }}%"></div>
+            </div>
+        </div>
+        <div class="sistem-card">
+            <span class="sistem-label">RAM</span>
+            <span class="sistem-value">{{ stats.ram_percent }}%</span>
+            <div class="sistem-bar">
+                <div class="sistem-bar-fill {% if stats.ram_percent > 80 %}sistem-bar-warn{% endif %}" style="width: {{ stats.ram_percent }}%"></div>
+            </div>
+            <span class="sistem-sub">{{ stats.ram_used }} MB / {{ stats.ram_total }} MB</span>
+        </div>
+        <div class="sistem-card">
+            <span class="sistem-label">Disk</span>
+            <span class="sistem-value">{{ stats.disk_percent }}%</span>
+            <div class="sistem-bar">
+                <div class="sistem-bar-fill {% if stats.disk_percent > 80 %}sistem-bar-warn{% endif %}" style="width: {{ stats.disk_percent }}%"></div>
+            </div>
+            <span class="sistem-sub">{{ stats.disk_used }} GB / {{ stats.disk_total }} GB</span>
+        </div>
+        <div class="sistem-card">
+            <span class="sistem-label">Swap</span>
+            <span class="sistem-value">{{ stats.swap_percent }}%</span>
+            <div class="sistem-bar">
+                <div class="sistem-bar-fill" style="width: {{ stats.swap_percent }}%"></div>
+            </div>
+            <span class="sistem-sub">{{ stats.swap_used }} MB / {{ stats.swap_total }} MB</span>
+        </div>
+    </div>
+</section>
+
+<section class="sistem-section">
+    <h2>Uptime</h2>
+    <p class="sistem-uptime">{{ stats.uptime }}</p>
+</section>
+
+<section class="dashboard-nav">
+    <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+    <a href="{{ url_for('dashboard.admin_index') }}">Panel Admin</a>
+</section>
+{% endblock %}

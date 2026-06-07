@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Panel Admin — Qata{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Panel Admin</h1>
+    <span class="badge badge-published">Admin</span>
+</div>
+
+<section class="post-list">
+    <h2>Daftar Pengguna ({{ users|length }})</h2>
+    {% if users %}
+        <table class="post-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Tulisan</th>
+                    <th>Status</th>
+                    <th>Bergabung</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('public.user_blog', username=user['username']) }}">
+                            @{{ user['username'] }}
+                        </a>
+                        {% if user['is_admin'] %}
+                            <span class="badge badge-published">Admin</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user['email'] }}</td>
+                    <td>{{ user['post_count'] }}</td>
+                    <td>
+                        <span class="badge badge-{{ 'published' if user['is_active'] else 'draft' }}">
+                            {{ 'Aktif' if user['is_active'] else 'Nonaktif' }}
+                        </span>
+                    </td>
+                    <td>{{ user['created_at'] | tanggal }}</td>
+                    <td>
+                        {% if not user['is_admin'] %}
+                        <form method="POST"
+                              action="{{ url_for('dashboard.admin_delete_user', user_id=user['id']) }}"
+                              onsubmit="return confirm('Yakin ingin menghapus @{{ user['username'] }} beserta semua datanya? Tindakan ini tidak dapat dibatalkan.')">
+                            <button type="submit" class="btn-link btn-hapus">Hapus</button>
+                        </form>
+                        {% else %}
+                        <span style="color:#ccc">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state">Belum ada pengguna terdaftar.</p>
+    {% endif %}
+</section>
+
+<a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary" style="margin-top:2rem">
+    Kembali ke Dashboard
+</a>
+{% endblock %}

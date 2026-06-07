@@ -1,0 +1,45 @@
+{% extends 'landing.html' %}
+
+{% block title %}Qata — {{ settings.landing_brand_sub }}{% endblock %}
+
+{% block content %}
+<div class="landing">
+    <p class="landing-brand">Qata</p>
+    <p class="landing-brand-sub">{{ settings.landing_brand_sub }}</p>
+
+    <h1 class="landing-hero">{{ settings.landing_title }}</h1>
+    <p class="landing-desc">{{ settings.landing_desc }}</p>
+
+    <ul class="landing-features">
+        {% for feature in settings.landing_features %}
+        {% if feature.strip() %}
+        <li>{{ feature.strip() }}</li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+
+    <a href="{{ url_for('auth.register') }}" class="landing-cta">{{ settings.landing_cta }}</a>
+    <p class="landing-masuk">Sudah punya akun? <a href="{{ url_for('auth.login') }}">Masuk</a></p>
+
+    {% if posts %}
+    <hr class="landing-divider">
+    <h2 class="landing-section-title">Tulisan terbaru</h2>
+    {% for post in posts %}
+    <article class="post-item">
+        <h3>
+            <a href="{{ url_for('public.post_detail', username=post['username'], slug=post['slug']) }}">
+                {{ post['title'] }}
+            </a>
+        </h3>
+        <div class="post-meta">
+            <a href="{{ url_for('public.user_blog', username=post['username']) }}">{{ post['display_name'] }}</a>
+            <span>&mdash;</span>
+            <span>{{ post['created_at'] | tanggal }}</span>
+            <span>&middot;</span>
+            <span>♥ {{ post['like_count'] }}</span>
+        </div>
+    </article>
+    {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

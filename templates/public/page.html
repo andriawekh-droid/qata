@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page['title'] }} — {{ user['display_name'] }}{% endblock %}
+
+{% block content %}
+<article class="post-full">
+    <header class="post-header">
+        <h1>{{ user['display_name'] }}</h1>
+        <div class="blog-nav">
+            <a href="{{ url_for('public.user_blog', username=user['username']) }}">Tulisan</a>
+            <a href="{{ url_for('public.user_about', username=user['username']) }}">Tentang</a>
+            {% for cp in custom_pages %}
+            <a href="{{ url_for('public.user_page', username=user['username'], slug=cp['slug']) }}">{{ cp['title'] }}</a>
+            {% endfor %}
+        </div>
+    </header>
+
+    <div class="post-content">
+        {{ page['content_html'] | safe }}
+    </div>
+
+    <footer class="post-footer">
+        <a href="{{ url_for('public.user_blog', username=user['username']) }}">
+            &larr; Kembali ke blog {{ user['display_name'] }}
+        </a>
+    </footer>
+</article>
+{% endblock %}

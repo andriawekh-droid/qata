@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post['title'] }} — {{ user['display_name'] }}{% endblock %}
+
+{% block content %}
+<article class="post-full">
+    <header class="post-header">
+        <h1>{{ post['title'] }}</h1>
+        <div class="post-meta">
+            <a href="{{ url_for('public.user_blog', username=user['username']) }}">
+                {{ user['display_name'] }}
+            </a>
+            <span>&mdash;</span>
+            <span>{{ post['created_at'] | tanggal }}</span>
+        </div>
+    </header>
+
+    <div class="post-content">
+        {{ post['content_html'] | safe }}
+    </div>
+
+    <div class="like-section">
+        <button class="like-btn {% if sudah_like %}liked{% endif %}"
+                data-post-id="{{ post['id'] }}"
+                onclick="toggleLike(this)">
+            <span class="like-icon">♥</span>
+            <span class="like-count">{{ post['like_count'] }}</span>
+        </button>
+        <p class="like-label">{% if sudah_like %}Anda menyukai tulisan ini{% else %}Suka tulisan ini?{% endif %}</p>
+    </div>
+
+    <footer class="post-footer">
+        <a href="{{ url_for('public.user_blog', username=user['username']) }}">
+            &larr; Kembali ke blog {{ user['display_name'] }}
+        </a>
+    </footer>
+</article>
+
+<script>
+function toggleLike(btn) {
+    const postId = btn.dataset.postId;
+    const countEl = btn.querySelector('.like-count');
+    const label = btn.closest('.like-section').querySelector('.like-label');
+    fetch(`/like/${postId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            countEl.textContent = data.total;
+            if (data.liked) {
+                btn.classList.add('liked');
+                label.textContent = 'Anda menyukai tulisan ini';
+            } else {
+                btn.classList.remove('liked');
+                label.textContent = 'Suka tulisan ini?';
+            }
+        });
+}
+</script>
+{% endblock %}
