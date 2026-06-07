@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link rel="alternate" type="application/rss+xml" 
+      title="{{ user['display_name'] }} — Qata" 
+      href="{{ url_for('public.user_rss', username=user['username']) }}">
+{% endblock %}
+
+{% block title %}Tulisan — {{ user['display_name'] }}{% endblock %}
+
+{% block content %}
+<div class="blog-header">
+    <h1>{{ user['display_name'] }}</h1>
+    <div class="blog-nav">
+        <a href="{{ url_for('public.user_blog', username=user['username']) }}">Rumah</a>
+        <a href="{{ url_for('public.user_archive', username=user['username']) }}">Tulisan</a>
+        <a href="{{ url_for('public.user_about', username=user['username']) }}">Tentang</a>
+        {% for cp in custom_pages %}
+        <a href="{{ url_for('public.user_page', username=user['username'], slug=cp['slug']) }}">{{ cp['title'] }}</a>
+        {% endfor %}
+        <a href="{{ url_for('public.user_rss', username=user['username']) }}" class="rss-link">RSS</a>
+    </div>
+</div>
+
+<section class="archive">
+    {% if archive %}
+        {% for year, posts in archive.items() %}
+        <div class="archive-year">
+            <h2 class="archive-year-title">{{ year }}</h2>
+            {% for post in posts %}
+            <article class="archive-item">
+                <a href="{{ url_for('public.post_detail', username=user['username'], slug=post['slug']) }}">
+                    {{ post['title'] }}
+                </a>
+                <span class="archive-meta">
+                    {{ post['created_at'] | tanggal }}
+                    <span>&middot;</span>
+                    ♥ {{ post['like_count'] }}
+                </span>
+            </article>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="empty-state">Belum ada tulisan yang diterbitkan.</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -15,10 +15,31 @@
     <a href="{{ url_for('auth.register') }}" class="landing-cta">{{ settings.landing_cta }}</a>
     <p class="landing-masuk">Sudah punya akun? <a href="{{ url_for('auth.login') }}">Masuk</a></p>
 
-    {% if posts %}
+    {% if recent_posts %}
     <hr class="landing-divider">
-    <h2 class="landing-section-title">Tulisan terbaru</h2>
-    {% for post in posts %}
+    <h2 class="landing-section-title">Tulisan Terbaru</h2>
+    {% for post in recent_posts %}
+    <article class="post-item">
+        <h3>
+            <a href="{{ url_for('public.post_detail', username=post['username'], slug=post['slug']) }}">
+                {{ post['title'] }}
+            </a>
+        </h3>
+        <div class="post-meta">
+            <a href="{{ url_for('public.user_blog', username=post['username']) }}">{{ post['display_name'] }}</a>
+            <span>&mdash;</span>
+            <span>{{ post['created_at'] | tanggal }}</span>
+            <span>&middot;</span>
+            <span>♥ {{ post['like_count'] }}</span>
+        </div>
+    </article>
+    {% endfor %}
+    {% endif %}
+
+    {% if popular_posts %}
+    <hr class="landing-divider">
+    <h2 class="landing-section-title">Tulisan Populer</h2>
+    {% for post in popular_posts %}
     <article class="post-item">
         <h3>
             <a href="{{ url_for('public.post_detail', username=post['username'], slug=post['slug']) }}">

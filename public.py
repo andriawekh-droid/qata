@@ -21,7 +21,22 @@ def get_site_setting(db, key, default=''):
 @public_bp.route('/')
 def index():
     db = get_db()
-    posts = db.execute(
+
+    # 5 tulisan terbaru dari semua user
+    recent_posts = db.execute(
+        '''SELECT p.*, u.username, u.display_name,
+           COUNT(DISTINCT l.id) as like_count
+           FROM posts p
+           JOIN users u ON p.user_id = u.id
+           LEFT JOIN likes l ON p.id = l.post_id
+           WHERE p.status = 'published' AND u.is_active = 1
+           GROUP BY p.id
+           ORDER BY p.created_at DESC
+           LIMIT 5'''
+    ).fetchall()
+
+    # 5 tulisan populer dari semua user
+    popular_posts = db.execute(
         '''SELECT p.*, u.username, u.display_name,
            COUNT(DISTINCT l.id) as like_count
            FROM posts p
@@ -30,21 +45,78 @@ def index():
            WHERE p.status = 'published' AND u.is_active = 1
            GROUP BY p.id
            ORDER BY like_count DESC, p.created_at DESC
-           LIMIT 20'''
+           LIMIT 5'''
     ).fetchall()
 
     settings = {
-    'landing_title': get_site_setting(db, 'landing_title'),
-    'landing_desc': render_markdown(get_site_setting(db, 'landing_desc')),
-    'landing_features': render_markdown(get_site_setting(db, 'landing_features')),
-    'landing_cta': get_site_setting(db, 'landing_cta'),
-    'landing_brand_sub': get_site_setting(db, 'landing_brand_sub'),
-}
+        'landing_title': get_site_setting(db, 'landing_title'),
+        'landing_desc': render_markdown(get_site_setting(db, 'landing_desc')),
+        'landing_features': render_markdown(get_site_setting(db, 'landing_features')),
+        'landing_cta': get_site_setting(db, 'landing_cta'),
+        'landing_brand_sub': get_site_setting(db, 'landing_brand_sub'),
+    }
 
-    return render_template('public/index.html', posts=posts, settings=settings)
+    return render_template('public/index.html',
+                           recent_posts=recent_posts,
+                           popular_posts=popular_posts,
+                           settings=settings)
 
 @public_bp.route('/<username>')
 def user_blog(username):
+    db = get_db()
+    user = db.execute(
+        'SELECT * FROM users WHERE username = ? AND is_active = 1',
+        (username,)
+    ).fetchone()
+
+    if user is None:
+        abort(404)
+
+    # 5 tulisan terbaru
+    recent_posts = db.execute(
+        '''SELECT p.*, COUNT(DISTINCT l.id) as like_count
+           FROM posts p
+           LEFT JOIN likes l ON p.id = l.post_id
+           WHERE p.user_id = ? AND p.status = 'published'
+           GROUP BY p.id
+           ORDER BY p.created_at DESC
+           LIMIT 5''',
+        (user['id'],)
+    ).fetchall()
+
+    # 5 tulisan populer
+    popular_posts = db.execute(
+        '''SELECT p.*, COUNT(DISTINCT l.id) as like_count
+           FROM posts p
+           LEFT JOIN likes l ON p.id = l.post_id
+           WHERE p.user_id = ? AND p.status = 'published'
+           GROUP BY p.id
+           ORDER BY like_count DESC, p.created_at DESC
+           LIMIT 5''',
+        (user['id'],)
+    ).fetchall()
+
+    # Ambil page landing user kalau ada
+    landing_page = db.execute(
+        'SELECT * FROM pages WHERE user_id = ? AND type = ?',
+        (user['id'], 'landing')
+    ).fetchone()
+
+    # Ambil page custom
+    custom_pages = db.execute(
+        'SELECT * FROM pages WHERE user_id = ? AND type = ?',
+        (user['id'], 'custom')
+    ).fetchall()
+
+    return render_template('public/blog.html',
+                           user=user,
+                           recent_posts=recent_posts,
+                           popular_posts=popular_posts,
+                           landing_page=landing_page,
+                           custom_pages=custom_pages)
+
+@public_bp.route('/<username>/tulisan')
+def user_archive(username):
     db = get_db()
     user = db.execute(
         'SELECT * FROM users WHERE username = ? AND is_active = 1',
@@ -64,22 +136,25 @@ def user_blog(username):
         (user['id'],)
     ).fetchall()
 
-    # Ambil page landing user kalau ada
-    landing_page = db.execute(
-        'SELECT * FROM pages WHERE user_id = ? AND type = ?',
-        (user['id'], 'landing')
-    ).fetchone()
+    # Kelompokkan per tahun
+    archive = {}
+    for post in posts:
+        year = str(post['created_at'])[:4]
+        if year not in archive:
+            archive[year] = []
+        archive[year].append(post)
 
-    # Ambil page custom
+    # Urutkan tahun terbaru di atas
+    archive = dict(sorted(archive.items(), reverse=True))
+
     custom_pages = db.execute(
         'SELECT * FROM pages WHERE user_id = ? AND type = ?',
         (user['id'], 'custom')
     ).fetchall()
 
-    return render_template('public/blog.html',
+    return render_template('public/archive.html',
                            user=user,
-                           posts=posts,
-                           landing_page=landing_page,
+                           archive=archive,
                            custom_pages=custom_pages)
 
 @public_bp.route('/<username>/tentang')

@@ -7,12 +7,14 @@
     <header class="post-header">
         <h1>{{ user['display_name'] }}</h1>
         <div class="blog-nav">
-            <a href="{{ url_for('public.user_blog', username=user['username']) }}">Tulisan</a>
-            <a href="{{ url_for('public.user_about', username=user['username']) }}">Tentang</a>
-            {% for cp in custom_pages %}
-            <a href="{{ url_for('public.user_page', username=user['username'], slug=cp['slug']) }}">{{ cp['title'] }}</a>
-            {% endfor %}
-        </div>
+    <a href="{{ url_for('public.user_blog', username=user['username']) }}">Rumah</a>
+    <a href="{{ url_for('public.user_archive', username=user['username']) }}">Tulisan</a>
+    <a href="{{ url_for('public.user_about', username=user['username']) }}">Tentang</a>
+    {% for cp in custom_pages %}
+    <a href="{{ url_for('public.user_page', username=user['username'], slug=cp['slug']) }}">{{ cp['title'] }}</a>
+    {% endfor %}
+    <a href="{{ url_for('public.user_rss', username=user['username']) }}" class="rss-link">RSS</a>
+</div>
     </header>
 
     <div class="post-content">
