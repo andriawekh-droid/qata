@@ -10,13 +10,7 @@
     <h1 class="landing-hero">{{ settings.landing_title }}</h1>
     <div class="landing-desc">{{ settings.landing_desc | safe }}</div>
 
-    <ul class="landing-features">
-        {% for feature in settings.landing_features %}
-        {% if feature.strip() %}
-        <li>{{ feature.strip() }}</li>
-        {% endif %}
-        {% endfor %}
-    </ul>
+    <div class="landing-features">{{ settings.landing_features | safe }}</div>
 
     <a href="{{ url_for('auth.register') }}" class="landing-cta">{{ settings.landing_cta }}</a>
     <p class="landing-masuk">Sudah punya akun? <a href="{{ url_for('auth.login') }}">Masuk</a></p>

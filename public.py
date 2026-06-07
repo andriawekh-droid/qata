@@ -36,10 +36,10 @@ def index():
     settings = {
     'landing_title': get_site_setting(db, 'landing_title'),
     'landing_desc': render_markdown(get_site_setting(db, 'landing_desc')),
-    'landing_features': get_site_setting(db, 'landing_features').split('\n'),
+    'landing_features': render_markdown(get_site_setting(db, 'landing_features')),
     'landing_cta': get_site_setting(db, 'landing_cta'),
     'landing_brand_sub': get_site_setting(db, 'landing_brand_sub'),
-    }
+}
 
     return render_template('public/index.html', posts=posts, settings=settings)
 
