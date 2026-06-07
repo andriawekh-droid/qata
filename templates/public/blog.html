@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 
+{% block head %}
+<link rel="alternate" type="application/rss+xml" 
+      title="{{ user['display_name'] }} — Qata" 
+      href="{{ url_for('public.user_rss', username=user['username']) }}">
+{% endblock %}
+
 {% block title %}{{ user['display_name'] }} — Qata{% endblock %}
+
 
 {% block content %}
 <div class="blog-header">
@@ -11,12 +18,13 @@
         </div>
     {% endif %}
     <div class="blog-nav">
-        <a href="{{ url_for('public.user_blog', username=user['username']) }}">Tulisan</a>
-        <a href="{{ url_for('public.user_about', username=user['username']) }}">Tentang</a>
-        {% for cp in custom_pages %}
-        <a href="{{ url_for('public.user_page', username=user['username'], slug=cp['slug']) }}">{{ cp['title'] }}</a>
-        {% endfor %}
-    </div>
+    <a href="{{ url_for('public.user_blog', username=user['username']) }}">Tulisan</a>
+    <a href="{{ url_for('public.user_about', username=user['username']) }}">Tentang</a>
+    {% for cp in custom_pages %}
+    <a href="{{ url_for('public.user_page', username=user['username'], slug=cp['slug']) }}">{{ cp['title'] }}</a>
+    {% endfor %}
+    <a href="{{ url_for('public.user_rss', username=user['username']) }}" class="rss-link">RSS</a>
+</div>
 </div>
 
 <section class="post-list">

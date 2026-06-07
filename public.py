@@ -1,6 +1,11 @@
 import hashlib
-from flask import Blueprint, render_template, request, abort, jsonify
+import mistune
+from flask import Blueprint, render_template, request, abort, jsonify, Response
 from database import get_db
+
+def render_markdown(content):
+    markdown = mistune.create_markdown(plugins=['strikethrough', 'table'])
+    return markdown(content)
 
 public_bp = Blueprint('public', __name__)
 
@@ -29,11 +34,11 @@ def index():
     ).fetchall()
 
     settings = {
-        'landing_title': get_site_setting(db, 'landing_title'),
-        'landing_desc': get_site_setting(db, 'landing_desc'),
-        'landing_features': get_site_setting(db, 'landing_features').split('\n'),
-        'landing_cta': get_site_setting(db, 'landing_cta'),
-        'landing_brand_sub': get_site_setting(db, 'landing_brand_sub'),
+    'landing_title': get_site_setting(db, 'landing_title'),
+    'landing_desc': render_markdown(get_site_setting(db, 'landing_desc')),
+    'landing_features': get_site_setting(db, 'landing_features').split('\n'),
+    'landing_cta': get_site_setting(db, 'landing_cta'),
+    'landing_brand_sub': get_site_setting(db, 'landing_brand_sub'),
     }
 
     return render_template('public/index.html', posts=posts, settings=settings)
@@ -219,6 +224,60 @@ def like_post(post_id):
     ).fetchone()[0]
 
     return jsonify({'liked': liked, 'total': total})
+
+@public_bp.route('/<username>/rss')
+def user_rss(username):
+    db = get_db()
+    user = db.execute(
+        'SELECT * FROM users WHERE username = ? AND is_active = 1',
+        (username,)
+    ).fetchone()
+
+    if user is None:
+        abort(404)
+
+    posts = db.execute(
+        '''SELECT * FROM posts
+           WHERE user_id = ? AND status = 'published'
+           ORDER BY created_at DESC
+           LIMIT 20''',
+        (user['id'],)
+    ).fetchall()
+
+    base_url = 'https://qata.my.id'
+    blog_url = f"{base_url}/{username}"
+
+    items = ''
+    for post in posts:
+        post_url = f"{base_url}/{username}/{post['slug']}"
+        title = str(post['title']).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        desc = str(post['content_html'] or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        pub_date = str(post['created_at'])[:19]
+
+        items += f'''
+        <item>
+            <title>{title}</title>
+            <link>{post_url}</link>
+            <guid>{post_url}</guid>
+            <description>{desc}</description>
+            <pubDate>{pub_date}</pubDate>
+        </item>'''
+
+    display_name = str(user['display_name'] or username)
+    bio = str(user['bio'] or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+    rss = f'''<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+    <channel>
+        <title>{display_name}</title>
+        <link>{blog_url}</link>
+        <description>{bio}</description>
+        <language>id</language>
+        {items}
+    </channel>
+</rss>'''
+
+    return Response(rss, mimetype='application/rss+xml')
 
 @public_bp.app_errorhandler(404)
 def not_found(e):

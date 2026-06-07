@@ -234,3 +234,7 @@ a:hover { text-decoration: underline; }
         gap: 1rem;
     }
 }
+
+/* RSS */
+.rss-link { color: #f26522 !important; }
+.rss-link:hover { color: #d4541a !important; }
