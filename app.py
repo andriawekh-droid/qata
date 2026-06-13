@@ -1,11 +1,11 @@
+import os
 import sqlite3
 from flask import Flask
 from flask_login import LoginManager
 
 app = Flask(__name__, instance_relative_config=True)
-import os
 app.config.from_mapping(
-    SECRET_KEY=os.environ.get'f9c60092dbc4b696ccef2fb2fc5cd2ab286346a28edc54bfe9b37f3c7ae48a5e', 'dev-key-lokal'),
+    SECRET_KEY=os.environ.get('SECRET_KEY', 'dev-key-lokal'),
     DATABASE=app.instance_path + '/qata.db',
 )
 
