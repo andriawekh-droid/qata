@@ -33,12 +33,10 @@
                     {{ post['title'] }}
                 </a>
                 <span class="archive-meta">
-    {{ post['created_at'] | waktu_relatif }}
-    <span>&middot;</span>
-    ♥ {{ post['like_count'] }}
-    <span>&middot;</span>
-    {{ post['reading_time'] }} menit baca
-</span>
+                    {{ post['created_at'] | tanggal }}
+                    <span>&middot;</span>
+                    ♥ {{ post['like_count'] }}
+                </span>
             </article>
             {% endfor %}
         </div>
