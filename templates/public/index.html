@@ -49,9 +49,11 @@
         <div class="post-meta">
             <a href="{{ url_for('public.user_blog', username=post['username']) }}">{{ post['display_name'] }}</a>
             <span>&mdash;</span>
-            <span>{{ post['created_at'] | tanggal }}</span>
+            <span>{{ post['created_at'] | waktu_relatif }}</span>
             <span>&middot;</span>
             <span>♥ {{ post['like_count'] }}</span>
+            <span>&middot;</span>
+            <span>{{ post['reading_time'] }} menit baca</span>
         </div>
     </article>
     {% endfor %}

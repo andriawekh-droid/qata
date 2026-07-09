@@ -23,6 +23,11 @@ def render_markdown(content):
     )
     return markdown(content)
 
+def hitung_waktu_baca(content):
+    jumlah_kata = len(content.split())
+    menit = max(1, round(jumlah_kata / 200))
+    return menit
+
 @dashboard_bp.route('/')
 @login_required
 def index():
@@ -67,11 +72,13 @@ def new_post():
                 slug = slug + '-' + str(int(__import__('time').time()))
 
             content_html = render_markdown(content)
-            db.execute(
-                '''INSERT INTO posts (user_id, title, slug, content, content_html, status)
-                   VALUES (?, ?, ?, ?, ?, ?)''',
-                (current_user.id, title, slug, content, content_html, status)
-            )
+reading_time = hitung_waktu_baca(content)
+db.execute(
+    '''INSERT INTO posts (user_id, title, slug, content, content_html, reading_time, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)''',
+    (current_user.id, title, slug, content, content_html, reading_time, status)
+)
+            
             db.commit()
             flash('Tulisan berhasil disimpan.', 'sukses')
             return redirect(url_for('dashboard.index'))
@@ -106,13 +113,14 @@ def edit_post(post_id):
 
         if error is None:
             content_html = render_markdown(content)
-            db.execute(
-                '''UPDATE posts
-                   SET title = ?, content = ?, content_html = ?, status = ?,
-                       updated_at = CURRENT_TIMESTAMP
-                   WHERE id = ? AND user_id = ?''',
-                (title, content, content_html, status, post_id, current_user.id)
-            )
+reading_time = hitung_waktu_baca(content)
+db.execute(
+    '''UPDATE posts
+       SET title = ?, content = ?, content_html = ?, reading_time = ?, status = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ? AND user_id = ?''',
+    (title, content, content_html, reading_time, status, post_id, current_user.id)
+)
             db.commit()
             flash('Tulisan berhasil diperbarui.', 'sukses')
             return redirect(url_for('dashboard.index'))
