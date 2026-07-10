@@ -1,0 +1,40 @@
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Database & instance folder — JANGAN PERNAH dihapus baris ini
+instance/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Backup files
+backup/
+*.tar.gz
+backup-*.db
+
+# Environment & secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Editor / OS
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

@@ -21,6 +21,40 @@ def format_tanggal(value):
     except Exception:
         return ''
 
+@app.template_filter('waktu_relatif')
+def format_waktu_relatif(value):
+    if value is None:
+        return ''
+
+    from datetime import datetime
+
+    try:
+        if hasattr(value, 'strftime'):
+            dt = value
+        else:
+            s = str(value)
+            dt = datetime.strptime(s[:19], '%Y-%m-%d %H:%M:%S')
+    except Exception:
+        return str(value)[:10]
+
+    now = datetime.now()
+    diff = now - dt
+    detik = diff.total_seconds()
+
+    if detik < 60:
+        return 'Baru saja'
+    elif detik < 3600:
+        menit = int(detik // 60)
+        return f'{menit} menit yang lalu'
+    elif detik < 86400:
+        jam = int(detik // 3600)
+        return f'{jam} jam yang lalu'
+    elif detik < 604800:
+        hari = int(detik // 86400)
+        return f'{hari} hari yang lalu'
+    else:
+        return dt.strftime('%d %b %Y')
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'

@@ -50,6 +50,7 @@ def init_db():
             slug TEXT NOT NULL,
             content TEXT NOT NULL,
             content_html TEXT,
+            reading_time INTEGER DEFAULT 1,
             status TEXT DEFAULT 'draft',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
