@@ -147,7 +147,6 @@ a:hover { text-decoration: underline; }
 /* Landing */
 .landing { max-width: 680px; padding: 3rem 0; }
 .landing-brand { font-size: 1.3rem; font-weight: bold; color: #111; margin-bottom: 0.3rem; }
-.landing-brand-logo { height: 28px; width: auto; display: block; margin-bottom: 0.3rem; }
 .landing-brand-sub { font-size: 0.9rem; color: #888; margin-bottom: 3rem; }
 .landing-hero { font-size: 1.8rem; font-weight: normal; color: #111; margin-bottom: 1rem; line-height: 1.3; }
 .landing-desc { font-size: 1rem; color: #111; line-height: 1.7; margin-bottom: 1.5rem; }
@@ -233,6 +232,14 @@ a:hover { text-decoration: underline; }
 .post-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e0e0e0; }
 .post-header h1 { font-size: 2rem; line-height: 1.3; margin-bottom: 0.8rem; font-weight: normal; }
 .post-content { line-height: 1.9; }
+.post-content a,
+.landing-desc a,
+.landing-features a,
+.blog-bio a { text-decoration: underline; }
+.post-content a:hover,
+.landing-desc a:hover,
+.landing-features a:hover,
+.blog-bio a:hover { color: #444; }
 .post-content h1, .post-content h2, .post-content h3 { margin: 2rem 0 1rem; line-height: 1.3; }
 .post-content p { margin-bottom: 1.2rem; }
 .post-content ul, .post-content ol { margin: 1rem 0 1rem 1.5rem; }
