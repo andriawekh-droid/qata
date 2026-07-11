@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /$
+Allow: /awekh$
+Disallow: /dashboard
+Disallow: /editor
+Disallow: /new
+Disallow: /login
+Disallow: /register
+Disallow: /admin
+Disallow: /settings
+
+Sitemap: https://qata.my.id/sitemap.xml
