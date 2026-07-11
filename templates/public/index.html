@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="landing">
-    <p class="landing-brand">Qata</p>
+    <img src="{{ url_for('static', filename='qata-logo.svg') }}" alt="Qata" class="landing-brand-logo">
     <p class="landing-brand-sub">{{ settings.landing_brand_sub }}</p>
 
     <h1 class="landing-hero">{{ settings.landing_title }}</h1>
