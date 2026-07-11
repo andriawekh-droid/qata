@@ -147,6 +147,7 @@ a:hover { text-decoration: underline; }
 /* Landing */
 .landing { max-width: 680px; padding: 3rem 0; }
 .landing-brand { font-size: 1.3rem; font-weight: bold; color: #111; margin-bottom: 0.3rem; }
+.landing-brand-logo { height: 28px; width: auto; display: block; margin-bottom: 0.3rem; }
 .landing-brand-sub { font-size: 0.9rem; color: #888; margin-bottom: 3rem; }
 .landing-hero { font-size: 1.8rem; font-weight: normal; color: #111; margin-bottom: 1rem; line-height: 1.3; }
 .landing-desc { font-size: 1rem; color: #111; line-height: 1.7; margin-bottom: 1.5rem; }
