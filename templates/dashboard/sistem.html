@@ -72,6 +72,26 @@
 </section>
 
 <section class="sistem-section">
+    <h2>Status SDMFSRD</h2>
+    <div class="sistem-grid">
+        <div class="sistem-card">
+            <span class="sistem-label">Status</span>
+            <span class="sistem-value {% if stats.sdmfsrd.online %}sistem-ok{% else %}sistem-bar-warn{% endif %}">
+                {% if stats.sdmfsrd.online %}Online{% else %}Offline{% endif %}
+            </span>
+        </div>
+        <div class="sistem-card">
+            <span class="sistem-label">Kode Status HTTP</span>
+            <span class="sistem-value">{{ stats.sdmfsrd.status_code or '—' }}</span>
+        </div>
+        <div class="sistem-card">
+            <span class="sistem-label">Waktu Respons</span>
+            <span class="sistem-value">{{ stats.sdmfsrd.response_time or '—' }} ms</span>
+        </div>
+    </div>
+</section>
+
+<section class="sistem-section">
     <h2>Uptime</h2>
     <p class="sistem-uptime">{{ stats.uptime }}</p>
 </section>

@@ -4,11 +4,31 @@ import mistune
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
 from database import get_db
+import requests
+from datetime import datetime as dt
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
 BATAS_UNDANGAN = 5
 BATAS_PAGE = 3
+SDMFSRD_URL = "https://sdmfsrd.web.id"
+
+def cek_status_sdmfsrd():
+    try:
+        start = dt.now()
+        resp = requests.get(SDMFSRD_URL, timeout=5)
+        elapsed_ms = round((dt.now() - start).total_seconds() * 1000)
+        return {
+            'online': resp.status_code == 200,
+            'status_code': resp.status_code,
+            'response_time': elapsed_ms
+        }
+    except requests.RequestException:
+        return {
+            'online': False,
+            'status_code': None,
+            'response_time': None
+        }
 
 def generate_slug(title):
     slug = title.lower()
@@ -476,6 +496,7 @@ def sistem():
         'total_drafts': total_drafts,
         'total_views': total_views,
         'total_likes': total_likes,
+        'sdmfsrd': cek_status_sdmfsrd(),
     }
 
     return render_template('dashboard/sistem.html', stats=stats)
