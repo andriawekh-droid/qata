@@ -2,8 +2,11 @@ import os
 import sqlite3
 from flask import Flask
 from flask_login import LoginManager
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__, instance_relative_config=True)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
 app.config.from_mapping(
     SECRET_KEY=os.environ.get('SECRET_KEY', 'dev-key-lokal'),
     DATABASE=app.instance_path + '/qata.db',
