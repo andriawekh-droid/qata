@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from flask import Flask
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__, instance_relative_config=True)
@@ -57,6 +57,16 @@ def format_waktu_relatif(value):
         return f'{hari} hari yang lalu'
     else:
         return dt.strftime('%d %b %Y')
+
+@app.context_processor
+def inject_page_theme():
+    # Default untuk halaman yang tidak override page_theme secara eksplisit
+    # (dashboard user sendiri, landing page, dsb).
+    # Halaman publik blog (public.py) selalu override ini dengan tema
+    # milik PEMILIK blog, jadi baris ini tidak berlaku di sana.
+    if current_user.is_authenticated:
+        return dict(page_theme=getattr(current_user, 'theme_preference', None) or 'light')
+    return dict(page_theme='light')
 
 login_manager = LoginManager()
 login_manager.init_app(app)

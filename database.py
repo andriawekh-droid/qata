@@ -31,6 +31,7 @@ def init_db():
             instagram TEXT,
             is_admin INTEGER DEFAULT 0,
             is_active INTEGER DEFAULT 1,
+            theme_preference TEXT NOT NULL DEFAULT 'light',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 

@@ -171,23 +171,28 @@ def delete_post(post_id):
 @dashboard_bp.route('/profil', methods=['GET', 'POST'])
 @login_required
 def profile():
+    TEMA_VALID = ('light', 'dark')
+
     if request.method == 'POST':
         display_name = request.form['display_name'].strip()
         website = request.form['website'].strip()
         twitter = request.form['twitter'].strip()
         instagram = request.form['instagram'].strip()
+        theme_preference = request.form.get('theme_preference', 'light').strip()
         error = None
 
         if not display_name:
             error = 'Nama tampilan tidak boleh kosong.'
+        elif theme_preference not in TEMA_VALID:
+            error = 'Tema tidak valid.'
 
         if error is None:
             db = get_db()
             db.execute(
                 '''UPDATE users
-                   SET display_name = ?, website = ?, twitter = ?, instagram = ?
+                   SET display_name = ?, website = ?, twitter = ?, instagram = ?, theme_preference = ?
                    WHERE id = ?''',
-                (display_name, website, twitter, instagram, current_user.id)
+                (display_name, website, twitter, instagram, theme_preference, current_user.id)
             )
             db.commit()
             flash('Profil berhasil diperbarui.', 'sukses')

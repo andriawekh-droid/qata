@@ -113,7 +113,8 @@ def user_blog(username):
                            recent_posts=recent_posts,
                            popular_posts=popular_posts,
                            landing_page=landing_page,
-                           custom_pages=custom_pages)
+                           custom_pages=custom_pages,
+                           page_theme=user['theme_preference'] or 'light')
 
 @public_bp.route('/<username>/tulisan')
 def user_archive(username):
@@ -155,7 +156,8 @@ def user_archive(username):
     return render_template('public/archive.html',
                            user=user,
                            archive=archive,
-                           custom_pages=custom_pages)
+                           custom_pages=custom_pages,
+                           page_theme=user['theme_preference'] or 'light')
 
 @public_bp.route('/<username>/tentang')
 def user_about(username):
@@ -183,7 +185,8 @@ def user_about(username):
     return render_template('public/tentang.html',
                            user=user,
                            page=page,
-                           custom_pages=custom_pages)
+                           custom_pages=custom_pages,
+                           page_theme=user['theme_preference'] or 'light')
 
 @public_bp.route('/<username>/page/<slug>')
 def user_page(username, slug):
@@ -213,7 +216,8 @@ def user_page(username, slug):
     return render_template('public/page.html',
                            user=user,
                            page=page,
-                           custom_pages=custom_pages)
+                           custom_pages=custom_pages,
+                           page_theme=user['theme_preference'] or 'light')
 
 @public_bp.route('/<username>/<slug>')
 def post_detail(username, slug):
@@ -259,7 +263,8 @@ def post_detail(username, slug):
                            user=user,
                            post=post,
                            sudah_like=sudah_like,
-                           custom_pages=custom_pages)
+                           custom_pages=custom_pages,
+                           page_theme=user['theme_preference'] or 'light')
 
 @public_bp.route('/like/<int:post_id>', methods=['POST'])
 def like_post(post_id):
