@@ -171,7 +171,7 @@ def delete_post(post_id):
 @dashboard_bp.route('/profil', methods=['GET', 'POST'])
 @login_required
 def profile():
-    TEMA_VALID = ('light', 'dark')
+    TEMA_VALID = ('light', 'dark', 'sepia', 'forest')
 
     if request.method == 'POST':
         display_name = request.form['display_name'].strip()

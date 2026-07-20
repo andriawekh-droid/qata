@@ -6,7 +6,7 @@ from database import get_db
 auth_bp = Blueprint('auth', __name__)
 
 class User(UserMixin):
-    def __init__(self, id, username, email, display_name, bio, website, twitter, instagram, is_admin, active):
+    def __init__(self, id, username, email, display_name, bio, website, twitter, instagram, is_admin, active, theme_preference='light'):
         self.id = id
         self.username = username
         self.email = email
@@ -17,6 +17,7 @@ class User(UserMixin):
         self.instagram = instagram
         self.is_admin = is_admin
         self.active = active
+        self.theme_preference = theme_preference or 'light'
 
     def get_id(self):
         return str(self.id)
@@ -33,7 +34,7 @@ def get_user_by_id(user_id):
             row['id'], row['username'], row['email'],
             row['display_name'], row['bio'], row['website'],
             row['twitter'], row['instagram'], row['is_admin'],
-            row['is_active']
+            row['is_active'], row['theme_preference']
         )
     return None
 
@@ -45,7 +46,7 @@ def get_user_by_username(username):
             row['id'], row['username'], row['email'],
             row['display_name'], row['bio'], row['website'],
             row['twitter'], row['instagram'], row['is_admin'],
-            row['is_active']
+            row['is_active'], row['theme_preference']
         )
     return None
 
@@ -124,7 +125,7 @@ def login():
                 row['id'], row['username'], row['email'],
                 row['display_name'], row['bio'], row['website'],
                 row['twitter'], row['instagram'], row['is_admin'],
-                row['is_active']
+                row['is_active'], row['theme_preference']
             )
             login_user(user)
             return redirect(url_for('dashboard.index'))

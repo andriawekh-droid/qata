@@ -42,11 +42,17 @@
         <div class="form-group">
             <label for="theme_preference">Tema Blog</label>
             <select name="theme_preference" id="theme_preference">
-                <option value="light" {% if current_user.theme_preference != 'dark' %}selected{% endif %}>
+                <option value="light" {% if current_user.theme_preference not in ('dark', 'sepia', 'forest') %}selected{% endif %}>
                     Terang (default)
                 </option>
                 <option value="dark" {% if current_user.theme_preference == 'dark' %}selected{% endif %}>
                     Gelap
+                </option>
+                <option value="sepia" {% if current_user.theme_preference == 'sepia' %}selected{% endif %}>
+                    Sepia
+                </option>
+                <option value="forest" {% if current_user.theme_preference == 'forest' %}selected{% endif %}>
+                    Forest
                 </option>
             </select>
             <small>Tema ini akan terlihat oleh Anda dan pengunjung blog Anda.</small>
