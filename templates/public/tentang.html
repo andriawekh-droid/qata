@@ -25,14 +25,6 @@
         {% endif %}
     </div>
 
-    <div class="post-content">
-        {% if page and page['content_html'] %}
-            {{ page['content_html'] | safe }}
-        {% else %}
-            <p class="empty-state">Pengguna ini belum mengisi halaman tentang.</p>
-        {% endif %}
-    </div>
-
     {% if user['website'] or user['twitter'] or user['instagram'] %}
     <div class="about-links">
         {% if user['website'] %}
