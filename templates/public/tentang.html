@@ -25,6 +25,28 @@
         {% endif %}
     </div>
 
+    <div class="post-content">
+        {% if page and page['content_html'] %}
+            {{ page['content_html'] | safe }}
+        {% else %}
+            <p class="empty-state">Pengguna ini belum mengisi halaman tentang.</p>
+        {% endif %}
+    </div>
+
+    {% if user['website'] or user['twitter'] or user['instagram'] %}
+    <div class="about-links">
+        {% if user['website'] %}
+        <a href="{{ user['website'] }}" target="_blank" rel="noopener">Website</a>
+        {% endif %}
+        {% if user['twitter'] %}
+        <a href="https://twitter.com/{{ user['twitter'] }}" target="_blank" rel="noopener">Twitter/X</a>
+        {% endif %}
+        {% if user['instagram'] %}
+        <a href="https://instagram.com/{{ user['instagram'] }}" target="_blank" rel="noopener">Instagram</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <footer class="post-footer">
         <a href="{{ url_for('public.user_blog', username=user['username']) }}">
             &larr; Kembali ke blog {{ user['display_name'] }}
