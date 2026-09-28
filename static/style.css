@@ -848,3 +848,127 @@ article.post-full h1,
 .sistem-bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
 .sistem-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
 .sistem-bar-warn { background: var(--danger); }
+
+/* Pagination Dashboard */
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+    font-size: 13.5px;
+    font-family: "IBM Plex Sans", sans-serif;
+}
+
+.btn-page {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.btn-page:hover:not(.disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.btn-page.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--line);
+    color: var(--ink-faint);
+}
+
+.page-info {
+    color: var(--ink-faint);
+    font-size: 13px;
+}
+
+/* Dashboard Menu - Rapi, Berkelompok, & Jelas */
+.dashboard-menu {
+    margin-top: 3.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.dashboard-menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dashboard-menu-heading {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    font-weight: 600;
+}
+
+.dashboard-menu-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 0.8rem;
+    font-size: 14.5px;
+}
+
+.dashboard-menu-links a {
+    color: var(--ink);
+    text-decoration: none;
+    padding: 3px 0;
+    transition: color 0.15s ease;
+}
+
+.dashboard-menu-links a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.menu-divider {
+    color: var(--line);
+    user-select: none;
+}
+
+.dashboard-menu-footer {
+    padding-top: 0.8rem;
+    border-top: 1px dashed var(--line);
+}
+
+.logout-link {
+    color: var(--danger) !important;
+    font-size: 14px;
+    text-decoration: none;
+    align-self: flex-start;
+}
+
+.logout-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 560px) {
+    .dashboard-menu-links {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .menu-divider {
+        display: none;
+    }
+    .pagination {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+}
+

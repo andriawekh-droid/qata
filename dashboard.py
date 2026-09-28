@@ -52,6 +52,21 @@ def hitung_waktu_baca(content):
 @login_required
 def index():
     db = get_db()
+    
+    # Pagination: 5 tulisan per halaman
+    page = request.args.get('page', 1, type=int)
+    if page < 1:
+        page = 1
+    per_page = 5
+
+    total_row = db.execute(
+        'SELECT COUNT(*) as total FROM posts WHERE user_id = ?',
+        (current_user.id,)
+    ).fetchone()
+    total_posts = total_row['total'] if total_row else 0
+    total_pages = max(1, (total_posts + per_page - 1) // per_page)
+    offset = (page - 1) * per_page
+
     posts = db.execute(
         '''SELECT p.*,
            COUNT(DISTINCT pv.id) as view_count,
@@ -61,10 +76,18 @@ def index():
            LEFT JOIN likes l ON p.id = l.post_id
            WHERE p.user_id = ?
            GROUP BY p.id
-           ORDER BY p.created_at DESC''',
-        (current_user.id,)
+           ORDER BY p.created_at DESC
+           LIMIT ? OFFSET ?''',
+        (current_user.id, per_page, offset)
     ).fetchall()
-    return render_template('dashboard/index.html', posts=posts)
+
+    return render_template(
+        'dashboard/index.html',
+        posts=posts,
+        page=page,
+        total_pages=total_pages,
+        total_posts=total_posts
+    )
 
 @dashboard_bp.route('/tulisan/baru', methods=['GET', 'POST'])
 @login_required

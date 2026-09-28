@@ -22,7 +22,7 @@ def get_site_setting(db, key, default=''):
 def index():
     db = get_db()
 
-    # 5 tulisan terbaru dari semua user
+    # 3 tulisan terbaru dari semua user
     recent_posts = db.execute(
         '''SELECT p.*, u.username, u.display_name,
            COUNT(DISTINCT l.id) as like_count
@@ -32,10 +32,10 @@ def index():
            WHERE p.status = 'published' AND u.is_active = 1
            GROUP BY p.id
            ORDER BY p.created_at DESC
-           LIMIT 5'''
+           LIMIT 3'''
     ).fetchall()
 
-    # 5 tulisan populer dari semua user
+    # 3 tulisan populer dari semua user
     popular_posts = db.execute(
         '''SELECT p.*, u.username, u.display_name,
            COUNT(DISTINCT l.id) as like_count
@@ -45,7 +45,7 @@ def index():
            WHERE p.status = 'published' AND u.is_active = 1
            GROUP BY p.id
            ORDER BY like_count DESC, p.created_at DESC
-           LIMIT 5'''
+           LIMIT 3'''
     ).fetchall()
 
     settings = {
@@ -72,7 +72,7 @@ def user_blog(username):
     if user is None:
         abort(404)
 
-    # 5 tulisan terbaru
+    # 3 tulisan terbaru
     recent_posts = db.execute(
         '''SELECT p.*, COUNT(DISTINCT l.id) as like_count
            FROM posts p
@@ -80,11 +80,11 @@ def user_blog(username):
            WHERE p.user_id = ? AND p.status = 'published'
            GROUP BY p.id
            ORDER BY p.created_at DESC
-           LIMIT 5''',
+           LIMIT 3''',
         (user['id'],)
     ).fetchall()
 
-    # 5 tulisan populer
+    # 3 tulisan populer
     popular_posts = db.execute(
         '''SELECT p.*, COUNT(DISTINCT l.id) as like_count
            FROM posts p
@@ -92,7 +92,7 @@ def user_blog(username):
            WHERE p.user_id = ? AND p.status = 'published'
            GROUP BY p.id
            ORDER BY like_count DESC, p.created_at DESC
-           LIMIT 5''',
+           LIMIT 3''',
         (user['id'],)
     ).fetchall()
 

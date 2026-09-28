@@ -17,57 +17,94 @@
                     <th>Judul</th>
                     <th>Status</th>
                     <th>Kunjungan</th>
-                    <th>♥ Like</th>
+                    <th>Like</th>
                     <th>Tanggal</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
-    {% for post in posts %}
-    <tr>
-        <td data-label="Judul">
-            {% if post['status'] == 'published' %}
-                <a href="{{ url_for('public.post_detail', username=current_user.username, slug=post['slug']) }}">
-                    {{ post['title'] }}
-                </a>
-            {% else %}
-                {{ post['title'] }}
-            {% endif %}
-        </td>
-        <td data-label="Status">
-            <span class="badge badge-{{ post['status'] }}">
-                {% if post['status'] == 'published' %}Terbit{% else %}Draf{% endif %}
-            </span>
-        </td>
-        <td data-label="Kunjungan">{{ post['view_count'] }}</td>
-        <td data-label="Like">{{ post['like_count'] }}</td>
-        <td data-label="Tanggal">{{ post['created_at'] | tanggal }}</td>
-        <td data-label="Aksi" class="post-actions">
-            <a href="{{ url_for('dashboard.edit_post', post_id=post['id']) }}">Edit</a>
-            <form method="POST" action="{{ url_for('dashboard.delete_post', post_id=post['id']) }}"
-                  onsubmit="return confirm('Yakin ingin menghapus tulisan ini?')">
-                <button type="submit" class="btn-link btn-hapus">Hapus</button>
-            </form>
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
+            {% for post in posts %}
+            <tr>
+                <td data-label="Judul">
+                    {% if post['status'] == 'published' %}
+                        <a href="{{ url_for('public.post_detail', username=current_user.username, slug=post['slug']) }}">
+                            {{ post['title'] }}
+                        </a>
+                    {% else %}
+                        {{ post['title'] }}
+                    {% endif %}
+                </td>
+                <td data-label="Status">
+                    <span class="badge badge-{{ post['status'] }}">
+                        {% if post['status'] == 'published' %}Terbit{% else %}Draf{% endif %}
+                    </span>
+                </td>
+                <td data-label="Kunjungan">{{ post['view_count'] }}</td>
+                <td data-label="Like">{{ post['like_count'] }}</td>
+                <td data-label="Tanggal">{{ post['created_at'] | tanggal }}</td>
+                <td data-label="Aksi" class="post-actions">
+                    <a href="{{ url_for('dashboard.edit_post', post_id=post['id']) }}">Edit</a>
+                    <form method="POST" action="{{ url_for('dashboard.delete_post', post_id=post['id']) }}"
+                          onsubmit="return confirm('Yakin ingin menghapus tulisan ini?')">
+                        <button type="submit" class="btn-link btn-hapus">Hapus</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
         </table>
+
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="{{ url_for('dashboard.index', page=page-1) }}" class="btn-page">&larr; Sebelumnya</a>
+            {% else %}
+                <span class="btn-page disabled">&larr; Sebelumnya</span>
+            {% endif %}
+
+            <span class="page-info">Halaman {{ page }} dari {{ total_pages }}</span>
+
+            {% if page < total_pages %}
+                <a href="{{ url_for('dashboard.index', page=page+1) }}" class="btn-page">Berikutnya &rarr;</a>
+            {% else %}
+                <span class="btn-page disabled">Berikutnya &rarr;</span>
+            {% endif %}
+        </div>
+        {% endif %}
     {% else %}
         <p class="empty-state">Belum ada tulisan. <a href="{{ url_for('dashboard.new_post') }}">Mulai menulis sekarang</a>.</p>
     {% endif %}
 </section>
 
-<section class="dashboard-nav">
-    <a href="{{ url_for('dashboard.profile') }}">Pengaturan Profil</a>
-    <a href="{{ url_for('dashboard.pages') }}">Halaman</a>
-    <a href="{{ url_for('dashboard.invite_codes') }}">Kode Undangan</a>
-    <a href="{{ url_for('public.user_blog', username=current_user.username) }}">Lihat Blog Saya</a>
+<nav class="dashboard-menu" aria-label="Menu Dashboard">
+    <div class="dashboard-menu-group">
+        <span class="dashboard-menu-heading">Akun & Konten</span>
+        <div class="dashboard-menu-links">
+            <a href="{{ url_for('dashboard.profile') }}">Pengaturan Profil</a>
+            <span class="menu-divider">&middot;</span>
+            <a href="{{ url_for('dashboard.pages') }}">Halaman</a>
+            <span class="menu-divider">&middot;</span>
+            <a href="{{ url_for('dashboard.invite_codes') }}">Kode Undangan</a>
+            <span class="menu-divider">&middot;</span>
+            <a href="{{ url_for('public.user_blog', username=current_user.username) }}" target="_blank">Lihat Blog Saya &rarr;</a>
+        </div>
+    </div>
+
     {% if current_user.is_admin %}
-        <a href="{{ url_for('dashboard.admin_index') }}">Panel Admin</a>
-        <a href="{{ url_for('dashboard.admin_landing') }}">Edit Landing Page</a>
-        <a href="{{ url_for('dashboard.sistem') }}">Status Sistem</a>
+    <div class="dashboard-menu-group">
+        <span class="dashboard-menu-heading">Administrasi</span>
+        <div class="dashboard-menu-links">
+            <a href="{{ url_for('dashboard.admin_index') }}">Panel Admin</a>
+            <span class="menu-divider">&middot;</span>
+            <a href="{{ url_for('dashboard.admin_landing') }}">Edit Landing Page</a>
+            <span class="menu-divider">&middot;</span>
+            <a href="{{ url_for('dashboard.sistem') }}">Status Sistem</a>
+        </div>
+    </div>
     {% endif %}
-    <a href="{{ url_for('auth.logout') }}">Keluar</a>
-</section>
+
+    <div class="dashboard-menu-group dashboard-menu-footer">
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">Keluar dari Akun</a>
+    </div>
+</nav>
 {% endblock %}

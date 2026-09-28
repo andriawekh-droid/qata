@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Qata{% endblock %}</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=9">
 </head>
 <body>
     <main class="container">
@@ -17,13 +17,13 @@
             {% endif %}
         {% endwith %}
         {% block content %}{% endblock %}
-    </main>
 
-    <footer class="footer footer-landing">
-        <span class="footer-left">Qata &mdash; &copy; 2026. Dibuat oleh <a href="https://qata.my.id/awekh">awekh</a> untuk penulis, dengan tenang.</span>
-        {% if current_user.is_authenticated %}
-        <a class="footer-right" href="{{ url_for('dashboard.index') }}">Dashboard</a>
-        {% endif %}
-    </footer>
+        <footer class="footer">
+            <span class="footer-left">Qata &mdash; &copy; 2026. Dibuat oleh <a href="https://qata.my.id/awekh">awekh</a> untuk penulis, dengan tenang.</span>
+            {% if current_user.is_authenticated %}
+            <a class="footer-right" href="{{ url_for('dashboard.index') }}">Dashboard</a>
+            {% endif %}
+        </footer>
+    </main>
 </body>
 </html>
