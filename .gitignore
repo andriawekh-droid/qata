@@ -44,3 +44,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Mockup & Design References
+doc/*.html
+

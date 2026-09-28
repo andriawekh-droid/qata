@@ -9,17 +9,24 @@
 {% block title %}Tulisan — {{ user['display_name'] }}{% endblock %}
 
 {% block content %}
-<div class="blog-header">
+<header class="site-header">
+    <a href="{{ url_for('public.index') }}" class="wordmark">Qata</a>
+    <div class="header-links">
+        <a href="{{ url_for('public.index') }}">Rumah</a>
+    </div>
+</header>
+
+<div class="profile-block">
     <h1>{{ user['display_name'] }}</h1>
-    <div class="blog-nav">
+    <nav class="profile-nav">
         <a href="{{ url_for('public.user_blog', username=user['username']) }}">Rumah</a>
-        <a href="{{ url_for('public.user_archive', username=user['username']) }}">Tulisan</a>
+        <a href="{{ url_for('public.user_archive', username=user['username']) }}" class="current">Tulisan</a>
         <a href="{{ url_for('public.user_about', username=user['username']) }}">Tentang</a>
         {% for cp in custom_pages %}
         <a href="{{ url_for('public.user_page', username=user['username'], slug=cp['slug']) }}">{{ cp['title'] }}</a>
         {% endfor %}
         <a href="{{ url_for('public.user_rss', username=user['username']) }}" class="rss-link">RSS</a>
-    </div>
+    </nav>
 </div>
 
 <section class="archive">
@@ -33,11 +40,16 @@
                     {{ post['title'] }}
                 </a>
                 <span class="archive-meta">
-                    {{ post['created_at'] | waktu_relatif }}
-                    <span>&middot;</span>
-                    ♥ {{ post['like_count'] }}
-                    <span>&middot;</span>
-                    {{ post['reading_time'] }} menit baca
+                    <span>{{ post['created_at'] | waktu_relatif }}</span>
+                    <span class="dot">&middot;</span>
+                    <span>{{ post['reading_time'] }} mnt baca</span>
+                    {% if post['like_count'] > 0 %}
+                    <span class="dot">&middot;</span>
+                    <span class="heart-stat">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.6-9.4-9A5.1 5.1 0 0 1 12 6a5.1 5.1 0 0 1 9.4 5c-2.4 4.4-9.4 9-9.4 9Z"/></svg>
+                        {{ post['like_count'] }}
+                    </span>
+                    {% endif %}
                 </span>
             </article>
             {% endfor %}
