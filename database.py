@@ -96,6 +96,16 @@ def init_db():
             value TEXT NOT NULL,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS register_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ip_hash TEXT NOT NULL,
+            success INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_register_attempts_ip
+            ON register_attempts (ip_hash, created_at);
     ''')
     db.commit()
 

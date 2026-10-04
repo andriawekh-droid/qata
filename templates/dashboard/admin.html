@@ -8,6 +8,31 @@
     <span class="badge badge-published">Admin</span>
 </div>
 
+<section class="admin-panel">
+    <h2>Mode Pendaftaran</h2>
+    <form method="POST" action="{{ url_for('dashboard.admin_registration_mode') }}">
+        <label class="radio-option">
+            <input type="radio" name="registration_mode" value="open" {% if registration_mode == 'open' %}checked{% endif %}>
+            <span>Terbuka
+                <small>Siapa saja bisa mendaftar tanpa kode undangan. Dilindungi honeypot, pertanyaan keamanan, dan batas pendaftaran per jaringan.</small>
+            </span>
+        </label>
+        <label class="radio-option">
+            <input type="radio" name="registration_mode" value="invite_only" {% if registration_mode == 'invite_only' %}checked{% endif %}>
+            <span>Hanya undangan
+                <small>Pendaftaran wajib memakai kode undangan sekali pakai.</small>
+            </span>
+        </label>
+        <label class="radio-option">
+            <input type="radio" name="registration_mode" value="closed" {% if registration_mode == 'closed' %}checked{% endif %}>
+            <span>Ditutup
+                <small>Tidak ada pendaftaran baru sama sekali, berguna saat ada gelombang spam.</small>
+            </span>
+        </label>
+        <button type="submit" class="btn" style="margin-top:0.8rem">Simpan</button>
+    </form>
+</section>
+
 <section class="post-list">
     <h2>Daftar Pengguna ({{ users|length }})</h2>
     {% if users %}
@@ -41,15 +66,14 @@
                         </span>
                     </td>
                     <td>{{ user['created_at'] | tanggal }}</td>
-                    <td>
+                    <td class="post-actions">
+                        <a href="{{ url_for('dashboard.admin_reset_password', user_id=user['id']) }}">Reset Password</a>
                         {% if not user['is_admin'] %}
                         <form method="POST"
                               action="{{ url_for('dashboard.admin_delete_user', user_id=user['id']) }}"
                               onsubmit="return confirm('Yakin ingin menghapus @{{ user['username'] }} beserta semua datanya? Tindakan ini tidak dapat dibatalkan.')">
                             <button type="submit" class="btn-link btn-hapus">Hapus</button>
                         </form>
-                        {% else %}
-                        <span style="color:#ccc">—</span>
                         {% endif %}
                     </td>
                 </tr>

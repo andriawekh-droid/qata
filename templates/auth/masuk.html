@@ -16,6 +16,12 @@
         </div>
         <button type="submit" class="btn">Masuk</button>
     </form>
-    <p class="auth-link">Belum punya akun? Hubungi admin untuk mendapatkan kode undangan.</p>
+    {% if mode == 'open' %}
+    <p class="auth-link">Belum punya akun? <a href="{{ url_for('auth.register') }}">Daftar</a></p>
+    {% elif mode == 'invite_only' %}
+    <p class="auth-link">Belum punya akun? <a href="{{ url_for('auth.register') }}">Daftar dengan kode undangan</a></p>
+    {% else %}
+    <p class="auth-link">Pendaftaran akun baru sedang ditutup.</p>
+    {% endif %}
 </div>
 {% endblock %}

@@ -5,27 +5,55 @@
 {% block content %}
 <div class="auth-container">
     <h1>Daftar Akun</h1>
-    <form method="POST">
+
+    {% if mode == 'closed' %}
+    <p class="empty-state" style="padding-top:0">
+        Pendaftaran akun baru sedang ditutup untuk sementara. Silakan kembali lagi nanti.
+    </p>
+    <p class="auth-link">Sudah punya akun? <a href="{{ url_for('auth.login') }}">Masuk</a></p>
+    {% else %}
+    <form method="POST" autocomplete="off">
+        {% if mode == 'invite_only' %}
         <div class="form-group">
             <label for="invite_code">Kode Undangan</label>
             <input type="text" id="invite_code" name="invite_code" required autofocus>
             <small>Belum punya kode undangan? <a href="https://instagram.com/awekh" target="_blank" rel="noopener">Minta lewat Instagram →</a></small>
         </div>
+        {% endif %}
         <div class="form-group">
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" required>
-            <small>Hanya huruf kecil, angka, dan tanda hubung. Minimal 3 karakter.</small>
+            <input type="text" id="username" name="username" required
+                   minlength="3" maxlength="30" pattern="[a-z0-9][a-z0-9\-]{1,28}[a-z0-9]"
+                   value="{{ username }}" {% if mode != 'invite_only' %}autofocus{% endif %}>
+            <small>Hanya huruf kecil, angka, dan tanda hubung. 3-30 karakter.</small>
         </div>
         <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" required>
+            <input type="email" id="email" name="email" required value="{{ email }}">
+            <small>Tidak ada email verifikasi. Jika lupa password, hubungi admin.</small>
         </div>
         <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
+            <input type="password" id="password" name="password" required minlength="8" maxlength="72">
+            <small>Minimal 8 karakter.</small>
         </div>
+
+        {% if mode == 'open' and tantangan %}
+        <div class="form-group">
+            <label for="jawaban">Pertanyaan keamanan: berapa {{ tantangan }}?</label>
+            <input type="text" id="jawaban" name="jawaban" required inputmode="numeric" maxlength="3">
+        </div>
+        {% endif %}
+
+        {# Honeypot: disembunyikan dari manusia, bot biasanya mengisinya #}
+        <div class="hp-field" aria-hidden="true">
+            <label for="website_url">Jangan diisi</label>
+            <input type="text" id="website_url" name="website_url" tabindex="-1" autocomplete="off">
+        </div>
+
         <button type="submit" class="btn">Daftar</button>
     </form>
     <p class="auth-link">Sudah punya akun? <a href="{{ url_for('auth.login') }}">Masuk</a></p>
+    {% endif %}
 </div>
 {% endblock %}

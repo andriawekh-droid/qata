@@ -1,9 +1,12 @@
 import re
 import hashlib
+import secrets
+import bcrypt
 import mistune
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, make_response
 from flask_login import login_required, current_user
 from database import get_db
+from auth import get_registration_mode, MODE_VALID, PASSWORD_MIN, PASSWORD_MAX_BYTES
 import requests
 from datetime import datetime as dt
 
@@ -411,7 +414,77 @@ def admin_index():
            ORDER BY u.created_at DESC'''
     ).fetchall()
 
-    return render_template('dashboard/admin.html', users=users)
+    return render_template('dashboard/admin.html', users=users,
+                           registration_mode=get_registration_mode(db))
+
+@dashboard_bp.route('/admin/registrasi', methods=['POST'])
+@login_required
+def admin_registration_mode():
+    if not current_user.is_admin:
+        abort(403)
+
+    mode = request.form.get('registration_mode', '').strip()
+    if mode not in MODE_VALID:
+        flash('Mode pendaftaran tidak valid.', 'error')
+        return redirect(url_for('dashboard.admin_index'))
+
+    db = get_db()
+    db.execute(
+        '''INSERT INTO site_settings (key, value)
+           VALUES ('registration_mode', ?)
+           ON CONFLICT(key) DO UPDATE SET value = ?, updated_at = CURRENT_TIMESTAMP''',
+        (mode, mode)
+    )
+    db.commit()
+    flash('Mode pendaftaran berhasil diperbarui.', 'sukses')
+    return redirect(url_for('dashboard.admin_index'))
+
+@dashboard_bp.route('/admin/reset-password/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def admin_reset_password(user_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    db = get_db()
+    target = db.execute(
+        'SELECT id, username, display_name FROM users WHERE id = ?', (user_id,)
+    ).fetchone()
+
+    if target is None:
+        flash('User tidak ditemukan.', 'error')
+        return redirect(url_for('dashboard.admin_index'))
+
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        generated = not password.strip()
+        error = None
+
+        if generated:
+            password = secrets.token_urlsafe(9)
+        elif len(password) < PASSWORD_MIN:
+            error = f'Password minimal {PASSWORD_MIN} karakter.'
+        elif len(password.encode('utf-8')) > PASSWORD_MAX_BYTES:
+            error = 'Password terlalu panjang (maksimal 72 byte).'
+
+        if error is None:
+            hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            db.execute(
+                'UPDATE users SET password = ? WHERE id = ?',
+                (hashed.decode('utf-8'), user_id)
+            )
+            db.commit()
+            # Tampilkan sekali di respons ini saja; tidak disimpan di sesi/flash.
+            resp = make_response(render_template(
+                'dashboard/reset_password.html',
+                target=target, new_password=password
+            ))
+            resp.headers['Cache-Control'] = 'no-store'
+            return resp
+
+        flash(error, 'error')
+
+    return render_template('dashboard/reset_password.html',
+                           target=target, new_password=None)
 
 @dashboard_bp.route('/admin/hapus-user/<int:user_id>', methods=['POST'])
 @login_required

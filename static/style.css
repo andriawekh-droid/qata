@@ -826,6 +826,71 @@ article.post-full h1,
     font-size: 26px;
 }
 
+/* Honeypot anti-bot: disembunyikan dari manusia dan pembaca layar */
+.hp-field {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* Admin: pengaturan pendaftaran & reset password */
+.admin-panel {
+    margin-bottom: 2.5rem;
+    padding: 1.25rem 1.4rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper-raised);
+}
+.admin-panel h2 {
+    font-size: 1.05rem;
+    margin-bottom: 0.9rem;
+}
+.radio-option {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    padding: 0.55rem 0;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+.radio-option input {
+    margin-top: 0.35rem;
+    accent-color: var(--accent);
+}
+.radio-option small {
+    display: block;
+    color: var(--ink-faint);
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+.temp-password {
+    margin: 1rem 0;
+    padding: 0.9rem 1.1rem;
+    border: 1px dashed var(--accent);
+    border-radius: 6px;
+    background: var(--accent-wash);
+    font-family: ui-monospace, 'Cascadia Code', Menlo, monospace;
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+    word-break: break-all;
+    user-select: all;
+}
+.btn-link {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--accent);
+}
+.btn-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.btn-hapus { color: var(--danger); }
+.post-actions { display: flex; gap: 1rem; align-items: center; }
+.auth-link { margin-top: 1rem; font-size: 0.9rem; color: var(--ink-faint); }
+
 /* System cards */
 .sistem-grid {
     display: grid;
