@@ -33,31 +33,6 @@
     </form>
 </section>
 
-<section class="admin-panel">
-    <h2>Fitur Upload Gambar</h2>
-    <form method="POST" action="{{ url_for('dashboard.admin_image_upload_mode') }}">
-        <label class="radio-option">
-            <input type="radio" name="image_upload_mode" value="enabled" {% if image_upload_mode == 'enabled' %}checked{% endif %}>
-            <span>Aktif untuk Semua Penulis
-                <small>Semua pengguna dapat menyisipkan dan mengunggah gambar saat menulis tulisan atau halaman.</small>
-            </span>
-        </label>
-        <label class="radio-option">
-            <input type="radio" name="image_upload_mode" value="admin_only" {% if image_upload_mode == 'admin_only' %}checked{% endif %}>
-            <span>Khusus Akun Admin
-                <small>Hanya administrator yang dapat mengunggah gambar (berguna untuk pembatasan kuota server atau fitur berbayar).</small>
-            </span>
-        </label>
-        <label class="radio-option">
-            <input type="radio" name="image_upload_mode" value="disabled" {% if image_upload_mode == 'disabled' %}checked{% endif %}>
-            <span>Nonaktifkan
-                <small>Fitur unggah gambar dimatikan untuk semua pengguna.</small>
-            </span>
-        </label>
-        <button type="submit" class="btn" style="margin-top:0.8rem">Simpan</button>
-    </form>
-</section>
-
 <section class="post-list">
     <h2>Daftar Pengguna ({{ users|length }})</h2>
     {% if users %}
@@ -68,6 +43,7 @@
                     <th>Email</th>
                     <th>Tulisan</th>
                     <th>Status</th>
+                    <th>Upload Gambar</th>
                     <th>Bergabung</th>
                     <th>Aksi</th>
                 </tr>
@@ -89,6 +65,23 @@
                         <span class="badge badge-{{ 'published' if user['is_active'] else 'draft' }}">
                             {{ 'Aktif' if user['is_active'] else 'Nonaktif' }}
                         </span>
+                    </td>
+                    <td>
+                        {% if user['is_admin'] %}
+                            <span class="badge badge-published" title="Admin selalu memiliki izin upload gambar">Aktif (Admin)</span>
+                        {% else %}
+                            <form method="POST" action="{{ url_for('dashboard.admin_toggle_upload_image', user_id=user['id']) }}" style="display:inline;">
+                                {% if user['can_upload_image'] %}
+                                    <button type="submit" class="badge badge-published btn-toggle" title="Klik untuk menonaktifkan fitur upload gambar">
+                                        Aktif &check;
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="badge badge-draft btn-toggle" title="Klik untuk mengaktifkan fitur upload gambar">
+                                        Nonaktif &cross;
+                                    </button>
+                                {% endif %}
+                            </form>
+                        {% endif %}
                     </td>
                     <td>{{ user['created_at'] | tanggal }}</td>
                     <td>

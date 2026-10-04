@@ -18,19 +18,13 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 BATAS_UNDANGAN = 5
 BATAS_PAGE = 3
 SDMFSRD_URL = "https://sdmfsrd.web.id"
-IMAGE_UPLOAD_MODES = ('enabled', 'admin_only', 'disabled')
-
-def get_image_upload_mode(db):
-    row = db.execute(
-        "SELECT value FROM site_settings WHERE key = 'image_upload_mode'"
-    ).fetchone()
-    return row['value'] if row else 'enabled'
-
 def user_can_upload_image(db, user):
-    mode = get_image_upload_mode(db)
-    if mode == 'enabled':
+    if not getattr(user, 'is_authenticated', False):
+        return False
+    if getattr(user, 'is_admin', False):
         return True
-    if mode == 'admin_only' and getattr(user, 'is_authenticated', False) and getattr(user, 'is_admin', False):
+    row = db.execute('SELECT can_upload_image, is_admin FROM users WHERE id = ?', (user.id,)).fetchone()
+    if row and (row['is_admin'] or row['can_upload_image']):
         return True
     return False
 
@@ -550,8 +544,7 @@ def admin_index():
     ).fetchall()
 
     return render_template('dashboard/admin.html', users=users,
-                           registration_mode=get_registration_mode(db),
-                           image_upload_mode=get_image_upload_mode(db))
+                           registration_mode=get_registration_mode(db))
 
 @dashboard_bp.route('/admin/registrasi', methods=['POST'])
 @login_required
@@ -575,26 +568,28 @@ def admin_registration_mode():
     flash('Mode pendaftaran berhasil diperbarui.', 'sukses')
     return redirect(url_for('dashboard.admin_index'))
 
-@dashboard_bp.route('/admin/upload-gambar', methods=['POST'])
+@dashboard_bp.route('/admin/toggle-upload-gambar/<int:user_id>', methods=['POST'])
 @login_required
-def admin_image_upload_mode():
+def admin_toggle_upload_image(user_id):
     if not current_user.is_admin:
         abort(403)
 
-    mode = request.form.get('image_upload_mode', '').strip()
-    if mode not in IMAGE_UPLOAD_MODES:
-        flash('Mode upload gambar tidak valid.', 'error')
+    db = get_db()
+    target = db.execute('SELECT id, username, can_upload_image, is_admin FROM users WHERE id = ?', (user_id,)).fetchone()
+    if not target:
+        flash('Pengguna tidak ditemukan.', 'error')
         return redirect(url_for('dashboard.admin_index'))
 
-    db = get_db()
-    db.execute(
-        '''INSERT INTO site_settings (key, value)
-           VALUES ('image_upload_mode', ?)
-           ON CONFLICT(key) DO UPDATE SET value = ?, updated_at = CURRENT_TIMESTAMP''',
-        (mode, mode)
-    )
+    if target['is_admin']:
+        flash('Akun admin selalu memiliki izin upload gambar.', 'error')
+        return redirect(url_for('dashboard.admin_index'))
+
+    new_val = 0 if target['can_upload_image'] else 1
+    db.execute('UPDATE users SET can_upload_image = ? WHERE id = ?', (new_val, user_id))
     db.commit()
-    flash('Pengaturan upload gambar berhasil diperbarui.', 'sukses')
+
+    status_str = 'diaktifkan' if new_val else 'dinonaktifkan'
+    flash(f"Izin upload gambar untuk @{target['username']} berhasil {status_str}.", 'sukses')
     return redirect(url_for('dashboard.admin_index'))
 
 @dashboard_bp.route('/admin/reset-password/<int:user_id>', methods=['GET', 'POST'])

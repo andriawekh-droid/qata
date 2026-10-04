@@ -830,6 +830,19 @@ article.post-full h1,
     color: var(--ink-faint);
 }
 
+.btn-toggle {
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    transition: all 0.15s ease;
+}
+
+.btn-toggle:hover {
+    filter: brightness(0.92);
+    transform: translateY(-1px);
+}
+
 .editor-actions {
     display: flex;
     gap: 0.8rem;

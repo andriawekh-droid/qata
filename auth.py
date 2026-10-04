@@ -12,7 +12,7 @@ from database import get_db
 auth_bp = Blueprint('auth', __name__)
 
 class User(UserMixin):
-    def __init__(self, id, username, email, display_name, bio, website, twitter, instagram, is_admin, active, theme_preference='light'):
+    def __init__(self, id, username, email, display_name, bio, website, twitter, instagram, is_admin, active, theme_preference='light', can_upload_image=0):
         self.id = id
         self.username = username
         self.email = email
@@ -24,6 +24,7 @@ class User(UserMixin):
         self.is_admin = is_admin
         self.active = active
         self.theme_preference = theme_preference or 'light'
+        self.can_upload_image = bool(can_upload_image or is_admin)
 
     def get_id(self):
         return str(self.id)
@@ -36,11 +37,13 @@ def get_user_by_id(user_id):
     db = get_db()
     row = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
     if row:
+        can_upload = row['can_upload_image'] if 'can_upload_image' in row.keys() else 0
         return User(
             row['id'], row['username'], row['email'],
             row['display_name'], row['bio'], row['website'],
             row['twitter'], row['instagram'], row['is_admin'],
-            row['is_active'], row['theme_preference']
+            row['is_active'], row['theme_preference'],
+            can_upload
         )
     return None
 
@@ -48,11 +51,13 @@ def get_user_by_username(username):
     db = get_db()
     row = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
     if row:
+        can_upload = row['can_upload_image'] if 'can_upload_image' in row.keys() else 0
         return User(
             row['id'], row['username'], row['email'],
             row['display_name'], row['bio'], row['website'],
             row['twitter'], row['instagram'], row['is_admin'],
-            row['is_active'], row['theme_preference']
+            row['is_active'], row['theme_preference'],
+            can_upload
         )
     return None
 

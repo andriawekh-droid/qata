@@ -31,6 +31,7 @@ def init_db():
             instagram TEXT,
             is_admin INTEGER DEFAULT 0,
             is_active INTEGER DEFAULT 1,
+            can_upload_image INTEGER NOT NULL DEFAULT 0,
             theme_preference TEXT NOT NULL DEFAULT 'light',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -122,6 +123,13 @@ def init_db():
             ON login_attempts (username, created_at);
     ''')
     db.commit()
+
+    # Migrasi kolom can_upload_image pada users jika belum ada
+    user_cols = [c['name'] for c in db.execute("PRAGMA table_info(users)").fetchall()]
+    if 'can_upload_image' not in user_cols:
+        db.execute("ALTER TABLE users ADD COLUMN can_upload_image INTEGER NOT NULL DEFAULT 0")
+        db.execute("UPDATE users SET can_upload_image = 1 WHERE is_admin = 1")
+        db.commit()
 
 def init_app(app):
     app.teardown_appcontext(close_db)
