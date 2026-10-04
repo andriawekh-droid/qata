@@ -36,14 +36,14 @@
 <section class="post-list">
     <h2>Daftar Pengguna ({{ users|length }})</h2>
     {% if users %}
+    <div class="table-responsive">
         <table class="post-table">
             <thead>
                 <tr>
-                    <th>Username</th>
-                    <th>Email</th>
+                    <th>Pengguna</th>
                     <th>Tulisan</th>
                     <th>Status</th>
-                    <th>Upload Gambar</th>
+                    <th>Gambar</th>
                     <th>Bergabung</th>
                     <th>Aksi</th>
                 </tr>
@@ -52,14 +52,14 @@
                 {% for user in users %}
                 <tr>
                     <td>
-                        <a href="{{ url_for('public.user_blog', username=user['username']) }}">
+                        <a href="{{ url_for('public.user_blog', username=user['username']) }}" style="font-weight:500;">
                             @{{ user['username'] }}
                         </a>
                         {% if user['is_admin'] %}
-                            <span class="badge badge-published">Admin</span>
+                            <span class="badge badge-published" style="font-size:10px; padding:1px 5px;">Admin</span>
                         {% endif %}
+                        <div class="user-meta-email">{{ user['email'] }}</div>
                     </td>
-                    <td>{{ user['email'] }}</td>
                     <td>{{ user['post_count'] }}</td>
                     <td>
                         <span class="badge badge-{{ 'published' if user['is_active'] else 'draft' }}">
@@ -83,7 +83,7 @@
                             </form>
                         {% endif %}
                     </td>
-                    <td>{{ user['created_at'] | tanggal }}</td>
+                    <td><span style="white-space:nowrap;">{{ user['created_at'] | tanggal }}</span></td>
                     <td>
                         <div class="post-actions">
                             <a href="{{ url_for('dashboard.admin_reset_password', user_id=user['id']) }}">Reset Password</a>
@@ -100,6 +100,7 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
     {% else %}
         <p class="empty-state">Belum ada pengguna terdaftar.</p>
     {% endif %}
