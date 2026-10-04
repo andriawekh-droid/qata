@@ -19,6 +19,7 @@
         <div class="form-group">
             <div class="editor-toolbar">
                 <label for="content" style="margin-bottom:0">Isi Halaman (Markdown)</label>
+                {% if can_upload_image %}
                 <div>
                     <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" style="display:none">
                     <button type="button" class="btn-upload" onclick="document.getElementById('imageInput').click()">
@@ -30,9 +31,12 @@
                         <span>Sisipkan Gambar</span>
                     </button>
                 </div>
+                {% endif %}
             </div>
             <textarea id="content" name="content" rows="20" required>{{ page['content'] if page else '' }}</textarea>
+            {% if can_upload_image %}
             <div id="uploadStatus" class="upload-status" style="margin-top:0.4rem;"></div>
+            {% endif %}
         </div>
 
         <div class="editor-footer">
@@ -64,6 +68,7 @@
     {% endif %}
 </div>
 
+{% if can_upload_image %}
 <script>
 const imageInput = document.getElementById('imageInput');
 const contentArea = document.getElementById('content');
@@ -119,4 +124,5 @@ imageInput.addEventListener('change', function() {
     });
 });
 </script>
+{% endif %}
 {% endblock %}

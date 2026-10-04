@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Dukungan & Donasi — Qata{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('dashboard.index') }}" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    Kembali ke Dashboard
+</a>
+
+<div class="donasi-container">
+    <div class="donasi-card">
+        <div class="donasi-header">
+            <div class="donasi-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>
+            <div>
+                <h1>Dukung Qata</h1>
+                <p class="donasi-sub">Kontribusi &amp; Sumbangan Sukarela</p>
+            </div>
+        </div>
+
+        <div class="donasi-badge-wrapper">
+            <span class="donasi-badge">✨ 100% Bebas Iklan &amp; Distraksi</span>
+        </div>
+
+        <p class="donasi-desc">
+            Qata berkomitmen menyediakan ruang menulis yang tenang, bersih, cepat, dan bebas distraksi. Dukungan Anda berapapun nominalnya sangat berarti untuk biaya operasional server, domain, serta kelangsungan pengembangan fitur-fitur baru.
+        </p>
+
+        <div class="qris-frame">
+            <img src="{{ url_for('static', filename='img/qris.jpg') }}" alt="QRIS Dukung Qata — Andri Permana" class="qris-img">
+        </div>
+
+        <div class="merchant-box">
+            <div class="merchant-row">
+                <span class="merchant-label">Merchant</span>
+                <span class="merchant-val">ANDRI PERMANA, DIGITAL &amp; KREATIF</span>
+            </div>
+            <div class="merchant-row">
+                <span class="merchant-label">NMID</span>
+                <div class="merchant-nmid-group">
+                    <span id="nmidText" class="merchant-val mono">ID1025380378675</span>
+                    <button type="button" class="btn-copy" onclick="salinNMID()" title="Salin NMID">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                        </svg>
+                        <span id="copyLabel">Salin</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <p class="donasi-instruction">
+            Pindai QRIS di atas melalui GoPay, OVO, DANA, ShopeePay, BCA, Mandiri, BNI, BRI, atau aplikasi m-Banking apa saja. Bebas masukkan nominal berapapun.
+        </p>
+
+        <div class="donasi-actions">
+            <a href="{{ url_for('static', filename='img/qris.jpg') }}" download="QRIS-Qata-Andri-Permana.jpg" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-1px;margin-right:4px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Unduh QR
+            </a>
+            <a href="{{ url_for('dashboard.index') }}" class="btn">Kembali ke Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function salinNMID() {
+    const text = document.getElementById('nmidText').innerText.trim();
+    navigator.clipboard.writeText(text).then(() => {
+        const lbl = document.getElementById('copyLabel');
+        lbl.innerText = 'Tersalin!';
+        lbl.classList.add('copied');
+        setTimeout(() => {
+            lbl.innerText = 'Salin';
+            lbl.classList.remove('copied');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

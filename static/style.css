@@ -945,7 +945,9 @@ article.post-full h1,
 }
 .btn-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .btn-hapus { color: var(--danger); }
-.post-actions { display: flex; gap: 1rem; align-items: center; }
+td.post-actions { display: table-cell; white-space: nowrap; }
+.post-actions { display: inline-flex; gap: 1rem; align-items: center; white-space: nowrap; }
+.post-actions form { display: inline-flex; margin: 0; }
 .auth-link { margin-top: 1rem; font-size: 0.9rem; color: var(--ink-faint); }
 
 /* System cards */
@@ -1092,5 +1094,200 @@ article.post-full h1,
         flex-direction: column;
         gap: 0.8rem;
     }
+}
+
+/* Dukungan / Donasi (QRIS) */
+.donasi-container {
+    max-width: 480px;
+    margin: 1.5rem auto 3rem;
+}
+
+.donasi-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 2rem 1.8rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.donasi-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.donasi-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #ffe3e3;
+    color: #e03131;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+[data-theme="dark"] .donasi-icon {
+    background: #3b181b;
+    color: #ff8787;
+}
+
+.donasi-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.donasi-header h1 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.donasi-sub {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    margin-top: 0.15rem;
+}
+
+.donasi-badge-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.donasi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--accent-wash);
+    color: var(--accent);
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.donasi-desc {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    text-align: center;
+    margin-bottom: 1.4rem;
+}
+
+.qris-frame {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 1.4rem;
+    background: #ffffff;
+    padding: 0.75rem;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    max-width: 280px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.qris-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 6px;
+}
+
+.merchant-box {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+}
+
+.merchant-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.merchant-label {
+    color: var(--ink-faint);
+    font-size: 0.82rem;
+    flex-shrink: 0;
+}
+
+.merchant-val {
+    color: var(--ink);
+    font-weight: 500;
+    text-align: right;
+    font-size: 0.85rem;
+}
+
+.merchant-val.mono {
+    font-family: ui-monospace, 'Cascadia Code', monospace;
+    letter-spacing: 0.03em;
+}
+
+.merchant-nmid-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-copy:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.btn-copy svg {
+    width: 12px;
+    height: 12px;
+}
+
+.btn-copy .copied {
+    color: var(--success);
+    font-weight: 500;
+}
+
+.donasi-instruction {
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--ink-faint);
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.donasi-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.donasi-actions .btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
 }
 

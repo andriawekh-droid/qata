@@ -18,6 +18,29 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 BATAS_UNDANGAN = 5
 BATAS_PAGE = 3
 SDMFSRD_URL = "https://sdmfsrd.web.id"
+IMAGE_UPLOAD_MODES = ('enabled', 'admin_only', 'disabled')
+
+def get_image_upload_mode(db):
+    row = db.execute(
+        "SELECT value FROM site_settings WHERE key = 'image_upload_mode'"
+    ).fetchone()
+    return row['value'] if row else 'enabled'
+
+def user_can_upload_image(db, user):
+    mode = get_image_upload_mode(db)
+    if mode == 'enabled':
+        return True
+    if mode == 'admin_only' and getattr(user, 'is_authenticated', False) and getattr(user, 'is_admin', False):
+        return True
+    return False
+
+@dashboard_bp.context_processor
+def inject_dashboard_context():
+    db = get_db()
+    can_upload = user_can_upload_image(db, current_user) if getattr(current_user, 'is_authenticated', False) else False
+    return {
+        'can_upload_image': can_upload
+    }
 
 def cek_status_sdmfsrd():
     try:
@@ -274,6 +297,10 @@ MAX_IMAGE_WIDTH = 1200             # Lebar proporsional maksimal artikel
 @dashboard_bp.route('/upload-gambar', methods=['POST'])
 @login_required
 def upload_image():
+    db = get_db()
+    if not user_can_upload_image(db, current_user):
+        return jsonify({'error': 'Fitur unggah gambar saat ini dinonaktifkan atau khusus akun admin.'}), 403
+
     if 'image' not in request.files:
         return jsonify({'error': 'Tidak ada berkas yang dikirim.'}), 400
 
@@ -523,7 +550,8 @@ def admin_index():
     ).fetchall()
 
     return render_template('dashboard/admin.html', users=users,
-                           registration_mode=get_registration_mode(db))
+                           registration_mode=get_registration_mode(db),
+                           image_upload_mode=get_image_upload_mode(db))
 
 @dashboard_bp.route('/admin/registrasi', methods=['POST'])
 @login_required
@@ -545,6 +573,28 @@ def admin_registration_mode():
     )
     db.commit()
     flash('Mode pendaftaran berhasil diperbarui.', 'sukses')
+    return redirect(url_for('dashboard.admin_index'))
+
+@dashboard_bp.route('/admin/upload-gambar', methods=['POST'])
+@login_required
+def admin_image_upload_mode():
+    if not current_user.is_admin:
+        abort(403)
+
+    mode = request.form.get('image_upload_mode', '').strip()
+    if mode not in IMAGE_UPLOAD_MODES:
+        flash('Mode upload gambar tidak valid.', 'error')
+        return redirect(url_for('dashboard.admin_index'))
+
+    db = get_db()
+    db.execute(
+        '''INSERT INTO site_settings (key, value)
+           VALUES ('image_upload_mode', ?)
+           ON CONFLICT(key) DO UPDATE SET value = ?, updated_at = CURRENT_TIMESTAMP''',
+        (mode, mode)
+    )
+    db.commit()
+    flash('Pengaturan upload gambar berhasil diperbarui.', 'sukses')
     return redirect(url_for('dashboard.admin_index'))
 
 @dashboard_bp.route('/admin/reset-password/<int:user_id>', methods=['GET', 'POST'])
@@ -709,3 +759,8 @@ def sistem():
     }
 
     return render_template('dashboard/sistem.html', stats=stats)
+
+@dashboard_bp.route('/donasi')
+@login_required
+def donasi():
+    return render_template('dashboard/donasi.html')

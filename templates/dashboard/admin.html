@@ -33,6 +33,31 @@
     </form>
 </section>
 
+<section class="admin-panel">
+    <h2>Fitur Upload Gambar</h2>
+    <form method="POST" action="{{ url_for('dashboard.admin_image_upload_mode') }}">
+        <label class="radio-option">
+            <input type="radio" name="image_upload_mode" value="enabled" {% if image_upload_mode == 'enabled' %}checked{% endif %}>
+            <span>Aktif untuk Semua Penulis
+                <small>Semua pengguna dapat menyisipkan dan mengunggah gambar saat menulis tulisan atau halaman.</small>
+            </span>
+        </label>
+        <label class="radio-option">
+            <input type="radio" name="image_upload_mode" value="admin_only" {% if image_upload_mode == 'admin_only' %}checked{% endif %}>
+            <span>Khusus Akun Admin
+                <small>Hanya administrator yang dapat mengunggah gambar (berguna untuk pembatasan kuota server atau fitur berbayar).</small>
+            </span>
+        </label>
+        <label class="radio-option">
+            <input type="radio" name="image_upload_mode" value="disabled" {% if image_upload_mode == 'disabled' %}checked{% endif %}>
+            <span>Nonaktifkan
+                <small>Fitur unggah gambar dimatikan untuk semua pengguna.</small>
+            </span>
+        </label>
+        <button type="submit" class="btn" style="margin-top:0.8rem">Simpan</button>
+    </form>
+</section>
+
 <section class="post-list">
     <h2>Daftar Pengguna ({{ users|length }})</h2>
     {% if users %}
@@ -66,15 +91,17 @@
                         </span>
                     </td>
                     <td>{{ user['created_at'] | tanggal }}</td>
-                    <td class="post-actions">
-                        <a href="{{ url_for('dashboard.admin_reset_password', user_id=user['id']) }}">Reset Password</a>
-                        {% if not user['is_admin'] %}
-                        <form method="POST"
-                              action="{{ url_for('dashboard.admin_delete_user', user_id=user['id']) }}"
-                              onsubmit="return confirm('Yakin ingin menghapus @{{ user['username'] }} beserta semua datanya? Tindakan ini tidak dapat dibatalkan.')">
-                            <button type="submit" class="btn-link btn-hapus">Hapus</button>
-                        </form>
-                        {% endif %}
+                    <td>
+                        <div class="post-actions">
+                            <a href="{{ url_for('dashboard.admin_reset_password', user_id=user['id']) }}">Reset Password</a>
+                            {% if not user['is_admin'] %}
+                            <form method="POST"
+                                  action="{{ url_for('dashboard.admin_delete_user', user_id=user['id']) }}"
+                                  onsubmit="return confirm('Yakin ingin menghapus @{{ user['username'] }} beserta semua datanya? Tindakan ini tidak dapat dibatalkan.')">
+                                <button type="submit" class="btn-link btn-hapus">Hapus</button>
+                            </form>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}

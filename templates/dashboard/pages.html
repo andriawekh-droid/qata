@@ -46,16 +46,17 @@
                         {% else %}Bebas{% endif %}
                     </span>
                 </td>
-                <td>{{ page['updated_at'] | tanggal }}</td>
-                <td class="post-actions">
-                    <a href="{{ url_for('dashboard.edit_page', page_id=page['id']) }}">Edit</a>
-                    {% if page['type'] == 'custom' %}
-                    <form method="POST"
-                          action="{{ url_for('dashboard.delete_page', page_id=page['id']) }}"
-                          onsubmit="return confirm('Yakin ingin menghapus halaman ini?')">
-                        <button type="submit" class="btn-link btn-hapus">Hapus</button>
-                    </form>
-                    {% endif %}
+                <td>
+                    <div class="post-actions">
+                        <a href="{{ url_for('dashboard.edit_page', page_id=page['id']) }}">Edit</a>
+                        {% if page['type'] == 'custom' %}
+                        <form method="POST"
+                              action="{{ url_for('dashboard.delete_page', page_id=page['id']) }}"
+                              onsubmit="return confirm('Yakin ingin menghapus halaman ini?')">
+                            <button type="submit" class="btn-link btn-hapus">Hapus</button>
+                        </form>
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
             {% endfor %}

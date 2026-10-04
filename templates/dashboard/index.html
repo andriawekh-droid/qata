@@ -42,12 +42,14 @@
                 <td data-label="Kunjungan">{{ post['view_count'] }}</td>
                 <td data-label="Like">{{ post['like_count'] }}</td>
                 <td data-label="Tanggal">{{ post['created_at'] | tanggal }}</td>
-                <td data-label="Aksi" class="post-actions">
-                    <a href="{{ url_for('dashboard.edit_post', post_id=post['id']) }}">Edit</a>
-                    <form method="POST" action="{{ url_for('dashboard.delete_post', post_id=post['id']) }}"
-                          onsubmit="return confirm('Yakin ingin menghapus tulisan ini?')">
-                        <button type="submit" class="btn-link btn-hapus">Hapus</button>
-                    </form>
+                <td data-label="Aksi">
+                    <div class="post-actions">
+                        <a href="{{ url_for('dashboard.edit_post', post_id=post['id']) }}">Edit</a>
+                        <form method="POST" action="{{ url_for('dashboard.delete_post', post_id=post['id']) }}"
+                              onsubmit="return confirm('Yakin ingin menghapus tulisan ini?')">
+                            <button type="submit" class="btn-link btn-hapus">Hapus</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -87,6 +89,8 @@
             <a href="{{ url_for('dashboard.pages') }}">Halaman</a>
             <span class="menu-divider">&middot;</span>
             <a href="{{ url_for('dashboard.invite_codes') }}">Kode Undangan</a>
+            <span class="menu-divider">&middot;</span>
+            <a href="{{ url_for('dashboard.donasi') }}">Dukungan & Donasi</a>
             <span class="menu-divider">&middot;</span>
             <a href="{{ url_for('public.user_blog', username=current_user.username) }}" target="_blank">Lihat Blog Saya &rarr;</a>
         </div>
