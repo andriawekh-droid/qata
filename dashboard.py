@@ -1,9 +1,12 @@
+import os
+import io
 import re
 import hashlib
 import secrets
 import bcrypt
 import mistune
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, make_response
+from PIL import Image, ImageOps
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, make_response, jsonify, current_app
 from flask_login import login_required, current_user
 from database import get_db
 from auth import get_registration_mode, MODE_VALID, PASSWORD_MIN, PASSWORD_MAX_BYTES
@@ -263,6 +266,75 @@ def change_password():
         flash(error, 'error')
 
     return render_template('dashboard/password.html')
+
+ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
+MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2 MB limit per file
+MAX_IMAGE_WIDTH = 1200             # Lebar proporsional maksimal artikel
+
+@dashboard_bp.route('/upload-gambar', methods=['POST'])
+@login_required
+def upload_image():
+    if 'image' not in request.files:
+        return jsonify({'error': 'Tidak ada berkas yang dikirim.'}), 400
+
+    file = request.files['image']
+    if not file or not file.filename:
+        return jsonify({'error': 'Berkas tidak boleh kosong.'}), 400
+
+    # Cek ekstensi
+    _, ext = os.path.splitext(file.filename.lower())
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({'error': 'Format berkas harus JPG, PNG, atau WebP.'}), 400
+
+    # Baca byte ke memory buffer untuk validasi dan kompresi
+    file_bytes = file.read()
+    if len(file_bytes) > MAX_UPLOAD_SIZE:
+        return jsonify({'error': 'Ukuran berkas maksimal 2 MB.'}), 400
+
+    try:
+        # Buka gambar menggunakan Pillow
+        img = Image.open(io.BytesIO(file_bytes))
+        # Tangani orientasi rotasi otomatis kamera HP (EXIF orientation)
+        img = ImageOps.exif_transpose(img)
+
+        # Ubah RGBA/P ke RGB jika perlu (untuk gambar transparan/alpha tetap aman disimpan webp)
+        if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+            img_format = 'WEBP'
+        else:
+            img = img.convert('RGB')
+            img_format = 'WEBP'
+
+        # Resize jika lebar lebih dari MAX_IMAGE_WIDTH (1200px)
+        width, height = img.size
+        if width > MAX_IMAGE_WIDTH:
+            new_height = round((MAX_IMAGE_WIDTH / width) * height)
+            img = img.resize((MAX_IMAGE_WIDTH, new_height), Image.Resampling.LANCZOS)
+
+        # Siapkan folder upload user: static/uploads/<username>/
+        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', current_user.username)
+        os.makedirs(upload_folder, exist_ok=True)
+
+        # Buat nama file unik: YYYYMMDD-xxxxxx.webp
+        t_prefix = dt.now().strftime('%Y%m%d')
+        random_suffix = secrets.token_hex(4)
+        filename = f"{t_prefix}-{random_suffix}.webp"
+        save_path = os.path.join(upload_folder, filename)
+
+        # Simpan dalam format WebP terkompresi (kualitas 82 sangat jernih dan ukuran < 100 KB)
+        img.save(save_path, 'WEBP', quality=82, method=4)
+
+        # Siapkan URL hasil upload
+        image_url = url_for('static', filename=f'uploads/{current_user.username}/{filename}', _external=True)
+        markdown_snippet = f"![Ilustrasi]({image_url})"
+
+        return jsonify({
+            'success': True,
+            'url': image_url,
+            'markdown': markdown_snippet
+        })
+
+    except Exception as e:
+        return jsonify({'error': 'Gagal memproses gambar. Pastikan format berkas valid.'}), 400
 
 @dashboard_bp.route('/kode-undangan')
 @login_required

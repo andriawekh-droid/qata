@@ -4,3 +4,4 @@ bcrypt
 Mistune
 gunicorn
 psutil
+Pillow

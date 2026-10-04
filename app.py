@@ -10,6 +10,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config.from_mapping(
     SECRET_KEY=os.environ.get('SECRET_KEY', 'dev-key-lokal'),
     DATABASE=app.instance_path + '/qata.db',
+    MAX_CONTENT_LENGTH=3 * 1024 * 1024,  # Maksimal request payload 3 MB
 )
 
 @app.template_filter('tanggal')

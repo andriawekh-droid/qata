@@ -48,3 +48,6 @@ Thumbs.db
 # Mockup & Design References
 doc/*.html
 
+# User Uploads
+static/uploads/
+

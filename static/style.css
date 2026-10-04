@@ -527,6 +527,15 @@ article.post-full h1,
     margin-bottom: 0.4rem;
 }
 
+.post-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 1.8rem auto;
+    display: block;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
 /* Like Section */
 .post-footer {
     margin-top: 42px;
@@ -815,6 +824,45 @@ article.post-full h1,
 .editor-actions {
     display: flex;
     gap: 0.8rem;
+}
+
+/* Image Uploader Bar di Editor */
+.editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.btn-upload {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper-raised);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-upload:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.btn-upload svg {
+    width: 14px;
+    height: 14px;
+}
+
+.upload-status {
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    transition: color 0.15s ease;
 }
 
 .auth-container {
