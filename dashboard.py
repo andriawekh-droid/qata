@@ -8,7 +8,7 @@ import mistune
 from PIL import Image, ImageOps
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, make_response, jsonify, current_app
 from flask_login import login_required, current_user
-from database import get_db
+from database import get_db, update_sitemap
 from auth import get_registration_mode, MODE_VALID, PASSWORD_MIN, PASSWORD_MAX_BYTES
 import requests
 from datetime import datetime as dt
@@ -145,6 +145,7 @@ def new_post():
                 (current_user.id, title, slug, content, content_html, reading_time, status)
             )
             db.commit()
+            update_sitemap()
             flash('Tulisan berhasil disimpan.', 'sukses')
             return redirect(url_for('dashboard.index'))
 
@@ -187,6 +188,7 @@ def edit_post(post_id):
                 (title, content, content_html, reading_time, status, post_id, current_user.id)
             )
             db.commit()
+            update_sitemap()
             flash('Tulisan berhasil diperbarui.', 'sukses')
             return redirect(url_for('dashboard.index'))
 
@@ -211,6 +213,7 @@ def delete_post(post_id):
     db.execute('DELETE FROM page_views WHERE post_id = ?', (post_id,))
     db.execute('DELETE FROM posts WHERE id = ?', (post_id,))
     db.commit()
+    update_sitemap()
     flash('Tulisan berhasil dihapus.', 'sukses')
     return redirect(url_for('dashboard.index'))
 
@@ -450,6 +453,7 @@ def edit_page(page_id):
                 (title, content, content_html, page_id, current_user.id)
             )
             db.commit()
+            update_sitemap()
             flash('Halaman berhasil diperbarui.', 'sukses')
             return redirect(url_for('dashboard.pages'))
 
@@ -497,6 +501,7 @@ def new_page():
                 (current_user.id, slug, title, content, content_html)
             )
             db.commit()
+            update_sitemap()
             flash('Halaman berhasil dibuat.', 'sukses')
             return redirect(url_for('dashboard.pages'))
 
@@ -523,6 +528,7 @@ def delete_page(page_id):
 
     db.execute('DELETE FROM pages WHERE id = ?', (page_id,))
     db.commit()
+    update_sitemap()
     flash('Halaman berhasil dihapus.', 'sukses')
     return redirect(url_for('dashboard.pages'))
 

@@ -5,3 +5,4 @@ Mistune
 gunicorn
 psutil
 Pillow
+requests

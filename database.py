@@ -133,3 +133,68 @@ def init_db():
 
 def init_app(app):
     app.teardown_appcontext(close_db)
+
+def update_sitemap(app=None):
+    from flask import current_app
+    import os
+    try:
+        app_obj = app or current_app._get_current_object()
+    except RuntimeError:
+        return
+
+    db = get_db()
+    base_url = 'https://qata.my.id'
+    xml_lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    ]
+
+    # Beranda utama
+    xml_lines.append(f'  <url><loc>{base_url}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>')
+
+    # Blog & arsip pengguna aktif
+    users = db.execute('SELECT username FROM users WHERE is_active = 1').fetchall()
+    for u in users:
+        uname = u['username']
+        xml_lines.append(f'  <url><loc>{base_url}/{uname}</loc><changefreq>daily</changefreq><priority>0.8</priority></url>')
+        xml_lines.append(f'  <url><loc>{base_url}/{uname}/arsip</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>')
+        xml_lines.append(f'  <url><loc>{base_url}/{uname}/tentang</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>')
+
+    # Tulisan yang terbit
+    posts = db.execute('''
+        SELECT p.slug, p.updated_at, p.created_at, u.username
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.status = 'published' AND u.is_active = 1
+        ORDER BY p.created_at DESC
+    ''').fetchall()
+    for p in posts:
+        uname = p['username']
+        slug = p['slug']
+        tgl = str(p['updated_at'] or p['created_at'] or '')[:10]
+        lastmod = f'<lastmod>{tgl}</lastmod>' if tgl else ''
+        xml_lines.append(f'  <url><loc>{base_url}/{uname}/{slug}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.9</priority></url>')
+
+    # Halaman custom
+    pages = db.execute('''
+        SELECT pg.slug, pg.updated_at, u.username
+        FROM pages pg
+        JOIN users u ON pg.user_id = u.id
+        WHERE pg.type = 'custom' AND u.is_active = 1
+    ''').fetchall()
+    for pg in pages:
+        uname = pg['username']
+        slug = pg['slug']
+        tgl = str(pg['updated_at'] or '')[:10]
+        lastmod = f'<lastmod>{tgl}</lastmod>' if tgl else ''
+        xml_lines.append(f'  <url><loc>{base_url}/{uname}/{slug}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.6</priority></url>')
+
+    xml_lines.append('</urlset>\n')
+    xml_content = '\n'.join(xml_lines)
+
+    sitemap_path = os.path.join(app_obj.root_path, 'static', 'sitemap.xml')
+    try:
+        with open(sitemap_path, 'w', encoding='utf-8') as f:
+            f.write(xml_content)
+    except Exception as e:
+        app_obj.logger.warning(f"Gagal memperbarui sitemap.xml: {e}")

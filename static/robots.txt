@@ -1,12 +1,8 @@
 User-agent: *
-Allow: /$
-Allow: /awekh$
+Allow: /
 Disallow: /dashboard
-Disallow: /editor
-Disallow: /new
-Disallow: /login
-Disallow: /register
+Disallow: /masuk
+Disallow: /daftar
 Disallow: /admin
-Disallow: /settings
 
 Sitemap: https://qata.my.id/sitemap.xml

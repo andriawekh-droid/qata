@@ -86,9 +86,10 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(public_bp)
 
-from database import init_db
+from database import init_db, update_sitemap
 with app.app_context():
     init_db()
+    update_sitemap(app)
 
 if __name__ == '__main__':
     app.run(debug=True)
