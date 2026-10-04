@@ -165,6 +165,11 @@
     padding: 0;
 }
 
+img, picture, video, canvas {
+    max-width: 100%;
+    height: auto;
+}
+
 body {
     background: var(--paper);
     color: var(--ink);
@@ -474,6 +479,9 @@ article.post-full h1,
     font-size: 1.15rem;
     line-height: 1.82;
     color: var(--ink);
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .post-content p,
@@ -527,7 +535,8 @@ article.post-full h1,
     margin-bottom: 0.4rem;
 }
 
-.post-content img {
+.post-content img,
+.article-body img {
     max-width: 100%;
     height: auto;
     border-radius: 6px;
