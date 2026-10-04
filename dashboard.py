@@ -228,6 +228,42 @@ def profile():
 
     return render_template('dashboard/profil.html')
 
+@dashboard_bp.route('/password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        db = get_db()
+        row = db.execute('SELECT password FROM users WHERE id = ?', (current_user.id,)).fetchone()
+        error = None
+
+        if not current_password or not new_password or not confirm_password:
+            error = 'Semua kolom wajib diisi.'
+        elif not bcrypt.checkpw(current_password.encode('utf-8'), row['password'].encode('utf-8')):
+            error = 'Password saat ini salah.'
+        elif new_password != confirm_password:
+            error = 'Konfirmasi password baru tidak cocok.'
+        elif len(new_password) < PASSWORD_MIN:
+            error = f'Password baru minimal {PASSWORD_MIN} karakter.'
+        elif len(new_password.encode('utf-8')) > PASSWORD_MAX_BYTES:
+            error = 'Password baru terlalu panjang (maksimal 72 byte).'
+        elif current_password == new_password:
+            error = 'Password baru tidak boleh sama dengan password saat ini.'
+
+        if error is None:
+            hashed = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+            db.execute('UPDATE users SET password = ? WHERE id = ?', (hashed.decode('utf-8'), current_user.id))
+            db.commit()
+            flash('Password Anda berhasil diubah.', 'sukses')
+            return redirect(url_for('dashboard.profile'))
+
+        flash(error, 'error')
+
+    return render_template('dashboard/password.html')
+
 @dashboard_bp.route('/kode-undangan')
 @login_required
 def invite_codes():

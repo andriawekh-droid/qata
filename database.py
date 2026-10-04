@@ -106,6 +106,20 @@ def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_register_attempts_ip
             ON register_attempts (ip_hash, created_at);
+
+        CREATE TABLE IF NOT EXISTS login_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ip_hash TEXT NOT NULL,
+            username TEXT,
+            success INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_login_attempts_ip
+            ON login_attempts (ip_hash, created_at);
+
+        CREATE INDEX IF NOT EXISTS idx_login_attempts_user
+            ON login_attempts (username, created_at);
     ''')
     db.commit()
 

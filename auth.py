@@ -79,6 +79,10 @@ LIMIT_SUKSES_PER_JAM = 3
 LIMIT_PERCOBAAN_PER_JAM = 15
 MIN_DETIK_ISI_FORM = 2
 
+# Rate limiting login (mencegah brute-force password)
+MAX_LOGIN_GAGAL_USER = 5     # per 15 menit per username
+MAX_LOGIN_GAGAL_IP = 20      # per 15 menit per IP
+
 def get_registration_mode(db):
     """Mode pendaftaran dari site_settings. Default invite_only (aman)."""
     row = db.execute(
@@ -101,6 +105,32 @@ def _terlalu_banyak_percobaan(db, ip_hash):
         (ip_hash,)
     ).fetchone()
     return row['ok'] >= LIMIT_SUKSES_PER_JAM or row['total'] >= LIMIT_PERCOBAAN_PER_JAM
+
+def _terlalu_banyak_gagal_login(db, ip_hash, username):
+    db.execute(
+        "DELETE FROM login_attempts WHERE created_at < datetime('now', '-1 day')"
+    )
+    # Cek batas gagal per IP dalam 15 menit terakhir
+    ip_fails = db.execute(
+        '''SELECT COUNT(*) FROM login_attempts
+           WHERE ip_hash = ? AND success = 0 AND created_at >= datetime('now', '-15 minutes')''',
+        (ip_hash,)
+    ).fetchone()[0]
+
+    if ip_fails >= MAX_LOGIN_GAGAL_IP:
+        return True
+
+    # Cek batas gagal per username dalam 15 menit terakhir
+    if username:
+        user_fails = db.execute(
+            '''SELECT COUNT(*) FROM login_attempts
+               WHERE username = ? AND success = 0 AND created_at >= datetime('now', '-15 minutes')''',
+            (username,)
+        ).fetchone()[0]
+        if user_fails >= MAX_LOGIN_GAGAL_USER:
+            return True
+
+    return False
 
 def _buat_tantangan():
     a, b = random.randint(2, 9), random.randint(2, 9)
@@ -229,10 +259,18 @@ def register():
 @auth_bp.route('/masuk', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username'].strip().lower()
-        password = request.form['password']
+        username = request.form.get('username', '').strip().lower()
+        password = request.form.get('password', '')
 
         db = get_db()
+        ip_hash = _ip_hash()
+
+        # Cek rate limit login
+        if _terlalu_banyak_gagal_login(db, ip_hash, username):
+            db.commit()
+            flash('Terlalu banyak percobaan login yang gagal. Silakan tunggu 15 menit sebelum mencoba lagi.', 'error')
+            return render_template('auth/masuk.html', mode=get_registration_mode(db), username=username)
+
         row = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
         error = None
 
@@ -244,6 +282,13 @@ def login():
             error = 'Username atau password salah.'
 
         if error is None:
+            # Catat login sukses
+            db.execute(
+                'INSERT INTO login_attempts (ip_hash, username, success) VALUES (?, ?, 1)',
+                (ip_hash, username)
+            )
+            db.commit()
+
             user = User(
                 row['id'], row['username'], row['email'],
                 row['display_name'], row['bio'], row['website'],
@@ -253,9 +298,17 @@ def login():
             login_user(user)
             return redirect(url_for('dashboard.index'))
 
-        flash(error, 'error')
+        # Catat login gagal
+        db.execute(
+            'INSERT INTO login_attempts (ip_hash, username, success) VALUES (?, ?, 0)',
+            (ip_hash, username)
+        )
+        db.commit()
 
-    return render_template('auth/masuk.html', mode=get_registration_mode(get_db()))
+        flash(error, 'error')
+        return render_template('auth/masuk.html', mode=get_registration_mode(db), username=username)
+
+    return render_template('auth/masuk.html', mode=get_registration_mode(get_db()), username='')
 
 @auth_bp.route('/keluar')
 @login_required
