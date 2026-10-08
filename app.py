@@ -13,6 +13,26 @@ app.config.from_mapping(
     MAX_CONTENT_LENGTH=3 * 1024 * 1024,  # Maksimal request payload 3 MB
 )
 
+@app.after_request
+def set_security_headers(response):
+    response.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
+    response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    response.headers.setdefault('X-XSS-Protection', '1; mode=block')
+    response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    response.headers.setdefault(
+        'Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+    # CSP: 'unsafe-inline' dipertahankan untuk script/style karena template
+    # kemungkinan memakai inline; perketat dengan nonce bila sudah dimigrasi.
+    response.headers.setdefault(
+        'Content-Security-Policy',
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https:; "
+        "style-src 'self' 'unsafe-inline' https:; "
+        "img-src 'self' data: https:; "
+        "font-src 'self' data: https:; "
+        "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'")
+    return response
+
 @app.template_filter('tanggal')
 def format_tanggal(value):
     if value is None:
