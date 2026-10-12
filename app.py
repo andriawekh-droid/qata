@@ -7,10 +7,13 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 app = Flask(__name__, instance_relative_config=True)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
+_secret_key = os.environ.get('SECRET_KEY')
+if not _secret_key:
+    raise RuntimeError('Environment variable SECRET_KEY belum diset. Aplikasi tidak dijalankan.')
+
 app.config.from_mapping(
-    SECRET_KEY=os.environ.get('SECRET_KEY', 'dev-key-lokal'),
+    SECRET_KEY=_secret_key,
     DATABASE=app.instance_path + '/qata.db',
-    MAX_CONTENT_LENGTH=3 * 1024 * 1024,  # Maksimal request payload 3 MB
 )
 
 @app.after_request
