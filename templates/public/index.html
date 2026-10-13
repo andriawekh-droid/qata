@@ -6,6 +6,7 @@
 <header class="site-header">
     <a href="{{ url_for('public.index') }}" class="wordmark">Qata</a>
     <div class="header-links">
+        <a href="{{ url_for('public.explore') }}">Jelajahi</a>
         {% if current_user.is_authenticated %}
         <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
         {% else %}
@@ -90,5 +91,9 @@
         </div>
     </div>
     {% endif %}
+</div>
+
+<div class="landing-explore-cta">
+    <a href="{{ url_for('public.explore') }}" class="btn btn-secondary">Jelajahi tulisan lainnya &rarr;</a>
 </div>
 {% endblock %}

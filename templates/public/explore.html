@@ -1,0 +1,115 @@
+{% extends 'landing.html' %}
+
+{% block title %}Jelajahi Tulisan — Qata{% endblock %}
+
+{% block content %}
+<header class="site-header">
+    <a href="{{ url_for('public.index') }}" class="wordmark">Qata</a>
+    <div class="header-links">
+        <a href="{{ url_for('public.index') }}">Beranda</a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}">Masuk</a>
+        <a href="{{ url_for('auth.register') }}">Daftar</a>
+        {% endif %}
+    </div>
+</header>
+
+<div class="explore-hero">
+    <div class="explore-header-row">
+        <div>
+            <h1>Jelajahi</h1>
+            <p class="explore-desc">Daftar tulisan acak dan inspiratif dari para penulis di Qata.</p>
+        </div>
+        <div class="explore-actions">
+            <a href="{{ url_for('public.random_post') }}" class="btn btn-secondary" title="Buka satu tulisan acak langsung">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;">
+                    <path d="M16 3h5v5"/>
+                    <path d="M4 20L21 3"/>
+                    <path d="M21 16v5h-5"/>
+                    <path d="M15 15l6 6"/>
+                    <path d="M4 4l5 5"/>
+                </svg>
+                Baca Tulisan Acak &rarr;
+            </a>
+        </div>
+    </div>
+
+    <div class="explore-tabs">
+        <a href="{{ url_for('public.explore', filter='acak') }}" class="tab-item {% if current_filter == 'acak' %}active{% endif %}">
+            Acak
+        </a>
+        <a href="{{ url_for('public.explore', filter='terbaru') }}" class="tab-item {% if current_filter == 'terbaru' %}active{% endif %}">
+            Terbaru
+        </a>
+        <a href="{{ url_for('public.explore', filter='populer') }}" class="tab-item {% if current_filter == 'populer' %}active{% endif %}">
+            Populer
+        </a>
+
+        {% if current_filter == 'acak' %}
+        <a href="{{ url_for('public.explore', filter='acak') }}" class="tab-reload" title="Kocok ulang daftar tulisan acak">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;vertical-align:-2px;margin-right:3px;">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            Acak Ulang
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="post-list explore-list">
+    {% if posts %}
+        {% for post in posts %}
+        <article class="post-row explore-post-card">
+            <h3>
+                <a href="{{ url_for('public.post_detail', username=post['username'], slug=post['slug']) }}">
+                    {{ post['title'] }}
+                </a>
+            </h3>
+            {% if post['excerpt'] %}
+            <p class="explore-excerpt">{{ post['excerpt'] }}</p>
+            {% endif %}
+            <div class="meta">
+                <a href="{{ url_for('public.user_blog', username=post['username']) }}" class="author-link">
+                    @{{ post['username'] }}
+                    {% if post['display_name'] and post['display_name'] != post['username'] %}
+                        <span class="author-display">({{ post['display_name'] }})</span>
+                    {% endif %}
+                </a>
+                <span class="dot">&middot;</span>
+                <span>{{ post['created_at'] | waktu_relatif }}</span>
+                <span class="dot">&middot;</span>
+                <span>{{ post['reading_time'] }} mnt baca</span>
+                {% if post['like_count'] > 0 %}
+                <span class="dot">&middot;</span>
+                <span class="heart-stat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.6-9.4-9A5.1 5.1 0 0 1 12 6a5.1 5.1 0 0 1 9.4 5c-2.4 4.4-9.4 9-9.4 9Z"/></svg>
+                    {{ post['like_count'] }}
+                </span>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="{{ url_for('public.explore', filter=current_filter, page=page-1) }}" class="btn-page">&larr; Sebelumnya</a>
+            {% else %}
+                <span class="btn-page disabled">&larr; Sebelumnya</span>
+            {% endif %}
+            <span class="page-info">Halaman {{ page }} dari {{ total_pages }}</span>
+            {% if page < total_pages %}
+                <a href="{{ url_for('public.explore', filter=current_filter, page=page+1) }}" class="btn-page">Berikutnya &rarr;</a>
+            {% else %}
+                <span class="btn-page disabled">Berikutnya &rarr;</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% else %}
+        <p class="empty-state">Belum ada tulisan publik untuk dijelajahi saat ini.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -46,6 +46,7 @@
                         {% else %}Bebas{% endif %}
                     </span>
                 </td>
+                <td>{{ page['updated_at'] | tanggal }}</td>
                 <td>
                     <div class="post-actions">
                         <a href="{{ url_for('dashboard.edit_page', page_id=page['id']) }}">Edit</a>
@@ -68,6 +69,6 @@
 </section>
 
 <section class="dashboard-nav">
-    <a href="{{ url_for('dashboard.index') }}">Kembali ke Dashboard</a>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">&larr; Kembali ke Dashboard</a>
 </section>
 {% endblock %}

@@ -149,8 +149,9 @@ def update_sitemap(app=None):
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
     ]
 
-    # Beranda utama
+    # Beranda utama & Jelajahi
     xml_lines.append(f'  <url><loc>{base_url}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>')
+    xml_lines.append(f'  <url><loc>{base_url}/jelajahi</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>')
 
     # Blog & arsip pengguna aktif
     users = db.execute('SELECT username FROM users WHERE is_active = 1').fetchall()

@@ -44,7 +44,8 @@
 </form>
 
 <section class="dashboard-nav">
-    <a href="{{ url_for('dashboard.admin_index') }}">Panel Admin</a>
-    <a href="{{ url_for('dashboard.sistem') }}">Status Sistem</a>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">&larr; Kembali ke Dashboard</a>
+    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">Panel Admin</a>
+    <a href="{{ url_for('dashboard.sistem') }}" class="btn btn-secondary">Status Sistem</a>
 </section>
 {% endblock %}

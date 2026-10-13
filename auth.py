@@ -77,6 +77,7 @@ USERNAME_RESERVED = {
     'administrator', 'qata', 'api', 'www', 'root', 'support', 'help',
     'robots', 'sitemap', 'favicon', 'login', 'logout', 'register',
     'tulisan', 'tentang', 'page', 'rss', 'sistem', 'system',
+    'jelajahi', 'explore', 'discover',
 }
 
 PASSWORD_MIN = 8

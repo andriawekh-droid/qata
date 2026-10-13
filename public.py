@@ -1,11 +1,33 @@
 import hashlib
+import re
 import mistune
-from flask import Blueprint, render_template, request, abort, jsonify, Response
+from flask import Blueprint, render_template, request, abort, jsonify, Response, redirect, url_for, flash
 from database import get_db
 
 def render_markdown(content):
     markdown = mistune.create_markdown(plugins=['strikethrough', 'table'])
     return markdown(content)
+
+def extract_excerpt(text, max_len=140):
+    if not text:
+        return ''
+    # Hapus blok kode, inline code, dan gambar markdown
+    text = re.sub(r'```[\s\S]*?```', '', text)
+    text = re.sub(r'`[^`]*`', '', text)
+    text = re.sub(r'!\[.*?\]\(.*?\)', '', text)
+    # Ganti tautan markdown dengan teks jangkar
+    text = re.sub(r'\[(.*?)\]\(.*?\)', r'\1', text)
+    # Hapus penanda judul, blockquote, bullet list
+    text = re.sub(r'^[#>\-*\d+\.]+\s+', '', text, flags=re.MULTILINE)
+    # Hapus karakter pemformatan
+    text = re.sub(r'[*_~=]', '', text)
+    # Hapus tag HTML jika ada
+    text = re.sub(r'<[^>]+>', '', text)
+    # Rapikan spasi
+    text = ' '.join(text.split())
+    if len(text) > max_len:
+        return text[:max_len].rsplit(' ', 1)[0] + '...'
+    return text
 
 public_bp = Blueprint('public', __name__)
 
@@ -60,6 +82,107 @@ def index():
                            recent_posts=recent_posts,
                            popular_posts=popular_posts,
                            settings=settings)
+
+@public_bp.route('/jelajahi')
+@public_bp.route('/discover')
+@public_bp.route('/explore')
+def explore():
+    db = get_db()
+    current_filter = request.args.get('filter', 'acak').lower()
+    if current_filter not in ('acak', 'terbaru', 'populer'):
+        current_filter = 'acak'
+
+    page = request.args.get('page', 1, type=int)
+    if page < 1:
+        page = 1
+    per_page = 15
+
+    base_from = '''
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
+        LEFT JOIN likes l ON p.id = l.post_id
+        WHERE p.status = 'published' AND u.is_active = 1
+        GROUP BY p.id
+    '''
+
+    total_pages = 1
+    if current_filter == 'acak':
+        # Postingan acak dari para penulis di Qata
+        posts = db.execute(
+            f'''SELECT p.*, u.username, u.display_name,
+                      COUNT(DISTINCT l.id) as like_count
+               {base_from}
+               ORDER BY RANDOM()
+               LIMIT 20'''
+        ).fetchall()
+    elif current_filter == 'terbaru':
+        count_row = db.execute(
+            f'''SELECT COUNT(*) as total FROM (
+                SELECT p.id {base_from}
+            )'''
+        ).fetchone()
+        total_items = count_row['total'] if count_row else 0
+        total_pages = max(1, (total_items + per_page - 1) // per_page)
+        offset = (page - 1) * per_page
+
+        posts = db.execute(
+            f'''SELECT p.*, u.username, u.display_name,
+                      COUNT(DISTINCT l.id) as like_count
+               {base_from}
+               ORDER BY p.created_at DESC
+               LIMIT ? OFFSET ?''',
+            (per_page, offset)
+        ).fetchall()
+    else:  # populer
+        count_row = db.execute(
+            f'''SELECT COUNT(*) as total FROM (
+                SELECT p.id {base_from}
+            )'''
+        ).fetchone()
+        total_items = count_row['total'] if count_row else 0
+        total_pages = max(1, (total_items + per_page - 1) // per_page)
+        offset = (page - 1) * per_page
+
+        posts = db.execute(
+            f'''SELECT p.*, u.username, u.display_name,
+                      COUNT(DISTINCT l.id) as like_count
+               {base_from}
+               ORDER BY like_count DESC, p.created_at DESC
+               LIMIT ? OFFSET ?''',
+            (per_page, offset)
+        ).fetchall()
+
+    posts_data = []
+    for p in posts:
+        item = dict(p)
+        item['excerpt'] = extract_excerpt(p['content'] if 'content' in p.keys() else '')
+        posts_data.append(item)
+
+    return render_template(
+        'public/explore.html',
+        posts=posts_data,
+        current_filter=current_filter,
+        page=page,
+        total_pages=total_pages
+    )
+
+@public_bp.route('/jelajahi/acak')
+@public_bp.route('/discover/random')
+def random_post():
+    db = get_db()
+    row = db.execute(
+        '''SELECT p.slug, u.username
+           FROM posts p
+           JOIN users u ON p.user_id = u.id
+           WHERE p.status = 'published' AND u.is_active = 1
+           ORDER BY RANDOM()
+           LIMIT 1'''
+    ).fetchone()
+
+    if row:
+        return redirect(url_for('public.post_detail', username=row['username'], slug=row['slug']))
+    flash('Belum ada tulisan yang diterbitkan.', 'info')
+    return redirect(url_for('public.explore'))
 
 @public_bp.route('/<username>')
 def user_blog(username):
