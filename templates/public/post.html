@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ post['title'] }} — {{ user['display_name'] }}{% endblock %}
+{% block title %}{% if is_preview %}[Pratinjau] {% endif %}{{ post['title'] }} — {{ user['display_name'] }}{% endblock %}
 
 {% block content %}
 <header class="site-header">
@@ -10,10 +10,19 @@
     </div>
 </header>
 
+{% if is_preview %}
+<div class="preview-banner" style="background: var(--paper-raised); border: 1px dashed var(--line); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; font-size: 0.9rem;">
+    <div>
+        <strong>Mode Pratinjau</strong> &mdash; Tulisan ini belum tentu tersimpan/terbit.
+    </div>
+    <button type="button" onclick="window.close()" class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; white-space: nowrap;">Tutup Pratinjau</button>
+</div>
+{% else %}
 <a href="{{ url_for('public.user_blog', username=user['username']) }}" class="back-link">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
     Kembali ke blog {{ user['display_name'] }}
 </a>
+{% endif %}
 
 <article class="post-full">
     <header class="post-header">
@@ -23,6 +32,10 @@
             <span>{{ post['created_at'] | tanggal }}</span>
             <span class="dot">&middot;</span>
             <span>{{ post['reading_time'] }} mnt baca</span>
+            {% if is_preview %}
+            <span class="dot">&middot;</span>
+            <span style="color: var(--accent); font-weight: 500;">Pratinjau Draf</span>
+            {% endif %}
         </div>
         <h1>{{ post['title'] }}</h1>
     </header>
@@ -32,6 +45,7 @@
     </div>
 
     <div class="post-footer">
+        {% if not is_preview %}
         <button type="button" 
                 class="like-btn {% if sudah_like %}liked{% endif %}"
                 data-post-id="{{ post['id'] }}"
@@ -44,9 +58,15 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             Kembali ke blog {{ user['display_name'] }}
         </a>
+        {% else %}
+        <button type="button" onclick="window.close()" class="btn btn-secondary" style="font-size: 0.85rem;">
+            Tutup Pratinjau
+        </button>
+        {% endif %}
     </div>
 </article>
 
+{% if not is_preview %}
 <script>
 function toggleLike(btn) {
     const postId = btn.dataset.postId;
@@ -68,4 +88,5 @@ function toggleLike(btn) {
         });
 }
 </script>
+{% endif %}
 {% endblock %}

@@ -18,7 +18,21 @@
 
         <div class="form-group">
             <div class="editor-toolbar">
-                <label for="content" style="margin-bottom:0">Isi Halaman (Markdown)</label>
+                <div class="editor-toolbar-left">
+                    <label for="content" style="margin-bottom:0">Isi Halaman (Markdown)</label>
+                    <a href="https://qata.my.id/awekh/panduan-menulis-di-qata-markdown" 
+                       target="_blank" 
+                       rel="noopener noreferrer" 
+                       class="markdown-guide-link"
+                       title="Buka panduan menulis Markdown di Qata">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span>Panduan Markdown ↗</span>
+                    </a>
+                </div>
                 {% if can_upload_image %}
                 <div>
                     <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" style="display:none">

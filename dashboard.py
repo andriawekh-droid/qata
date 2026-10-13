@@ -139,15 +139,20 @@ def new_post():
 
             content_html = render_markdown(content)
             reading_time = hitung_waktu_baca(content)
-            db.execute(
+            cursor = db.execute(
                 '''INSERT INTO posts (user_id, title, slug, content, content_html, reading_time, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?)''',
                 (current_user.id, title, slug, content, content_html, reading_time, status)
             )
+            new_post_id = cursor.lastrowid
             db.commit()
             update_sitemap()
-            flash('Tulisan berhasil disimpan.', 'sukses')
-            return redirect(url_for('dashboard.index'))
+            if status == 'draft':
+                flash('Draf berhasil disimpan.', 'sukses')
+                return redirect(url_for('dashboard.edit_post', post_id=new_post_id))
+            else:
+                flash('Tulisan berhasil diterbitkan.', 'sukses')
+                return redirect(url_for('dashboard.index'))
 
         flash(error, 'error')
 
@@ -189,12 +194,50 @@ def edit_post(post_id):
             )
             db.commit()
             update_sitemap()
-            flash('Tulisan berhasil diperbarui.', 'sukses')
-            return redirect(url_for('dashboard.index'))
+            if status == 'draft':
+                flash('Draf berhasil disimpan.', 'sukses')
+                return redirect(url_for('dashboard.edit_post', post_id=post_id))
+            else:
+                flash('Tulisan berhasil diperbarui.', 'sukses')
+                return redirect(url_for('dashboard.index'))
 
         flash(error, 'error')
 
     return render_template('dashboard/editor.html', post=post)
+
+@dashboard_bp.route('/tulisan/preview', methods=['POST'])
+@login_required
+def preview_post():
+    title = request.form.get('title', '').strip() or 'Tanpa Judul'
+    content = request.form.get('content', '')
+    content_html = render_markdown(content) if content.strip() else '<p><em>(Belum ada isi tulisan)</em></p>'
+    reading_time = hitung_waktu_baca(content)
+
+    db = get_db()
+    user = db.execute('SELECT * FROM users WHERE id = ?', (current_user.id,)).fetchone()
+    custom_pages = db.execute(
+        'SELECT * FROM pages WHERE user_id = ? AND type = ?',
+        (current_user.id, 'custom')
+    ).fetchall()
+
+    dummy_post = {
+        'id': 0,
+        'title': title,
+        'content_html': content_html,
+        'reading_time': reading_time,
+        'created_at': dt.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'like_count': 0
+    }
+
+    return render_template(
+        'public/post.html',
+        user=user,
+        post=dummy_post,
+        sudah_like=False,
+        custom_pages=custom_pages,
+        page_theme=user['theme_preference'] or 'light',
+        is_preview=True
+    )
 
 @dashboard_bp.route('/tulisan/hapus/<int:post_id>', methods=['POST'])
 @login_required

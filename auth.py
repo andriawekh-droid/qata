@@ -38,11 +38,12 @@ def get_user_by_id(user_id):
     row = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
     if row:
         can_upload = row['can_upload_image'] if 'can_upload_image' in row.keys() else 0
+        theme = row['theme_preference'] if 'theme_preference' in row.keys() else 'light'
         return User(
             row['id'], row['username'], row['email'],
             row['display_name'], row['bio'], row['website'],
             row['twitter'], row['instagram'], row['is_admin'],
-            row['is_active'], row['theme_preference'],
+            row['is_active'], theme,
             can_upload
         )
     return None
@@ -52,11 +53,12 @@ def get_user_by_username(username):
     row = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
     if row:
         can_upload = row['can_upload_image'] if 'can_upload_image' in row.keys() else 0
+        theme = row['theme_preference'] if 'theme_preference' in row.keys() else 'light'
         return User(
             row['id'], row['username'], row['email'],
             row['display_name'], row['bio'], row['website'],
             row['twitter'], row['instagram'], row['is_admin'],
-            row['is_active'], row['theme_preference'],
+            row['is_active'], theme,
             can_upload
         )
     return None

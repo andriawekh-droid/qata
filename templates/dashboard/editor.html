@@ -14,9 +14,35 @@
 
         <div class="form-group">
             <div class="editor-toolbar">
-                <label for="content" style="margin-bottom:0">Isi Tulisan (Markdown)</label>
-                {% if can_upload_image %}
-                <div>
+                <div class="editor-toolbar-left">
+                    <label for="content" style="margin-bottom:0">Isi Tulisan (Markdown)</label>
+                    <a href="https://qata.my.id/awekh/panduan-menulis-di-qata-markdown" 
+                       target="_blank" 
+                       rel="noopener noreferrer" 
+                       class="markdown-guide-link"
+                       title="Buka panduan menulis Markdown di Qata">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span>Panduan Markdown ↗</span>
+                    </a>
+                </div>
+                <div class="editor-toolbar-right">
+                    <button type="submit" 
+                            formaction="{{ url_for('dashboard.preview_post') }}" 
+                            formtarget="_blank" 
+                            formnovalidate 
+                            class="btn-upload" 
+                            title="Buka pratinjau tulisan di tab baru">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <span>Pratinjau</span>
+                    </button>
+                    {% if can_upload_image %}
                     <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" style="display:none">
                     <button type="button" class="btn-upload" onclick="document.getElementById('imageInput').click()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -26,8 +52,8 @@
                         </svg>
                         <span>Sisipkan Gambar</span>
                     </button>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
             <textarea id="content" name="content" rows="20" required>{{ post['content'] if post else '' }}</textarea>
             {% if can_upload_image %}
@@ -49,11 +75,34 @@
             </div>
             <div class="editor-actions">
                 <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Batal</a>
-                <button type="submit" class="btn">Simpan</button>
+                <button type="submit" 
+                        formaction="{{ url_for('dashboard.preview_post') }}" 
+                        formtarget="_blank" 
+                        formnovalidate 
+                        class="btn btn-secondary">
+                    Pratinjau
+                </button>
+                <button type="submit" id="saveBtn" class="btn">
+                    {% if post and post['status'] == 'published' %}Terbitkan{% else %}Simpan Draf{% endif %}
+                </button>
             </div>
         </div>
     </form>
 </div>
+
+<script>
+const statusSelect = document.getElementById('status');
+const saveBtn = document.getElementById('saveBtn');
+if (statusSelect && saveBtn) {
+    statusSelect.addEventListener('change', function() {
+        if (this.value === 'published') {
+            saveBtn.textContent = 'Terbitkan';
+        } else {
+            saveBtn.textContent = 'Simpan Draf';
+        }
+    });
+}
+</script>
 
 {% if can_upload_image %}
 <script>
