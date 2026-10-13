@@ -545,11 +545,68 @@ article.post-full h1,
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
+/* Social Share Section */
+.post-share {
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.share-title {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    font-family: "IBM Plex Sans", sans-serif;
+}
+
+.share-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-family: "IBM Plex Sans", sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.share-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--paper);
+}
+
+.share-btn.copied {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.share-btn svg {
+    flex-shrink: 0;
+}
+
 /* Like Section */
 .post-footer {
-    margin-top: 42px;
-    padding-top: 24px;
-    border-top: 1px solid var(--line);
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--line);
     display: flex;
     align-items: center;
     justify-content: space-between;
