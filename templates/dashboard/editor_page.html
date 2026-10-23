@@ -88,54 +88,119 @@ const imageInput = document.getElementById('imageInput');
 const contentArea = document.getElementById('content');
 const uploadStatus = document.getElementById('uploadStatus');
 
-imageInput.addEventListener('change', function() {
-    const file = this.files[0];
+function handleImageUpload(file) {
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
+    const validExtensions = /\.(jpe?g|png|webp)$/i;
+    if (!file.name.match(validExtensions) && !file.type.match(/^image\/(jpeg|png|webp)$/)) {
         uploadStatus.style.color = 'var(--danger)';
-        uploadStatus.textContent = 'Ukuran gambar maksimal 2 MB.';
+        uploadStatus.textContent = 'Format berkas harus JPG, PNG, atau WebP.';
+        imageInput.value = '';
+        return;
+    }
+
+    if (file.size > 25 * 1024 * 1024) {
+        uploadStatus.style.color = 'var(--danger)';
+        uploadStatus.textContent = 'Ukuran berkas terlalu besar (maksimal 25 MB).';
+        imageInput.value = '';
         return;
     }
 
     uploadStatus.style.color = 'var(--ink-faint)';
-    uploadStatus.textContent = 'Mengompres dan mengunggah gambar...';
+    uploadStatus.textContent = 'Mengompres gambar...';
 
-    const formData = new FormData();
-    formData.append('image', file);
+    function sendFile(blobOrFile, filename) {
+        uploadStatus.textContent = 'Mengunggah gambar...';
+        const formData = new FormData();
+        formData.append('image', blobOrFile, filename);
 
-    fetch("{{ url_for('dashboard.upload_image') }}", {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json().then(data => ({ status: res.status, body: data })))
-    .then(({ status, body }) => {
-        if (status === 200 && body.success) {
-            uploadStatus.style.color = 'var(--success)';
-            uploadStatus.textContent = 'Gambar berhasil diunggah dan disisipkan!';
+        fetch("{{ url_for('dashboard.upload_image') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json().then(data => ({ status: res.status, body: data })))
+        .then(({ status, body }) => {
+            if (status === 200 && body.success) {
+                uploadStatus.style.color = 'var(--success)';
+                uploadStatus.textContent = 'Gambar berhasil diunggah dan disisipkan!';
 
-            const start = contentArea.selectionStart;
-            const end = contentArea.selectionEnd;
-            const text = contentArea.value;
-            const snippet = '\n' + body.markdown + '\n';
+                const start = contentArea.selectionStart;
+                const end = contentArea.selectionEnd;
+                const text = contentArea.value;
+                const snippet = '\n' + body.markdown + '\n';
 
-            contentArea.value = text.substring(0, start) + snippet + text.substring(end);
-            contentArea.selectionStart = contentArea.selectionEnd = start + snippet.length;
-            contentArea.focus();
+                contentArea.value = text.substring(0, start) + snippet + text.substring(end);
+                contentArea.selectionStart = contentArea.selectionEnd = start + snippet.length;
+                contentArea.focus();
 
-            setTimeout(() => { uploadStatus.textContent = ''; }, 4000);
-        } else {
+                setTimeout(() => { uploadStatus.textContent = ''; }, 4000);
+            } else {
+                uploadStatus.style.color = 'var(--danger)';
+                uploadStatus.textContent = body.error || 'Gagal mengunggah gambar.';
+            }
+        })
+        .catch(() => {
             uploadStatus.style.color = 'var(--danger)';
-            uploadStatus.textContent = body.error || 'Gagal mengunggah gambar.';
+            uploadStatus.textContent = 'Terjadi kesalahan jaringan saat mengunggah.';
+        })
+        .finally(() => {
+            imageInput.value = '';
+        });
+    }
+
+    // Auto-resize di client menggunakan Canvas untuk gambar kamera HP resolusi tinggi
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = function() {
+        URL.revokeObjectURL(objectUrl);
+        const MAX_WIDTH = 1600;
+        let width = img.naturalWidth || img.width;
+        let height = img.naturalHeight || img.height;
+
+        // Jika gambar sudah kecil (lebar & tinggi <= 1600px dan ukuran < 1.5 MB), kirim langsung
+        if (width <= MAX_WIDTH && height <= MAX_WIDTH && file.size <= 1.5 * 1024 * 1024) {
+            sendFile(file, file.name);
+            return;
         }
-    })
-    .catch(() => {
-        uploadStatus.style.color = 'var(--danger)';
-        uploadStatus.textContent = 'Terjadi kesalahan jaringan saat mengunggah.';
-    })
-    .finally(() => {
-        imageInput.value = '';
-    });
+
+        if (width > MAX_WIDTH) {
+            height = Math.round((MAX_WIDTH / width) * height);
+            width = MAX_WIDTH;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
+        const outputMime = isPng ? 'image/png' : 'image/jpeg';
+        let outputName = file.name;
+        if (!isPng && !outputName.match(/\.(jpe?g)$/i)) {
+            outputName = outputName.replace(/\.[^.]+$/, '') + '.jpg';
+        }
+
+        canvas.toBlob(function(blob) {
+            if (blob) {
+                sendFile(blob, outputName);
+            } else {
+                sendFile(file, file.name);
+            }
+        }, outputMime, 0.85);
+    };
+
+    img.onerror = function() {
+        URL.revokeObjectURL(objectUrl);
+        sendFile(file, file.name);
+    };
+
+    img.src = objectUrl;
+}
+
+imageInput.addEventListener('change', function() {
+    handleImageUpload(this.files[0]);
 });
 </script>
 {% endif %}

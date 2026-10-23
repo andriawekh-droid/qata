@@ -331,7 +331,7 @@ def change_password():
     return render_template('dashboard/password.html')
 
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
-MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2 MB limit per file
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB limit per file (pengaman server)
 MAX_IMAGE_WIDTH = 1200             # Lebar proporsional maksimal artikel
 
 @dashboard_bp.route('/upload-gambar', methods=['POST'])
@@ -356,7 +356,7 @@ def upload_image():
     # Baca byte ke memory buffer untuk validasi dan kompresi
     file_bytes = file.read()
     if len(file_bytes) > MAX_UPLOAD_SIZE:
-        return jsonify({'error': 'Ukuran berkas maksimal 2 MB.'}), 400
+        return jsonify({'error': 'Ukuran berkas maksimal 10 MB.'}), 400
 
     try:
         # Buka gambar menggunakan Pillow
