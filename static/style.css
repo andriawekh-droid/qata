@@ -571,19 +571,28 @@ article.post-full h1,
 }
 
 .share-btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
     border: 1px solid var(--line);
     background: var(--paper-raised);
     color: var(--ink-soft);
-    border-radius: 999px;
-    padding: 5px 12px;
+    border-radius: 50%;
+    padding: 0;
     font-size: 13px;
     font-family: "IBM Plex Sans", sans-serif;
     text-decoration: none;
     cursor: pointer;
     transition: all 0.15s ease;
+}
+
+.share-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
 }
 
 .share-btn:hover {
@@ -592,14 +601,39 @@ article.post-full h1,
     background: var(--paper);
 }
 
+/* Tooltip on hover */
+.share-btn::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 7px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 11px;
+    font-family: "IBM Plex Sans", sans-serif;
+    white-space: nowrap;
+    padding: 3px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 10;
+}
+
+.share-btn:hover::after {
+    opacity: 1;
+}
+
 .share-btn.copied {
     border-color: var(--accent);
     color: var(--accent);
-    font-weight: 500;
 }
 
-.share-btn svg {
-    flex-shrink: 0;
+/* hide the copy-label span visually — used only for JS feedback via title attr */
+.share-btn .copy-label,
+.share-btn .share-tooltip {
+    display: none;
 }
 
 /* Like Section */
@@ -678,9 +712,9 @@ article.post-full h1,
 .hero-actions {
     margin-top: 26px;
     display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
     font-size: 15px;
 }
 
@@ -714,9 +748,8 @@ article.post-full h1,
 }
 
 .traits {
-    margin-top: 40px;
-    padding-top: 26px;
-    border-top: 1px solid var(--line);
+    margin-top: 20px;
+    margin-bottom: 20px;
     display: flex;
     flex-direction: column;
     gap: 11px;

@@ -19,14 +19,13 @@
 <div class="hero">
     <h1>{{ settings.landing_title }}</h1>
     <div class="landing-desc">{{ settings.landing_desc | safe }}</div>
+    <div class="traits">
+        {{ settings.landing_features | safe }}
+    </div>
     <div class="hero-actions">
         <a href="{{ url_for('auth.register') }}" class="btn-primary">{{ settings.landing_cta }}</a>
         <span style="color:var(--ink-faint); font-size:14px;">Sudah punya akun? <a href="{{ url_for('auth.login') }}">Masuk</a></span>
     </div>
-</div>
-
-<div class="traits">
-    {{ settings.landing_features | safe }}
 </div>
 
 <div class="landing-lists">
