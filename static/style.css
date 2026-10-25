@@ -601,39 +601,35 @@ article.post-full h1,
     background: var(--paper);
 }
 
-/* Tooltip on hover */
-.share-btn::after {
-    content: attr(title);
-    position: absolute;
-    bottom: calc(100% + 7px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--ink);
-    color: var(--paper);
-    font-size: 11px;
-    font-family: "IBM Plex Sans", sans-serif;
-    white-space: nowrap;
-    padding: 3px 8px;
-    border-radius: 4px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-    z-index: 10;
-}
+/* Tooltip on hover — desktop only */
+@media (hover: hover) {
+    .share-btn::after {
+        content: attr(title);
+        position: absolute;
+        bottom: calc(100% + 7px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--ink);
+        color: var(--paper);
+        font-size: 11px;
+        font-family: "IBM Plex Sans", sans-serif;
+        white-space: nowrap;
+        padding: 3px 8px;
+        border-radius: 4px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        z-index: 10;
+    }
 
-.share-btn:hover::after {
-    opacity: 1;
+    .share-btn:hover::after {
+        opacity: 1;
+    }
 }
 
 .share-btn.copied {
     border-color: var(--accent);
     color: var(--accent);
-}
-
-/* hide the copy-label span visually — used only for JS feedback via title attr */
-.share-btn .copy-label,
-.share-btn .share-tooltip {
-    display: none;
 }
 
 /* Like Section */
