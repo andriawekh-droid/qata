@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_login import LoginManager, current_user
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -23,6 +23,8 @@ def set_security_headers(response):
     response.headers.setdefault('X-XSS-Protection', '1; mode=block')
     response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
     response.headers.setdefault(
+        'Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    response.headers.setdefault(
         'Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
     # CSP: 'unsafe-inline' dipertahankan untuk script/style karena template
     # kemungkinan memakai inline; perketat dengan nonce bila sudah dimigrasi.
@@ -35,6 +37,12 @@ def set_security_headers(response):
         "font-src 'self' data: https:; "
         "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'")
     return response
+
+@app.route('/.well-known/security.txt')
+def security_txt():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static', 'well-known'),
+        'security.txt', mimetype='text/plain')
 
 @app.template_filter('tanggal')
 def format_tanggal(value):
