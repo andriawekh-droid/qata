@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Qata{% endblock %}</title>
     {% block meta %}{% endblock %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=17">
+    {% block head %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=19">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
 <body>

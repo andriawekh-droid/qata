@@ -4,11 +4,48 @@
 
 {% block meta %}
 {% if not is_preview %}
+    <meta name="description" content="{{ meta_description }}">
+    <link rel="canonical" href="{{ url_for('public.post_detail', username=user['username'], slug=post['slug'], _external=True) }}">
+    <link rel="alternate" type="application/rss+xml" title="{{ user['display_name'] }} — Qata" href="{{ url_for('public.user_rss', username=user['username']) }}">
     <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Qata">
     <meta property="og:title" content="{{ post['title'] }} — {{ user['display_name'] }}">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:description" content="{{ meta_description }}">
+    <meta property="og:url" content="{{ url_for('public.post_detail', username=user['username'], slug=post['slug'], _external=True) }}">
+    {% if post_image %}
+    <meta property="og:image" content="{{ post_image }}">
+    {% endif %}
+    <meta name="twitter:card" content="{% if post_image %}summary_large_image{% else %}summary{% endif %}">
     <meta name="twitter:title" content="{{ post['title'] }}">
+    <meta name="twitter:description" content="{{ meta_description }}">
+    {% if post_image %}
+    <meta name="twitter:image" content="{{ post_image }}">
+    {% endif %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": {{ post['title'] | tojson }},
+        "description": {{ meta_description | tojson }},
+        "datePublished": {{ (post['created_at'] | string)[:10] | tojson }},
+        "dateModified": {{ ((post['updated_at'] or post['created_at']) | string)[:10] | tojson }},
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": {{ url_for('public.post_detail', username=user['username'], slug=post['slug'], _external=True) | tojson }}
+        },
+        "author": {
+            "@type": "Person",
+            "name": {{ (user['display_name'] or user['username']) | tojson }},
+            "url": {{ url_for('public.user_blog', username=user['username'], _external=True) | tojson }}
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "Qata",
+            "url": {{ url_for('public.index', _external=True) | tojson }}
+        }{% if post_image %},
+        "image": {{ post_image | tojson }}{% endif %}
+    }
+    </script>
 {% endif %}
 {% endblock %}
 
@@ -125,6 +162,37 @@
         {% endif %}
     </div>
 </article>
+
+{% if not is_preview and other_posts %}
+<section class="landing-lists" style="margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--line);">
+    <div>
+        <div class="section-label">Tulisan lain dari @{{ user['username'] }}</div>
+        <div class="post-list">
+            {% for op in other_posts %}
+            <article class="post-row">
+                <h3>
+                    <a href="{{ url_for('public.post_detail', username=user['username'], slug=op['slug']) }}">
+                        {{ op['title'] }}
+                    </a>
+                </h3>
+                <div class="meta">
+                    <span>{{ op['created_at'] | waktu_relatif }}</span>
+                    <span class="dot">&middot;</span>
+                    <span>{{ op['reading_time'] }} mnt baca</span>
+                    {% if op['like_count'] > 0 %}
+                    <span class="dot">&middot;</span>
+                    <span class="heart-stat">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.6-9.4-9A5.1 5.1 0 0 1 12 6a5.1 5.1 0 0 1 9.4 5c-2.4 4.4-9.4 9-9.4 9Z"/></svg>
+                        {{ op['like_count'] }}
+                    </span>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
 
 {% if not is_preview %}
 <script>

@@ -158,7 +158,7 @@ def update_sitemap(app=None):
     for u in users:
         uname = u['username']
         xml_lines.append(f'  <url><loc>{base_url}/{uname}</loc><changefreq>daily</changefreq><priority>0.8</priority></url>')
-        xml_lines.append(f'  <url><loc>{base_url}/{uname}/arsip</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>')
+        xml_lines.append(f'  <url><loc>{base_url}/{uname}/tulisan</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>')
         xml_lines.append(f'  <url><loc>{base_url}/{uname}/tentang</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>')
 
     # Tulisan yang terbit
@@ -188,7 +188,7 @@ def update_sitemap(app=None):
         slug = pg['slug']
         tgl = str(pg['updated_at'] or '')[:10]
         lastmod = f'<lastmod>{tgl}</lastmod>' if tgl else ''
-        xml_lines.append(f'  <url><loc>{base_url}/{uname}/{slug}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.6</priority></url>')
+        xml_lines.append(f'  <url><loc>{base_url}/{uname}/page/{slug}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.6</priority></url>')
 
     xml_lines.append('</urlset>\n')
     xml_content = '\n'.join(xml_lines)

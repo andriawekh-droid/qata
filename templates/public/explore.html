@@ -2,6 +2,19 @@
 
 {% block title %}Jelajahi Tulisan — Qata{% endblock %}
 
+{% block meta %}
+    <meta name="description" content="{{ meta_description }}">
+    <link rel="canonical" href="{{ url_for('public.explore', _external=True) }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Qata">
+    <meta property="og:title" content="Jelajahi Tulisan — Qata">
+    <meta property="og:description" content="{{ meta_description }}">
+    <meta property="og:url" content="{{ url_for('public.explore', _external=True) }}">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Jelajahi Tulisan — Qata">
+    <meta name="twitter:description" content="{{ meta_description }}">
+{% endblock %}
+
 {% block content %}
 <header class="site-header">
     <a href="{{ url_for('public.index') }}" class="wordmark">Qata</a>

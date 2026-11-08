@@ -1,9 +1,16 @@
 {% extends 'base.html' %}
 
-{% block head %}
+{% block meta %}
+<meta name="description" content="{{ meta_description }}">
+<link rel="canonical" href="{{ url_for('public.user_archive', username=user['username'], _external=True) }}">
 <link rel="alternate" type="application/rss+xml" 
       title="{{ user['display_name'] }} — Qata" 
       href="{{ url_for('public.user_rss', username=user['username']) }}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Qata">
+<meta property="og:title" content="Tulisan — {{ user['display_name'] }}">
+<meta property="og:description" content="{{ meta_description }}">
+<meta property="og:url" content="{{ url_for('public.user_archive', username=user['username'], _external=True) }}">
 {% endblock %}
 
 {% block title %}Tulisan — {{ user['display_name'] }}{% endblock %}

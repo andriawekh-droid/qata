@@ -2,6 +2,16 @@
 
 {% block title %}{{ page['title'] if page else 'Tentang' }} — {{ user['display_name'] }}{% endblock %}
 
+{% block meta %}
+<meta name="description" content="{{ meta_description }}">
+<link rel="canonical" href="{{ url_for('public.user_about', username=user['username'], _external=True) }}">
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="Qata">
+<meta property="og:title" content="{{ page['title'] if page else 'Tentang' }} — {{ user['display_name'] }}">
+<meta property="og:description" content="{{ meta_description }}">
+<meta property="og:url" content="{{ url_for('public.user_about', username=user['username'], _external=True) }}">
+{% endblock %}
+
 {% block content %}
 <header class="site-header">
     <a href="{{ url_for('public.index') }}" class="wordmark">Qata</a>

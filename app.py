@@ -44,6 +44,18 @@ def security_txt():
         os.path.join(app.root_path, 'static', 'well-known'),
         'security.txt', mimetype='text/plain')
 
+@app.route('/robots.txt')
+def robots_txt():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'robots.txt', mimetype='text/plain')
+
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'sitemap.xml', mimetype='application/xml')
+
 @app.template_filter('tanggal')
 def format_tanggal(value):
     if value is None:

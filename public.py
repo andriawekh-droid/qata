@@ -29,6 +29,14 @@ def extract_excerpt(text, max_len=140):
         return text[:max_len].rsplit(' ', 1)[0] + '...'
     return text
 
+def extract_first_image(text):
+    if not text:
+        return None
+    m = re.search(r'!\[[^\]]*\]\((https?://[^\s)]+|/[^\s)]+)\)', text)
+    if m:
+        return m.group(1)
+    return None
+
 public_bp = Blueprint('public', __name__)
 
 def hash_ip(ip):
@@ -70,18 +78,21 @@ def index():
            LIMIT 3'''
     ).fetchall()
 
+    raw_desc = get_site_setting(db, 'landing_desc')
     settings = {
         'landing_title': get_site_setting(db, 'landing_title'),
-        'landing_desc': render_markdown(get_site_setting(db, 'landing_desc')),
+        'landing_desc': render_markdown(raw_desc),
         'landing_features': render_markdown(get_site_setting(db, 'landing_features')),
         'landing_cta': get_site_setting(db, 'landing_cta'),
         'landing_brand_sub': get_site_setting(db, 'landing_brand_sub'),
     }
+    meta_description = extract_excerpt(raw_desc, max_len=155) or 'Platform blogging minimalis yang berfokus pada ketenangan tulisan dan kenyamanan membaca.'
 
     return render_template('public/index.html',
                            recent_posts=recent_posts,
                            popular_posts=popular_posts,
-                           settings=settings)
+                           settings=settings,
+                           meta_description=meta_description)
 
 @public_bp.route('/jelajahi')
 @public_bp.route('/discover')
@@ -163,7 +174,8 @@ def explore():
         posts=posts_data,
         current_filter=current_filter,
         page=page,
-        total_pages=total_pages
+        total_pages=total_pages,
+        meta_description='Jelajahi daftar tulisan acak, terbaru, dan populer dari para penulis di Qata.'
     )
 
 @public_bp.route('/jelajahi/acak')
@@ -231,12 +243,16 @@ def user_blog(username):
         (user['id'], 'custom')
     ).fetchall()
 
+    raw_bio = (landing_page['content'] if landing_page else '') or user['bio'] or ''
+    meta_description = extract_excerpt(raw_bio, max_len=155) or f"Tulisan dan catatan oleh {user['display_name'] or user['username']} di Qata."
+
     return render_template('public/blog.html',
                            user=user,
                            recent_posts=recent_posts,
                            popular_posts=popular_posts,
                            landing_page=landing_page,
                            custom_pages=custom_pages,
+                           meta_description=meta_description,
                            page_theme=user['theme_preference'] or 'light')
 
 @public_bp.route('/<username>/tulisan')
@@ -276,10 +292,13 @@ def user_archive(username):
         (user['id'], 'custom')
     ).fetchall()
 
+    meta_description = f"Arsip seluruh tulisan oleh {user['display_name'] or user['username']} di Qata."
+
     return render_template('public/archive.html',
                            user=user,
                            archive=archive,
                            custom_pages=custom_pages,
+                           meta_description=meta_description,
                            page_theme=user['theme_preference'] or 'light')
 
 @public_bp.route('/<username>/tentang')
@@ -305,10 +324,14 @@ def user_about(username):
         (user['id'], 'custom')
     ).fetchall()
 
+    raw_about = (page['content'] if page else '') or user['bio'] or ''
+    meta_description = extract_excerpt(raw_about, max_len=155) or f"Tentang {user['display_name'] or user['username']} di Qata."
+
     return render_template('public/tentang.html',
                            user=user,
                            page=page,
                            custom_pages=custom_pages,
+                           meta_description=meta_description,
                            page_theme=user['theme_preference'] or 'light')
 
 @public_bp.route('/<username>/page/<slug>')
@@ -336,10 +359,13 @@ def user_page(username, slug):
         (user['id'], 'custom')
     ).fetchall()
 
+    meta_description = extract_excerpt(page['content'], max_len=155) or f"{page['title']} — {user['display_name'] or user['username']}"
+
     return render_template('public/page.html',
                            user=user,
                            page=page,
                            custom_pages=custom_pages,
+                           meta_description=meta_description,
                            page_theme=user['theme_preference'] or 'light')
 
 @public_bp.route('/<username>/<slug>')
@@ -382,11 +408,32 @@ def post_detail(username, slug):
         (user['id'], 'custom')
     ).fetchall()
 
+    # Ambil hingga 3 tulisan lain dari penulis ini untuk internal linking
+    other_posts = db.execute(
+        '''SELECT p.title, p.slug, p.created_at, p.reading_time,
+                  COUNT(DISTINCT l.id) as like_count
+           FROM posts p
+           LEFT JOIN likes l ON p.id = l.post_id
+           WHERE p.user_id = ? AND p.id != ? AND p.status = 'published'
+           GROUP BY p.id
+           ORDER BY p.created_at DESC
+           LIMIT 3''',
+        (user['id'], post['id'])
+    ).fetchall()
+
+    meta_description = extract_excerpt(post['content'], max_len=155) or f"{post['title']} — tulisan oleh {user['display_name'] or user['username']} di Qata."
+    post_image = extract_first_image(post['content'])
+    if post_image and post_image.startswith('/'):
+        post_image = request.url_root.rstrip('/') + post_image
+
     return render_template('public/post.html',
                            user=user,
                            post=post,
                            sudah_like=sudah_like,
                            custom_pages=custom_pages,
+                           other_posts=other_posts,
+                           meta_description=meta_description,
+                           post_image=post_image,
                            page_theme=user['theme_preference'] or 'light')
 
 @public_bp.route('/like/<int:post_id>', methods=['POST'])
