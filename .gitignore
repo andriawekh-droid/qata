@@ -48,6 +48,7 @@ Thumbs.db
 # Mockup & Design References
 doc/*.html
 
-# User Uploads
+# User Uploads & Dynamic Sitemap
 static/uploads/
+static/sitemap.xml
 
