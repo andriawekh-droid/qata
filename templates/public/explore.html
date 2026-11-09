@@ -37,7 +37,7 @@
         </div>
         <div class="explore-actions">
             <a href="{{ url_for('public.random_post') }}" class="btn btn-secondary" title="Buka satu tulisan acak langsung">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="explore-meta-icon">
                     <path d="M16 3h5v5"/>
                     <path d="M4 20L21 3"/>
                     <path d="M21 16v5h-5"/>
@@ -62,7 +62,7 @@
 
         {% if current_filter == 'acak' %}
         <a href="{{ url_for('public.explore', filter='acak') }}" class="tab-reload" title="Kocok ulang daftar tulisan acak">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;vertical-align:-2px;margin-right:3px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="explore-meta-icon-sm">
                 <polyline points="23 4 23 10 17 10"/>
                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
             </svg>

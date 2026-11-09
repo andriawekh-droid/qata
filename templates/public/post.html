@@ -21,7 +21,7 @@
     {% if post_image %}
     <meta name="twitter:image" content="{{ post_image }}">
     {% endif %}
-    <script type="application/ld+json">
+    <script type="application/ld+json" nonce="{{ csp_nonce }}">
     {
         "@context": "https://schema.org",
         "@type": "BlogPosting",
@@ -58,11 +58,11 @@
 </header>
 
 {% if is_preview %}
-<div class="preview-banner" style="background: var(--paper-raised); border: 1px dashed var(--line); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; font-size: 0.9rem;">
+<div class="preview-banner">
     <div>
         <strong>Mode Pratinjau</strong> &mdash; Tulisan ini belum tentu tersimpan/terbit.
     </div>
-    <button type="button" onclick="window.close()" class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; white-space: nowrap;">Tutup Pratinjau</button>
+    <button type="button" class="btn btn-secondary btn-close-preview preview-banner-btn">Tutup Pratinjau</button>
 </div>
 {% else %}
 <a href="{{ url_for('public.user_blog', username=user['username']) }}" class="back-link">
@@ -81,7 +81,7 @@
             <span>{{ post['reading_time'] }} mnt baca</span>
             {% if is_preview %}
             <span class="dot">&middot;</span>
-            <span style="color: var(--accent); font-weight: 500;">Pratinjau Draf</span>
+            <span class="post-draft-preview-badge">Pratinjau Draf</span>
             {% endif %}
         </div>
         <h1>{{ post['title'] }}</h1>
@@ -120,7 +120,7 @@
             </a>
 
             <!-- Salin Tautan -->
-            <button type="button" class="share-btn share-copy" onclick="copyPostLink(this)" title="Salin tautan ke papan klip">
+            <button type="button" class="share-btn share-copy" id="shareCopyBtn" title="Salin tautan ke papan klip">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
@@ -128,7 +128,7 @@
             </button>
 
             <!-- Native Share Button (Ponsel / Tablet) -->
-            <button type="button" id="nativeShareBtn" class="share-btn share-native" onclick="shareNative()" title="Bagikan via aplikasi ponsel" style="display:none;">
+            <button type="button" id="nativeShareBtn" class="share-btn share-native d-none" title="Bagikan via aplikasi ponsel">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="18" cy="5" r="3"/>
                     <circle cx="6" cy="12" r="3"/>
@@ -144,19 +144,19 @@
     <div class="post-footer">
         {% if not is_preview %}
         <button type="button" 
+                id="likeBtn"
                 class="like-btn {% if sudah_like %}liked{% endif %}"
-                data-post-id="{{ post['id'] }}"
-                onclick="toggleLike(this)">
+                data-post-id="{{ post['id'] }}">
             <svg viewBox="0 0 24 24" fill="{% if sudah_like %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.6-9.4-9A5.1 5.1 0 0 1 12 6a5.1 5.1 0 0 1 9.4 5c-2.4 4.4-9.4 9-9.4 9Z"/></svg>
             <span class="like-label-text">{% if sudah_like %}Disukai ({{ post['like_count'] }}){% else %}Suka tulisan ini ({{ post['like_count'] }}){% endif %}</span>
         </button>
 
-        <a href="{{ url_for('public.user_blog', username=user['username']) }}" class="back-link" style="margin-bottom:0">
+        <a href="{{ url_for('public.user_blog', username=user['username']) }}" class="back-link mb-0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             Kembali ke blog {{ user['display_name'] }}
         </a>
         {% else %}
-        <button type="button" onclick="window.close()" class="btn btn-secondary" style="font-size: 0.85rem;">
+        <button type="button" class="btn btn-secondary btn-close-preview btn-sm">
             Tutup Pratinjau
         </button>
         {% endif %}
@@ -164,7 +164,7 @@
 </article>
 
 {% if not is_preview and other_posts %}
-<section class="landing-lists" style="margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--line);">
+<section class="landing-lists post-other-posts">
     <div>
         <div class="section-label">Tulisan lain dari @{{ user['username'] }}</div>
         <div class="post-list">
@@ -194,8 +194,16 @@
 </section>
 {% endif %}
 
+{% if is_preview %}
+<script nonce="{{ csp_nonce }}">
+document.querySelectorAll('.btn-close-preview').forEach(function(btn) {
+    btn.addEventListener('click', function() { window.close(); });
+});
+</script>
+{% endif %}
+
 {% if not is_preview %}
-<script>
+<script nonce="{{ csp_nonce }}">
 function toggleLike(btn) {
     const postId = btn.dataset.postId;
     const labelText = btn.querySelector('.like-label-text');
@@ -241,8 +249,18 @@ function shareNative() {
 
 if (navigator.share) {
     const nativeBtn = document.getElementById('nativeShareBtn');
-    if (nativeBtn) nativeBtn.style.display = 'inline-flex';
+    if (nativeBtn) nativeBtn.classList.remove('d-none');
 }
+
+document.getElementById('likeBtn')?.addEventListener('click', function() {
+    toggleLike(this);
+});
+document.getElementById('shareCopyBtn')?.addEventListener('click', function() {
+    copyPostLink(this);
+});
+document.getElementById('nativeShareBtn')?.addEventListener('click', function() {
+    shareNative();
+});
 </script>
 {% endif %}
 {% endblock %}

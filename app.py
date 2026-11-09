@@ -1,6 +1,7 @@
 import os
+import secrets
 import sqlite3
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, g
 from flask_login import LoginManager, current_user
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -16,6 +17,10 @@ app.config.from_mapping(
     DATABASE=app.instance_path + '/qata.db',
 )
 
+@app.before_request
+def set_csp_nonce():
+    g.csp_nonce = secrets.token_urlsafe(16)
+
 @app.after_request
 def set_security_headers(response):
     response.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
@@ -26,16 +31,20 @@ def set_security_headers(response):
         'Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
     response.headers.setdefault(
         'Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-    # CSP: 'unsafe-inline' dipertahankan untuk script/style karena template
-    # kemungkinan memakai inline; perketat dengan nonce bila sudah dimigrasi.
-    response.headers.setdefault(
-        'Content-Security-Policy',
+
+    nonce = getattr(g, 'csp_nonce', None)
+    if not nonce:
+        nonce = secrets.token_urlsafe(16)
+        g.csp_nonce = nonce
+
+    response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https:; "
-        "style-src 'self' 'unsafe-inline' https:; "
+        f"script-src 'self' 'nonce-{nonce}' https:; "
+        f"style-src 'self' 'nonce-{nonce}' https:; "
         "img-src 'self' data: https:; "
         "font-src 'self' data: https:; "
-        "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'")
+        "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    )
     return response
 
 @app.route('/.well-known/security.txt')
@@ -108,9 +117,14 @@ def inject_page_theme():
     # (dashboard user sendiri, landing page, dsb).
     # Halaman publik blog (public.py) selalu override ini dengan tema
     # milik PEMILIK blog, jadi baris ini tidak berlaku di sana.
+    theme = 'light'
     if current_user.is_authenticated:
-        return dict(page_theme=getattr(current_user, 'theme_preference', None) or 'light')
-    return dict(page_theme='light')
+        theme = getattr(current_user, 'theme_preference', None) or 'light'
+    nonce = getattr(g, 'csp_nonce', None)
+    if not nonce:
+        nonce = secrets.token_urlsafe(16)
+        g.csp_nonce = nonce
+    return dict(page_theme=theme, csp_nonce=nonce)
 
 login_manager = LoginManager()
 login_manager.init_app(app)

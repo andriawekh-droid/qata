@@ -15,7 +15,7 @@
         <div class="form-group">
             <div class="editor-toolbar">
                 <div class="editor-toolbar-left">
-                    <label for="content" style="margin-bottom:0">Isi Tulisan (Markdown)</label>
+                    <label for="content" class="mb-0">Isi Tulisan (Markdown)</label>
                     <a href="https://qata.my.id/awekh/panduan-menulis-di-qata-markdown" 
                        target="_blank" 
                        rel="noopener noreferrer" 
@@ -43,8 +43,8 @@
                         <span>Pratinjau</span>
                     </button>
                     {% if can_upload_image %}
-                    <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" style="display:none">
-                    <button type="button" class="btn-upload" onclick="document.getElementById('imageInput').click()">
+                    <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" class="d-none">
+                    <button type="button" class="btn-upload" id="insertImageBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
                             <circle cx="9" cy="9" r="2"/>
@@ -57,7 +57,7 @@
             </div>
             <textarea id="content" name="content" rows="20" required>{{ post['content'] if post else '' }}</textarea>
             {% if can_upload_image %}
-            <div id="uploadStatus" class="upload-status" style="margin-top:0.4rem;"></div>
+            <div id="uploadStatus" class="upload-status"></div>
             {% endif %}
         </div>
 
@@ -90,7 +90,7 @@
     </form>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 const statusSelect = document.getElementById('status');
 const saveBtn = document.getElementById('saveBtn');
 if (statusSelect && saveBtn) {
@@ -105,10 +105,14 @@ if (statusSelect && saveBtn) {
 </script>
 
 {% if can_upload_image %}
-<script>
+<script nonce="{{ csp_nonce }}">
 const imageInput = document.getElementById('imageInput');
 const contentArea = document.getElementById('content');
 const uploadStatus = document.getElementById('uploadStatus');
+
+document.getElementById('insertImageBtn')?.addEventListener('click', function() {
+    imageInput?.click();
+});
 
 function handleImageUpload(file) {
     if (!file) return;

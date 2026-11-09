@@ -43,7 +43,7 @@
     </div>
 
     {% if user['website'] or user['twitter'] or user['instagram'] %}
-    <div class="meta" style="margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid var(--line);">
+    <div class="meta about-meta">
         {% if user['website'] %}
         <a href="{{ user['website'] }}" target="_blank" rel="noopener">Website</a>
         {% endif %}
@@ -59,7 +59,7 @@
     {% endif %}
 
     <div class="post-footer">
-        <a href="{{ url_for('public.user_blog', username=user['username']) }}" class="back-link" style="margin:0">
+        <a href="{{ url_for('public.user_blog', username=user['username']) }}" class="back-link m-0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             Kembali ke blog {{ user['display_name'] }}
         </a>

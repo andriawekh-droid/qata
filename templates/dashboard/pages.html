@@ -53,7 +53,7 @@
                         {% if page['type'] == 'custom' %}
                         <form method="POST"
                               action="{{ url_for('dashboard.delete_page', page_id=page['id']) }}"
-                              onsubmit="return confirm('Yakin ingin menghapus halaman ini?')">
+                              data-confirm="Yakin ingin menghapus halaman ini?">
                             <button type="submit" class="btn-link btn-hapus">Hapus</button>
                         </form>
                         {% endif %}

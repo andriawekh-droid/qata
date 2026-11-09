@@ -47,7 +47,7 @@
                     <div class="post-actions">
                         <a href="{{ url_for('dashboard.edit_post', post_id=post['id']) }}">Edit</a>
                         <form method="POST" action="{{ url_for('dashboard.delete_post', post_id=post['id']) }}"
-                              onsubmit="return confirm('Yakin ingin menghapus tulisan ini?')">
+                              data-confirm="Yakin ingin menghapus tulisan ini?">
                             <button type="submit" class="btn-link btn-hapus">Hapus</button>
                         </form>
                     </div>

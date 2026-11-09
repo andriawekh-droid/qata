@@ -29,7 +29,7 @@
                 <small>Tidak ada pendaftaran baru sama sekali, berguna saat ada gelombang spam.</small>
             </span>
         </label>
-        <button type="submit" class="btn" style="margin-top:0.8rem">Simpan</button>
+        <button type="submit" class="btn mt-sm">Simpan</button>
     </form>
 </section>
 
@@ -52,11 +52,11 @@
                 {% for user in users %}
                 <tr>
                     <td>
-                        <a href="{{ url_for('public.user_blog', username=user['username']) }}" style="font-weight:500;">
+                        <a href="{{ url_for('public.user_blog', username=user['username']) }}" class="fw-medium">
                             @{{ user['username'] }}
                         </a>
                         {% if user['is_admin'] %}
-                            <span class="badge badge-published" style="font-size:10px; padding:1px 5px;">Admin</span>
+                            <span class="badge badge-published badge-admin-label">Admin</span>
                         {% endif %}
                         <div class="user-meta-email">{{ user['email'] }}</div>
                     </td>
@@ -70,7 +70,7 @@
                         {% if user['is_admin'] %}
                             <span class="badge badge-published" title="Admin selalu memiliki izin upload gambar">Aktif (Admin)</span>
                         {% else %}
-                            <form method="POST" action="{{ url_for('dashboard.admin_toggle_upload_image', user_id=user['id']) }}" style="display:inline;">
+                            <form method="POST" action="{{ url_for('dashboard.admin_toggle_upload_image', user_id=user['id']) }}" class="d-inline">
                                 {% if user['can_upload_image'] %}
                                     <button type="submit" class="badge badge-published btn-toggle" title="Klik untuk menonaktifkan fitur upload gambar">
                                         Aktif &check;
@@ -83,14 +83,14 @@
                             </form>
                         {% endif %}
                     </td>
-                    <td><span style="white-space:nowrap;">{{ user['created_at'] | tanggal }}</span></td>
+                    <td><span class="text-nowrap">{{ user['created_at'] | tanggal }}</span></td>
                     <td>
                         <div class="post-actions">
                             <a href="{{ url_for('dashboard.admin_reset_password', user_id=user['id']) }}">Reset Password</a>
                             {% if not user['is_admin'] %}
                             <form method="POST"
                                   action="{{ url_for('dashboard.admin_delete_user', user_id=user['id']) }}"
-                                  onsubmit="return confirm('Yakin ingin menghapus @{{ user['username'] }} beserta semua datanya? Tindakan ini tidak dapat dibatalkan.')">
+                                  data-confirm="Yakin ingin menghapus @{{ user['username'] }} beserta semua datanya? Tindakan ini tidak dapat dibatalkan.">
                                 <button type="submit" class="btn-link btn-hapus">Hapus</button>
                             </form>
                             {% endif %}

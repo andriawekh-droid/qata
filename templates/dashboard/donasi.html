@@ -41,7 +41,7 @@
                 <span class="merchant-label">NMID</span>
                 <div class="merchant-nmid-group">
                     <span id="nmidText" class="merchant-val mono">ID1025380378675</span>
-                    <button type="button" class="btn-copy" onclick="salinNMID()" title="Salin NMID">
+                    <button type="button" class="btn-copy" id="copyNmidBtn" title="Salin NMID">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
@@ -58,7 +58,7 @@
 
         <div class="donasi-actions">
             <a href="{{ url_for('static', filename='img/qris.jpg') }}" download="QRIS-Qata-Andri-Permana.jpg" class="btn btn-secondary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-1px;margin-right:4px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon-sm">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
@@ -70,7 +70,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 function salinNMID() {
     const text = document.getElementById('nmidText').innerText.trim();
     navigator.clipboard.writeText(text).then(() => {
@@ -83,5 +83,6 @@ function salinNMID() {
         }, 2000);
     });
 }
+document.getElementById('copyNmidBtn')?.addEventListener('click', salinNMID);
 </script>
 {% endblock %}

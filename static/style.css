@@ -1019,6 +1019,7 @@ article.post-full h1,
     font-size: 0.82rem;
     color: var(--ink-faint);
     transition: color 0.15s ease;
+    margin-top: 0.4rem;
 }
 
 .auth-container {
@@ -1565,4 +1566,110 @@ td.post-actions { display: table-cell; white-space: nowrap; }
     margin-top: 2.5rem;
     text-align: center;
 }
+
+/* ==========================================================================
+   Utility & Component Classes (CSP Hardening)
+   ========================================================================== */
+
+.pt-0 { padding-top: 0 !important; }
+.mt-xs { margin-top: 0.4rem !important; }
+.mt-sm { margin-top: 0.8rem !important; }
+.mt-md { margin-top: 1.5rem !important; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-md { margin-bottom: 1.5rem !important; }
+.m-0 { margin: 0 !important; }
+.d-none { display: none !important; }
+.d-inline { display: inline !important; }
+.text-nowrap { white-space: nowrap !important; }
+.fw-medium { font-weight: 500 !important; }
+
+.badge-admin-label {
+    font-size: 10px;
+    padding: 1px 5px;
+}
+
+.btn-icon-sm {
+    width: 14px;
+    height: 14px;
+    vertical-align: -1px;
+    margin-right: 4px;
+}
+
+.editor-page-guide {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.9rem;
+}
+
+.profile-footer-links {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.95rem;
+}
+
+.explore-meta-icon {
+    width: 14px;
+    height: 14px;
+    vertical-align: -2px;
+    margin-right: 5px;
+}
+
+.explore-meta-icon-sm {
+    width: 13px;
+    height: 13px;
+    vertical-align: -2px;
+    margin-right: 3px;
+}
+
+.landing-login-hint {
+    color: var(--ink-faint);
+    font-size: 14px;
+}
+
+.preview-banner {
+    background: var(--paper-raised);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.9rem;
+}
+
+.preview-banner-btn {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.post-draft-preview-badge {
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.btn-sm {
+    font-size: 0.85rem;
+}
+
+.post-other-posts {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+}
+
+.about-meta {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+}
+
 

@@ -41,14 +41,14 @@
             <span class="sistem-label">CPU</span>
             <span class="sistem-value">{{ stats.cpu }}%</span>
             <div class="sistem-bar">
-                <div class="sistem-bar-fill" style="width: {{ stats.cpu }}%"></div>
+                <div class="sistem-bar-fill" data-width="{{ stats.cpu }}"></div>
             </div>
         </div>
         <div class="sistem-card">
             <span class="sistem-label">RAM</span>
             <span class="sistem-value">{{ stats.ram_percent }}%</span>
             <div class="sistem-bar">
-                <div class="sistem-bar-fill {% if stats.ram_percent > 80 %}sistem-bar-warn{% endif %}" style="width: {{ stats.ram_percent }}%"></div>
+                <div class="sistem-bar-fill {% if stats.ram_percent > 80 %}sistem-bar-warn{% endif %}" data-width="{{ stats.ram_percent }}"></div>
             </div>
             <span class="sistem-sub">{{ stats.ram_used }} MB / {{ stats.ram_total }} MB</span>
         </div>
@@ -56,7 +56,7 @@
             <span class="sistem-label">Disk</span>
             <span class="sistem-value">{{ stats.disk_percent }}%</span>
             <div class="sistem-bar">
-                <div class="sistem-bar-fill {% if stats.disk_percent > 80 %}sistem-bar-warn{% endif %}" style="width: {{ stats.disk_percent }}%"></div>
+                <div class="sistem-bar-fill {% if stats.disk_percent > 80 %}sistem-bar-warn{% endif %}" data-width="{{ stats.disk_percent }}"></div>
             </div>
             <span class="sistem-sub">{{ stats.disk_used }} GB / {{ stats.disk_total }} GB</span>
         </div>
@@ -64,7 +64,7 @@
             <span class="sistem-label">Swap</span>
             <span class="sistem-value">{{ stats.swap_percent }}%</span>
             <div class="sistem-bar">
-                <div class="sistem-bar-fill" style="width: {{ stats.swap_percent }}%"></div>
+                <div class="sistem-bar-fill" data-width="{{ stats.swap_percent }}"></div>
             </div>
             <span class="sistem-sub">{{ stats.swap_used }} MB / {{ stats.swap_total }} MB</span>
         </div>
@@ -100,4 +100,10 @@
     <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">&larr; Kembali ke Dashboard</a>
     <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">Panel Admin</a>
 </section>
+
+<script nonce="{{ csp_nonce }}">
+document.querySelectorAll('.sistem-bar-fill[data-width]').forEach(function(el) {
+    el.style.width = el.getAttribute('data-width') + '%';
+});
+</script>
 {% endblock %}
