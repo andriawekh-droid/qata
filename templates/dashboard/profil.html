@@ -40,6 +40,20 @@
                    placeholder="username tanpa @">
         </div>
         <div class="form-group">
+            <label for="threads">Threads</label>
+            <input type="text" id="threads" name="threads"
+                   value="{{ current_user.threads or '' }}"
+                   placeholder="username tanpa @">
+            <small>Username akun Threads Anda (tanpa @ atau URL profil).</small>
+        </div>
+        <div class="form-group">
+            <label for="letterbird">Letterbird (Surat & Tanggapan Pembaca)</label>
+            <input type="text" id="letterbird" name="letterbird"
+                   value="{{ current_user.letterbird or '' }}"
+                   placeholder="username di letterbird.co">
+            <small>Username akun di <a href="https://letterbird.co" target="_blank" rel="noopener">letterbird.co</a> untuk menerima surat di halaman Tentang dan tanggapan privat di akhir tulisan.</small>
+        </div>
+        <div class="form-group">
             <label for="theme_preference">Tema Blog</label>
             <select name="theme_preference" id="theme_preference">
                 <option value="light" {% if current_user.theme_preference not in ('dark', 'sepia', 'forest') %}selected{% endif %}>

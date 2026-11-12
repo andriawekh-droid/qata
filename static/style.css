@@ -632,6 +632,80 @@ article.post-full h1,
     color: var(--accent);
 }
 
+/* Letterbird / Feedback Boxes */
+.post-feedback-box,
+.letterbird-contact-card {
+    margin-top: 28px;
+    padding: 16px 20px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.post-feedback-info,
+.letterbird-card-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.post-feedback-icon,
+.letterbird-card-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.post-feedback-title,
+.letterbird-card-title {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+}
+
+.post-feedback-desc,
+.letterbird-card-desc {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    line-height: 1.4;
+}
+
+.post-feedback-btn,
+.letterbird-card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    padding: 8px 14px;
+    text-decoration: none;
+}
+
+@media (max-width: 600px) {
+    .post-feedback-box,
+    .letterbird-contact-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    .post-feedback-btn,
+    .letterbird-card-btn {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
 /* Like Section */
 .post-footer {
     margin-top: 20px;

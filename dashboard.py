@@ -260,6 +260,19 @@ def delete_post(post_id):
     flash('Tulisan berhasil dihapus.', 'sukses')
     return redirect(url_for('dashboard.index'))
 
+def _clean_handle(value, base_domains=()):
+    if not value:
+        return ''
+    val = value.strip()
+    for prefix in ('https://', 'http://', '//', 'www.'):
+        if val.startswith(prefix):
+            val = val[len(prefix):]
+    for domain in base_domains:
+        if val.startswith(domain):
+            val = val[len(domain):].lstrip('/')
+    val = val.lstrip('@').strip().strip('/')
+    return val.split('?')[0].split('#')[0].strip('/')
+
 @dashboard_bp.route('/profil', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -268,8 +281,10 @@ def profile():
     if request.method == 'POST':
         display_name = request.form['display_name'].strip()
         website = request.form['website'].strip()
-        twitter = request.form['twitter'].strip()
-        instagram = request.form['instagram'].strip()
+        twitter = _clean_handle(request.form.get('twitter', ''), ('twitter.com', 'x.com'))
+        instagram = _clean_handle(request.form.get('instagram', ''), ('instagram.com',))
+        threads = _clean_handle(request.form.get('threads', ''), ('threads.net',))
+        letterbird = _clean_handle(request.form.get('letterbird', ''), ('letterbird.co',))
         theme_preference = request.form.get('theme_preference', 'light').strip()
         error = None
 
@@ -282,9 +297,9 @@ def profile():
             db = get_db()
             db.execute(
                 '''UPDATE users
-                   SET display_name = ?, website = ?, twitter = ?, instagram = ?, theme_preference = ?
+                   SET display_name = ?, website = ?, twitter = ?, instagram = ?, threads = ?, letterbird = ?, theme_preference = ?
                    WHERE id = ?''',
-                (display_name, website, twitter, instagram, theme_preference, current_user.id)
+                (display_name, website, twitter, instagram, threads, letterbird, theme_preference, current_user.id)
             )
             db.commit()
             flash('Profil berhasil diperbarui.', 'sukses')

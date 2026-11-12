@@ -42,18 +42,47 @@
         {% endif %}
     </div>
 
-    {% if user['website'] or user['twitter'] or user['instagram'] %}
+    {% if user['letterbird'] %}
+    <div class="letterbird-contact-card">
+        <div class="letterbird-card-info">
+            <div class="letterbird-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="20" height="16" x="2" y="4" rx="2"/>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+            </div>
+            <div>
+                <strong class="letterbird-card-title">Kirim surat ke {{ user['display_name'] }}</strong>
+                <p class="letterbird-card-desc">Punya pertanyaan, tanggapan, atau ingin bertukar kabar secara privat? Kirim pesan langsung melalui Letterbird.</p>
+            </div>
+        </div>
+        <a href="https://letterbird.co/{{ user['letterbird'] }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary letterbird-card-btn">
+            Tulis Pesan
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+        </a>
+    </div>
+    {% endif %}
+
+    {% if user['website'] or user['twitter'] or user['instagram'] or user['threads'] or user['letterbird'] %}
     <div class="meta about-meta">
         {% if user['website'] %}
         <a href="{{ user['website'] }}" target="_blank" rel="noopener">Website</a>
         {% endif %}
         {% if user['twitter'] %}
-        <span class="dot">&middot;</span>
+        {% if user['website'] %}<span class="dot">&middot;</span>{% endif %}
         <a href="https://twitter.com/{{ user['twitter'] }}" target="_blank" rel="noopener">Twitter/X</a>
         {% endif %}
         {% if user['instagram'] %}
-        <span class="dot">&middot;</span>
+        {% if user['website'] or user['twitter'] %}<span class="dot">&middot;</span>{% endif %}
         <a href="https://instagram.com/{{ user['instagram'] }}" target="_blank" rel="noopener">Instagram</a>
+        {% endif %}
+        {% if user['threads'] %}
+        {% if user['website'] or user['twitter'] or user['instagram'] %}<span class="dot">&middot;</span>{% endif %}
+        <a href="https://www.threads.net/@{{ user['threads'] }}" target="_blank" rel="noopener">Threads</a>
+        {% endif %}
+        {% if user['letterbird'] %}
+        {% if user['website'] or user['twitter'] or user['instagram'] or user['threads'] %}<span class="dot">&middot;</span>{% endif %}
+        <a href="https://letterbird.co/{{ user['letterbird'] }}" target="_blank" rel="noopener">Letterbird</a>
         {% endif %}
     </div>
     {% endif %}

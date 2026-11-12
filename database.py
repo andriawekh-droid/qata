@@ -29,6 +29,8 @@ def init_db():
             website TEXT,
             twitter TEXT,
             instagram TEXT,
+            threads TEXT,
+            letterbird TEXT,
             is_admin INTEGER DEFAULT 0,
             is_active INTEGER DEFAULT 1,
             can_upload_image INTEGER NOT NULL DEFAULT 0,
@@ -124,11 +126,17 @@ def init_db():
     ''')
     db.commit()
 
-    # Migrasi kolom can_upload_image pada users jika belum ada
+    # Migrasi kolom tambahan pada users jika belum ada
     user_cols = [c['name'] for c in db.execute("PRAGMA table_info(users)").fetchall()]
     if 'can_upload_image' not in user_cols:
         db.execute("ALTER TABLE users ADD COLUMN can_upload_image INTEGER NOT NULL DEFAULT 0")
         db.execute("UPDATE users SET can_upload_image = 1 WHERE is_admin = 1")
+        db.commit()
+    if 'threads' not in user_cols:
+        db.execute("ALTER TABLE users ADD COLUMN threads TEXT")
+        db.commit()
+    if 'letterbird' not in user_cols:
+        db.execute("ALTER TABLE users ADD COLUMN letterbird TEXT")
         db.commit()
 
 def init_app(app):

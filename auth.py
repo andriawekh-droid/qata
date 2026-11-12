@@ -12,7 +12,7 @@ from database import get_db
 auth_bp = Blueprint('auth', __name__)
 
 class User(UserMixin):
-    def __init__(self, id, username, email, display_name, bio, website, twitter, instagram, is_admin, active, theme_preference='light', can_upload_image=0):
+    def __init__(self, id, username, email, display_name, bio, website, twitter, instagram, is_admin, active, theme_preference='light', can_upload_image=0, threads=None, letterbird=None):
         self.id = id
         self.username = username
         self.email = email
@@ -21,6 +21,8 @@ class User(UserMixin):
         self.website = website
         self.twitter = twitter
         self.instagram = instagram
+        self.threads = threads
+        self.letterbird = letterbird
         self.is_admin = is_admin
         self.active = active
         self.theme_preference = theme_preference or 'light'
@@ -39,12 +41,16 @@ def get_user_by_id(user_id):
     if row:
         can_upload = row['can_upload_image'] if 'can_upload_image' in row.keys() else 0
         theme = row['theme_preference'] if 'theme_preference' in row.keys() else 'light'
+        threads = row['threads'] if 'threads' in row.keys() else None
+        letterbird = row['letterbird'] if 'letterbird' in row.keys() else None
         return User(
             row['id'], row['username'], row['email'],
             row['display_name'], row['bio'], row['website'],
             row['twitter'], row['instagram'], row['is_admin'],
             row['is_active'], theme,
-            can_upload
+            can_upload,
+            threads,
+            letterbird
         )
     return None
 
@@ -54,12 +60,16 @@ def get_user_by_username(username):
     if row:
         can_upload = row['can_upload_image'] if 'can_upload_image' in row.keys() else 0
         theme = row['theme_preference'] if 'theme_preference' in row.keys() else 'light'
+        threads = row['threads'] if 'threads' in row.keys() else None
+        letterbird = row['letterbird'] if 'letterbird' in row.keys() else None
         return User(
             row['id'], row['username'], row['email'],
             row['display_name'], row['bio'], row['website'],
             row['twitter'], row['instagram'], row['is_admin'],
             row['is_active'], theme,
-            can_upload
+            can_upload,
+            threads,
+            letterbird
         )
     return None
 
@@ -297,11 +307,18 @@ def login():
             )
             db.commit()
 
+            can_upload = row['can_upload_image'] if 'can_upload_image' in row.keys() else 0
+            theme = row['theme_preference'] if 'theme_preference' in row.keys() else 'light'
+            threads = row['threads'] if 'threads' in row.keys() else None
+            letterbird = row['letterbird'] if 'letterbird' in row.keys() else None
             user = User(
                 row['id'], row['username'], row['email'],
                 row['display_name'], row['bio'], row['website'],
                 row['twitter'], row['instagram'], row['is_admin'],
-                row['is_active'], row['theme_preference']
+                row['is_active'], theme,
+                can_upload,
+                threads,
+                letterbird
             )
             login_user(user)
             return redirect(url_for('dashboard.index'))

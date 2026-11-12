@@ -141,6 +141,26 @@
     </div>
     {% endif %}
 
+    {% if not is_preview and user['letterbird'] %}
+    <div class="post-feedback-box">
+        <div class="post-feedback-info">
+            <div class="post-feedback-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+            </div>
+            <div>
+                <strong class="post-feedback-title">Tanggapi Tulisan Ini</strong>
+                <p class="post-feedback-desc">Punya pemikiran, pertanyaan, atau tanggapan untuk penulis? Kirim pesan privat ke {{ user['display_name'] or user['username'] }} via Letterbird.</p>
+            </div>
+        </div>
+        <a href="https://letterbird.co/{{ user['letterbird'] }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary post-feedback-btn">
+            Kirim Tanggapan
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+        </a>
+    </div>
+    {% endif %}
+
     <div class="post-footer">
         {% if not is_preview %}
         <button type="button" 
