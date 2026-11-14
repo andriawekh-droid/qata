@@ -1,4 +1,4 @@
-# Blueprint Teknis — Qata (qata.my.id)
+# Blueprint Teknis — Qata (qata.blog)
 
 Dokumen ini merangkum keputusan teknis platform Qata agar bisa dipakai ulang sebagai referensi saat membangun aplikasi lain yang serupa (web app monolitik, ringan, self-hosted).
 

@@ -1,6 +1,6 @@
 # Dokumentasi Qata
 
-Platform blogging minimalis berbasis teks — [qata.my.id](https://qata.my.id)
+Platform blogging minimalis berbasis teks — [qata.blog](https://qata.blog)
 
 ---
 

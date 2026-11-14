@@ -5,4 +5,4 @@ Disallow: /masuk
 Disallow: /daftar
 Disallow: /admin
 
-Sitemap: https://qata.my.id/sitemap.xml
+Sitemap: https://qata.blog/sitemap.xml

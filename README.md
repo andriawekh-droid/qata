@@ -2,7 +2,7 @@
 
 Platform blogging minimalis yang berfokus pada ketenangan tulisan dan kenyamanan membaca. Dibangun dengan Python dan Flask.
 
-**[qata.my.id](https://qata.my.id)**
+**[qata.blog](https://qata.blog)**
 
 ---
 
@@ -44,7 +44,7 @@ Tidak ada iklan komersial, tidak ada pelacak pihak ketiga (*third-party trackers
 - **Hashing Aman:** Seluruh password diamankan dengan algoritma `bcrypt`.
 
 ### 5. Halaman Publik & SEO
-- **Halaman Penulis:** Blog per pengguna (`qata.my.id/<username>`), arsip tahunan (`/<username>/arsip`), dan halaman profil (`/<username>/tentang`).
+- **Halaman Penulis:** Blog per pengguna (`qata.blog/<username>`), arsip tahunan (`/<username>/arsip`), dan halaman profil (`/<username>/tentang`).
 - **Halaman Kustom:** Pengguna dapat membuat halaman bebas tersendiri (`/<username>/<slug>`).
 - **RSS Feed:** Umpan sindikasi XML otomatis untuk setiap penulis (`/<username>/rss`).
 - **Sistem Like Tanpa Akun:** Pembaca dapat mengapresiasi tulisan tanpa login, dengan pencegahan duplikasi like menggunakan hash IP SHA-256 lokal.
@@ -128,4 +128,4 @@ Didistribusikan di bawah lisensi MIT. Bebas digunakan, dipelajari, dan dimodifik
 
 ---
 
-Dibuat dengan tenang oleh **[awekh](https://qata.my.id/awekh)**.
+Dibuat dengan tenang oleh **[awekh](https://qata.blog/awekh)**.

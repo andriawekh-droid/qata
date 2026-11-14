@@ -1,6 +1,6 @@
 # Panduan Pengguna — Platform Qata
 
-> qata.my.id | Panduan ini ditujukan untuk pengguna terdaftar platform Qata.
+> qata.blog | Panduan ini ditujukan untuk pengguna terdaftar platform Qata.
 
 ---
 
@@ -15,7 +15,7 @@ Qata adalah platform blogging minimalis yang fokus pada tulisan. Tanpa iklan, ta
 Qata bersifat **invite-only**. Kamu hanya bisa mendaftar jika memiliki **kode undangan** yang diberikan oleh pengelola platform.
 
 ### Langkah Registrasi
-1. Buka `qata.my.id`
+1. Buka `qata.blog`
 2. Klik **Daftar** / Register
 3. Masukkan kode undangan yang kamu terima
 4. Isi username dan password
@@ -27,7 +27,7 @@ Qata bersifat **invite-only**. Kamu hanya bisa mendaftar jika memiliki **kode un
 
 ## 2. Login & Logout
 
-- Buka `qata.my.id` dan klik **Masuk**
+- Buka `qata.blog` dan klik **Masuk**
 - Masukkan username dan password
 - Untuk keluar, klik nama akun atau tombol **Logout** di navigasi
 
@@ -58,7 +58,7 @@ Qata menggunakan **Markdown** untuk memformat tulisan. Kamu tidak perlu tahu sem
 
 Setelah diterbitkan, postinganmu bisa diakses di:
 ```
-qata.my.id/usernamemu/judul-postingan
+qata.blog/usernamemu/judul-postingan
 ```
 
 ### Mengedit atau Menghapus Postingan
@@ -109,7 +109,7 @@ Qata menyediakan **RSS Feed** untuk setiap pengguna, sehingga pembaca bisa berla
 
 URL feed-mu:
 ```
-qata.my.id/usernamemu/rss
+qata.blog/usernamemu/rss
 ```
 
 Browser modern biasanya mendeteksi feed ini secara otomatis.
@@ -124,7 +124,7 @@ Kamu bisa melihat seluruh riwayat postinganmu yang dikelompokkan per tahun di ha
 
 ## 9. Homepage Platform
 
-Halaman utama `qata.my.id` menampilkan:
+Halaman utama `qata.blog` menampilkan:
 - **Terbaru** — 5 postingan terbaru dari seluruh pengguna
 - **Populer** — 5 postingan dengan jumlah suka terbanyak
 

@@ -20,7 +20,7 @@
             <div class="editor-toolbar">
                 <div class="editor-toolbar-left">
                     <label for="content" class="mb-0">Isi Halaman (Markdown)</label>
-                    <a href="https://qata.my.id/awekh/panduan-menulis-di-qata-markdown" 
+                    <a href="https://qata.blog/awekh/panduan-menulis-di-qata-markdown" 
                        target="_blank" 
                        rel="noopener noreferrer" 
                        class="markdown-guide-link"
@@ -67,15 +67,15 @@
         <strong>URL halaman ini:</strong>
         {% if page['type'] == 'tentang' %}
             <a href="{{ url_for('public.user_about', username=current_user.username) }}" target="_blank">
-                qata.my.id/{{ current_user.username }}/tentang
+                qata.blog/{{ current_user.username }}/tentang
             </a>
         {% elif page['type'] == 'landing' %}
             <a href="{{ url_for('public.user_blog', username=current_user.username) }}" target="_blank">
-                qata.my.id/{{ current_user.username }}
+                qata.blog/{{ current_user.username }}
             </a>
         {% else %}
             <a href="{{ url_for('public.user_page', username=current_user.username, slug=page['slug']) }}" target="_blank">
-                qata.my.id/{{ current_user.username }}/page/{{ page['slug'] }}
+                qata.blog/{{ current_user.username }}/page/{{ page['slug'] }}
             </a>
         {% endif %}
     </div>

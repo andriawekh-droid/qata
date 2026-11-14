@@ -6,7 +6,7 @@
 
 ## 1. Gambaran Umum
 
-**Qata** (qata.my.id) adalah platform blogging minimalis berbasis teks yang dirancang dengan prinsip:
+**Qata** (qata.blog) adalah platform blogging minimalis berbasis teks yang dirancang dengan prinsip:
 
 - **Privasi pengguna** — tidak ada pelacak eksternal (no third-party trackers)
 - **Kecepatan muat** — ringan, tidak bergantung pada framework frontend berat
@@ -50,7 +50,7 @@ Nginx (Reverse Proxy, port 80/443)
 Gunicorn (WSGI Application Server)
    │
    ▼
-Flask Application (qata.my.id)
+Flask Application (qata.blog)
    │
    ▼
 SQLite Database (WAL mode)
@@ -126,7 +126,7 @@ Menyimpan konfigurasi halaman landing utama situs (dapat diedit admin).
 
 ### 5.3 Blog & Postingan
 - Penulisan konten menggunakan **Markdown** (diproses oleh Mistune)
-- URL postingan: `qata.my.id/{username}/{slug}`
+- URL postingan: `qata.blog/{username}/{slug}`
 - Setiap postingan memiliki statistik: jumlah tampilan dan jumlah suka
 
 ### 5.4 Dashboard Pengguna
@@ -145,7 +145,7 @@ Setiap pengguna memiliki hingga 3 halaman statis:
 
 ### 5.7 RSS Feed
 - Setiap pengguna memiliki feed RSS yang dapat dideteksi otomatis oleh browser
-- URL feed: `qata.my.id/{username}/rss`
+- URL feed: `qata.blog/{username}/rss`
 
 ### 5.8 Halaman Arsip
 - Postingan dikelompokkan berdasarkan tahun

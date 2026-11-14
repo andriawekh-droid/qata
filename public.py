@@ -494,7 +494,7 @@ def user_rss(username):
         (user['id'],)
     ).fetchall()
 
-    base_url = 'https://qata.my.id'
+    base_url = 'https://qata.blog'
     blog_url = f"{base_url}/{username}"
 
     items = ''
