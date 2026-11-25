@@ -5,13 +5,13 @@
 {% block meta %}
 {% if not is_preview %}
     <meta name="description" content="{{ meta_description }}">
-    <link rel="canonical" href="{{ url_for('public.post_detail', username=user['username'], slug=post['slug'], _external=True) }}">
-    <link rel="alternate" type="application/rss+xml" title="{{ user['display_name'] }} — Qata" href="{{ url_for('public.user_rss', username=user['username']) }}">
+    <link rel="canonical" href="{{ blog_url(user, '/' ~ post['slug'], external=True) }}">
+    <link rel="alternate" type="application/rss+xml" title="{{ user['display_name'] }} — Qata" href="{{ blog_url(user, '/rss') }}">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Qata">
     <meta property="og:title" content="{{ post['title'] }} — {{ user['display_name'] }}">
     <meta property="og:description" content="{{ meta_description }}">
-    <meta property="og:url" content="{{ url_for('public.post_detail', username=user['username'], slug=post['slug'], _external=True) }}">
+    <meta property="og:url" content="{{ blog_url(user, '/' ~ post['slug'], external=True) }}">
     {% if post_image %}
     <meta property="og:image" content="{{ post_image }}">
     {% endif %}
@@ -31,17 +31,17 @@
         "dateModified": {{ ((post['updated_at'] or post['created_at']) | string)[:10] | tojson }},
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": {{ url_for('public.post_detail', username=user['username'], slug=post['slug'], _external=True) | tojson }}
+            "@id": {{ blog_url(user, '/' ~ post['slug'], external=True) | tojson }}
         },
         "author": {
             "@type": "Person",
             "name": {{ (user['display_name'] or user['username']) | tojson }},
-            "url": {{ url_for('public.user_blog', username=user['username'], _external=True) | tojson }}
+            "url": {{ blog_url(user, '', external=True) | tojson }}
         },
         "publisher": {
             "@type": "Organization",
             "name": "Qata",
-            "url": {{ url_for('public.index', _external=True) | tojson }}
+            "url": {{ main_url('public.index', _external=True) | tojson }}
         }{% if post_image %},
         "image": {{ post_image | tojson }}{% endif %}
     }
@@ -51,9 +51,9 @@
 
 {% block content %}
 <header class="site-header">
-    <a href="{{ url_for('public.index') }}" class="wordmark">Qata</a>
+    <a href="{{ main_url('public.index') }}" class="wordmark">Qata</a>
     <div class="header-links">
-        <a href="{{ url_for('public.index') }}">Rumah</a>
+        <a href="{{ main_url('public.index') }}">Rumah</a>
     </div>
 </header>
 
@@ -65,7 +65,7 @@
     <button type="button" class="btn btn-secondary btn-close-preview preview-banner-btn">Tutup Pratinjau</button>
 </div>
 {% else %}
-<a href="{{ url_for('public.user_blog', username=user['username']) }}" class="back-link">
+<a href="{{ blog_url(user) }}" class="back-link">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
     Kembali ke blog {{ user['display_name'] }}
 </a>
@@ -74,7 +74,7 @@
 <article class="post-full">
     <header class="post-header">
         <div class="post-meta">
-            <a href="{{ url_for('public.user_blog', username=user['username']) }}">@{{ user['username'] }}</a>
+            <a href="{{ blog_url(user) }}">@{{ user['username'] }}</a>
             <span class="dot">&middot;</span>
             <span>{{ post['created_at'] | tanggal }}</span>
             <span class="dot">&middot;</span>
@@ -171,7 +171,7 @@
             <span class="like-label-text">{% if sudah_like %}Disukai ({{ post['like_count'] }}){% else %}Suka tulisan ini ({{ post['like_count'] }}){% endif %}</span>
         </button>
 
-        <a href="{{ url_for('public.user_blog', username=user['username']) }}" class="back-link mb-0">
+        <a href="{{ blog_url(user) }}" class="back-link mb-0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             Kembali ke blog {{ user['display_name'] }}
         </a>
@@ -191,7 +191,7 @@
             {% for op in other_posts %}
             <article class="post-row">
                 <h3>
-                    <a href="{{ url_for('public.post_detail', username=user['username'], slug=op['slug']) }}">
+                    <a href="{{ blog_url(user, '/' ~ op['slug']) }}">
                         {{ op['title'] }}
                     </a>
                 </h3>

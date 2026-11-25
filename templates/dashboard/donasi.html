@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Dukungan & Donasi — Qata{% endblock %}
+{% block title %}Premium &amp; Donasi — Qata{% endblock %}
 
 {% block content %}
 <a href="{{ url_for('dashboard.index') }}" class="back-link">
@@ -8,24 +8,46 @@
     Kembali ke Dashboard
 </a>
 
-<div class="donasi-container">
+<div class="donasi-container donasi-container-wide">
     <div class="donasi-card">
         <div class="donasi-header">
             <div class="donasi-icon">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             </div>
             <div>
-                <h1>Dukung Qata</h1>
-                <p class="donasi-sub">Kontribusi &amp; Sumbangan Sukarela</p>
+                <h1>Premium &amp; Donasi</h1>
+                <p class="donasi-sub">Dukung Qata &amp; Buka Fitur Premium Selamanya</p>
             </div>
         </div>
 
-        <div class="donasi-badge-wrapper">
-            <span class="donasi-badge">✨ 100% Bebas Iklan &amp; Distraksi</span>
+        {% if is_premium %}
+        <div class="premium-status-box is-active">
+            <div class="premium-status-head">
+                <span class="badge badge-premium">Premium Aktif</span>
+                <strong>Terima kasih, akun Anda sudah Premium!</strong>
+            </div>
+            <p class="premium-status-desc">
+                Semua fitur Premium sudah terbuka selamanya: izin <strong>Unggah Gambar</strong> di editor tulisan dan alamat blog khusus
+                <code>{{ current_user.username }}.{{ base_domain }}</code>{% if not subdomain_enabled %} (segera aktif setelah propagasi domain){% endif %}.
+                Anda tetap dapat berdonasi secara sukarela kapan saja di bawah ini.
+            </p>
         </div>
+        {% else %}
+        <div class="premium-status-box">
+            <div class="premium-status-head">
+                <span class="badge badge-premium">Sekali Bayar Selamanya</span>
+                <strong>Qata Premium &mdash; {{ min_premium | rupiah }}</strong>
+            </div>
+            <ul class="premium-benefits">
+                <li><strong>Unggah Gambar:</strong> Sisipkan ilustrasi langsung ke dalam tulisan melalui editor.</li>
+                <li><strong>Subdomain Pribadi:</strong> Alamat blog eksklusif <code>{{ current_user.username }}.{{ base_domain }}</code>.</li>
+                <li><strong>Dukung Kemandirian Qata:</strong> Bebas iklan, tanpa pelacak, dan berkelanjutan.</li>
+            </ul>
+        </div>
+        {% endif %}
 
         <p class="donasi-desc">
-            Qata berkomitmen menyediakan ruang menulis yang tenang, bersih, cepat, dan bebas distraksi. Dukungan Anda berapapun nominalnya sangat berarti untuk biaya operasional server, domain, serta kelangsungan pengembangan fitur-fitur baru.
+            Pindai QRIS di bawah ini menggunakan GoPay, OVO, DANA, ShopeePay, BCA, Mandiri, BNI, BRI, atau m-Banking apa saja, lalu kirimkan konfirmasi pembayaran agar dapat segera diverifikasi admin.
         </p>
 
         <div class="qris-frame">
@@ -52,11 +74,7 @@
             </div>
         </div>
 
-        <p class="donasi-instruction">
-            Pindai QRIS di atas melalui GoPay, OVO, DANA, ShopeePay, BCA, Mandiri, BNI, BRI, atau aplikasi m-Banking apa saja. Bebas masukkan nominal berapapun.
-        </p>
-
-        <div class="donasi-actions">
+        <div class="donasi-actions mb-md">
             <a href="{{ url_for('static', filename='img/qris.jpg') }}" download="QRIS-Qata-Andri-Permana.jpg" class="btn btn-secondary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon-sm">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -65,9 +83,109 @@
                 </svg>
                 Unduh QR
             </a>
-            <a href="{{ url_for('dashboard.index') }}" class="btn">Kembali ke Dashboard</a>
         </div>
+
+        <form method="POST" enctype="multipart/form-data" class="payment-form" id="paymentForm" data-min-premium="{{ min_premium }}">
+            <h2>Konfirmasi Pembayaran</h2>
+            {% set default_type = 'donation' if is_premium else 'premium' %}
+            <input type="hidden" name="type" id="paymentTypeInput" value="{{ default_type }}">
+
+            <div class="payment-tabs" role="tablist" aria-label="Jenis pembayaran">
+                <button type="button" role="tab"
+                        id="tabPremium"
+                        data-type="premium"
+                        aria-selected="{{ 'true' if default_type == 'premium' else 'false' }}"
+                        class="payment-tab {% if default_type == 'premium' %}active{% endif %}">
+                    Buka Premium
+                </button>
+                <button type="button" role="tab"
+                        id="tabDonation"
+                        data-type="donation"
+                        aria-selected="{{ 'true' if default_type == 'donation' else 'false' }}"
+                        class="payment-tab {% if default_type == 'donation' %}active{% endif %}">
+                    Donasi Sukarela
+                </button>
+            </div>
+
+            <p class="payment-type-hint" id="paymentTypeHint">
+                {% if default_type == 'premium' %}
+                    Pembukaan fitur Premium selamanya, minimal <strong>{{ min_premium | rupiah }}</strong>.
+                {% else %}
+                    Donasi sukarela dengan nominal bebas. Terima kasih sudah mendukung operasional Qata!
+                {% endif %}
+            </p>
+
+            <div class="payment-grid">
+                <div class="form-group">
+                    <label for="amountInput">Nominal (Rp)</label>
+                    <input type="text" id="amountInput" name="amount" inputmode="numeric" required
+                           placeholder="{{ '25.000' if default_type == 'premium' else '10.000' }}">
+                    <small id="amountMinError" class="field-error d-none">
+                        Minimal {{ min_premium | rupiah }} untuk aktivasi Premium.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="senderNameInput">Nama Pengirim (sesuai e-wallet/bank)</label>
+                    <input type="text" id="senderNameInput" name="sender_name" required
+                           minlength="2" maxlength="80"
+                           value="{{ current_user.display_name or current_user.username }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="noteInput">Catatan (opsional)</label>
+                <textarea id="noteInput" name="note" rows="2" maxlength="300"
+                          placeholder="Tulis catatan singkat atau pesan dukungan jika ada..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="proofInput">Bukti Transfer (gambar)</label>
+                <input type="file" id="proofInput" name="proof" required
+                       accept="image/jpeg,image/png,image/webp">
+                <small>Format JPG, PNG, atau WebP (maks. 8 MB).</small>
+            </div>
+
+            <button type="submit" class="btn payment-submit-btn">Kirim Konfirmasi</button>
+        </form>
     </div>
+
+    {% if payments %}
+    <section class="payment-history-card">
+        <h2>Riwayat Konfirmasi Anda</h2>
+        <ul class="payment-history-list">
+            {% for p in payments %}
+            <li class="payment-history-item">
+                <div class="payment-history-top">
+                    <div class="payment-history-meta">
+                        <strong class="payment-amount">{{ p['amount'] | rupiah }}</strong>
+                        <span class="badge payment-type-badge">
+                            {{ 'Premium' if p['type'] == 'premium' else 'Donasi' }}
+                        </span>
+                        <span class="badge payment-status-badge status-{{ p['status'] }}">
+                            {% if p['status'] == 'verified' %}Terverifikasi
+                            {% elif p['status'] == 'rejected' %}Ditolak
+                            {% else %}Menunggu verifikasi{% endif %}
+                        </span>
+                    </div>
+                    <span class="payment-date">{{ p['created_at'] | tanggal }}</span>
+                </div>
+                <div class="payment-history-detail">
+                    <span>Pengirim: <strong>{{ p['sender_name'] }}</strong></span>
+                    <span class="menu-divider">&middot;</span>
+                    <a href="{{ url_for('dashboard.view_payment_proof', payment_id=p['id']) }}" target="_blank" rel="noopener">Lihat bukti</a>
+                </div>
+                {% if p['note'] %}
+                <p class="payment-note">&ldquo;{{ p['note'] }}&rdquo;</p>
+                {% endif %}
+                {% if p['admin_note'] %}
+                <p class="payment-admin-note">Catatan admin: {{ p['admin_note'] }}</p>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
 </div>
 
 <script nonce="{{ csp_nonce }}">
@@ -84,5 +202,69 @@ function salinNMID() {
     });
 }
 document.getElementById('copyNmidBtn')?.addEventListener('click', salinNMID);
+
+(function() {
+    const form = document.getElementById('paymentForm');
+    if (!form) return;
+    const minPremium = parseInt(form.dataset.minPremium || '25000', 10);
+    const typeInput = document.getElementById('paymentTypeInput');
+    const hintEl = document.getElementById('paymentTypeHint');
+    const amountInput = document.getElementById('amountInput');
+    const minError = document.getElementById('amountMinError');
+    const tabs = form.querySelectorAll('.payment-tab');
+
+    function formatRibuan(raw) {
+        const digits = raw.replace(/[^\d]/g, '');
+        return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function numericAmount() {
+        return parseInt((amountInput.value || '').replace(/[^\d]/g, ''), 10) || 0;
+    }
+
+    function updateValidationHint() {
+        const num = numericAmount();
+        if (typeInput.value === 'premium' && num > 0 && num < minPremium) {
+            minError.classList.remove('d-none');
+        } else {
+            minError.classList.add('d-none');
+        }
+    }
+
+    function selectTab(nextType) {
+        typeInput.value = nextType;
+        tabs.forEach((btn) => {
+            const active = btn.dataset.type === nextType;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        if (nextType === 'premium') {
+            hintEl.innerHTML = 'Pembukaan fitur Premium selamanya, minimal <strong>Rp25.000</strong>.';
+            amountInput.placeholder = '25.000';
+        } else {
+            hintEl.textContent = 'Donasi sukarela dengan nominal bebas. Terima kasih sudah mendukung operasional Qata!';
+            amountInput.placeholder = '10.000';
+        }
+        updateValidationHint();
+    }
+
+    tabs.forEach((btn) => {
+        btn.addEventListener('click', () => selectTab(btn.dataset.type));
+    });
+
+    amountInput.addEventListener('input', () => {
+        amountInput.value = formatRibuan(amountInput.value);
+        updateValidationHint();
+    });
+
+    form.addEventListener('submit', (e) => {
+        const num = numericAmount();
+        if (typeInput.value === 'premium' && num < minPremium) {
+            e.preventDefault();
+            minError.classList.remove('d-none');
+            amountInput.focus();
+        }
+    });
+})();
 </script>
 {% endblock %}

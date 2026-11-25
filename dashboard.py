@@ -6,7 +6,7 @@ import secrets
 import bcrypt
 import mistune
 from PIL import Image, ImageOps
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, make_response, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, make_response, jsonify, current_app, send_from_directory
 from flask_login import login_required, current_user
 from database import get_db, update_sitemap
 from auth import get_registration_mode, MODE_VALID, PASSWORD_MIN, PASSWORD_MAX_BYTES
@@ -18,22 +18,52 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 BATAS_UNDANGAN = 5
 BATAS_PAGE = 3
 SDMFSRD_URL = "https://sdmfsrd.web.id"
+MIN_PREMIUM_AMOUNT = 25000
+MAX_PROOF_SIZE = 8 * 1024 * 1024  # 8 MB batas bukti transfer
+
+def user_is_premium(db, user):
+    if not getattr(user, 'is_authenticated', False):
+        return False
+    if getattr(user, 'is_admin', False) or getattr(user, 'is_premium', False):
+        return True
+    row = db.execute('SELECT is_premium, is_admin FROM users WHERE id = ?', (user.id,)).fetchone()
+    if row:
+        keys = row.keys()
+        if (row['is_admin'] if 'is_admin' in keys else 0) or (row['is_premium'] if 'is_premium' in keys else 0):
+            return True
+    return False
+
 def user_can_upload_image(db, user):
     if not getattr(user, 'is_authenticated', False):
         return False
-    if getattr(user, 'is_admin', False):
+    if getattr(user, 'is_admin', False) or getattr(user, 'is_premium', False):
         return True
-    row = db.execute('SELECT can_upload_image, is_admin FROM users WHERE id = ?', (user.id,)).fetchone()
-    if row and (row['is_admin'] or row['can_upload_image']):
-        return True
+    row = db.execute('SELECT can_upload_image, is_premium, is_admin FROM users WHERE id = ?', (user.id,)).fetchone()
+    if row:
+        keys = row.keys()
+        if (row['is_admin'] if 'is_admin' in keys else 0) or (row['is_premium'] if 'is_premium' in keys else 0) or (row['can_upload_image'] if 'can_upload_image' in keys else 0):
+            return True
     return False
 
 @dashboard_bp.context_processor
 def inject_dashboard_context():
+    if not getattr(current_user, 'is_authenticated', False):
+        return {
+            'can_upload_image': False,
+            'is_premium_user': False,
+            'pending_payments_count': 0,
+        }
     db = get_db()
-    can_upload = user_can_upload_image(db, current_user) if getattr(current_user, 'is_authenticated', False) else False
+    can_upload = user_can_upload_image(db, current_user)
+    is_prem = user_is_premium(db, current_user)
+    pending_count = 0
+    if getattr(current_user, 'is_admin', False):
+        row = db.execute("SELECT COUNT(*) FROM payments WHERE status = 'pending'").fetchone()
+        pending_count = row[0] if row else 0
     return {
-        'can_upload_image': can_upload
+        'can_upload_image': can_upload,
+        'is_premium_user': is_prem,
+        'pending_payments_count': pending_count,
     }
 
 def cek_status_sdmfsrd():
@@ -656,6 +686,40 @@ def admin_toggle_upload_image(user_id):
     flash(f"Izin upload gambar untuk @{target['username']} berhasil {status_str}.", 'sukses')
     return redirect(url_for('dashboard.admin_index'))
 
+@dashboard_bp.route('/admin/toggle-premium/<int:user_id>', methods=['POST'])
+@login_required
+def admin_toggle_premium(user_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    db = get_db()
+    target = db.execute('SELECT id, username, is_premium, is_admin FROM users WHERE id = ?', (user_id,)).fetchone()
+    if not target:
+        flash('Pengguna tidak ditemukan.', 'error')
+        return redirect(url_for('dashboard.admin_index'))
+
+    if target['is_admin']:
+        flash('Akun admin selalu berstatus Premium.', 'error')
+        return redirect(url_for('dashboard.admin_index'))
+
+    new_val = 0 if target['is_premium'] else 1
+    if new_val:
+        db.execute(
+            '''UPDATE users
+               SET is_premium = 1, can_upload_image = 1,
+                   premium_since = COALESCE(premium_since, CURRENT_TIMESTAMP)
+               WHERE id = ?''',
+            (user_id,)
+        )
+    else:
+        db.execute('UPDATE users SET is_premium = 0 WHERE id = ?', (user_id,))
+    db.commit()
+    update_sitemap()
+
+    status_str = 'diaktifkan' if new_val else 'dinonaktifkan'
+    flash(f"Status Premium untuk @{target['username']} berhasil {status_str}.", 'sukses')
+    return redirect(url_for('dashboard.admin_index'))
+
 @dashboard_bp.route('/admin/reset-password/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def admin_reset_password(user_id):
@@ -731,6 +795,19 @@ def admin_delete_user(user_id):
     db.execute('DELETE FROM posts WHERE user_id = ?', (user_id,))
     db.execute('DELETE FROM pages WHERE user_id = ?', (user_id,))
     db.execute('DELETE FROM invite_codes WHERE created_by = ?', (user_id,))
+
+    # Hapus berkas bukti pembayaran user jika ada
+    proof_rows = db.execute('SELECT proof_file FROM payments WHERE user_id = ?', (user_id,)).fetchall()
+    proof_folder = os.path.join(current_app.instance_path, 'payment_proofs')
+    for pr in proof_rows:
+        fpath = os.path.join(proof_folder, pr['proof_file'])
+        if os.path.exists(fpath):
+            try:
+                os.remove(fpath)
+            except OSError:
+                pass
+    db.execute('DELETE FROM payments WHERE user_id = ?', (user_id,))
+
     db.execute('DELETE FROM users WHERE id = ?', (user_id,))
     db.commit()
 
@@ -819,7 +896,229 @@ def sistem():
 
     return render_template('dashboard/sistem.html', stats=stats)
 
-@dashboard_bp.route('/donasi')
+@dashboard_bp.route('/donasi', methods=['GET', 'POST'])
 @login_required
 def donasi():
-    return render_template('dashboard/donasi.html')
+    db = get_db()
+    is_prem = user_is_premium(db, current_user)
+
+    if request.method == 'POST':
+        pay_type = request.form.get('type', 'donation').strip()
+        if pay_type not in ('donation', 'premium'):
+            flash('Jenis pembayaran tidak valid.', 'error')
+            return redirect(url_for('dashboard.donasi'))
+
+        raw_amount = re.sub(r'[^\d]', '', request.form.get('amount', ''))
+        try:
+            amount = int(raw_amount) if raw_amount else 0
+        except ValueError:
+            amount = 0
+
+        sender_name = request.form.get('sender_name', '').strip()
+        note = request.form.get('note', '').strip()
+        proof_file = request.files.get('proof')
+
+        error = None
+        if amount <= 0:
+            error = 'Nominal pembayaran harus lebih dari Rp0.'
+        elif pay_type == 'premium' and amount < MIN_PREMIUM_AMOUNT:
+            error = f'Nominal minimal untuk aktivasi Premium adalah Rp{MIN_PREMIUM_AMOUNT:,}.'.replace(',', '.')
+        elif len(sender_name) < 2 or len(sender_name) > 80:
+            error = 'Nama pengirim wajib diisi (2–80 karakter).'
+        elif len(note) > 300:
+            error = 'Catatan maksimal 300 karakter.'
+        elif not proof_file or proof_file.filename == '':
+            error = 'Bukti transfer wajib dilampirkan.'
+
+        if error is None:
+            file_bytes = proof_file.read()
+            if not file_bytes:
+                error = 'Berkas bukti transfer kosong.'
+            elif len(file_bytes) > MAX_PROOF_SIZE:
+                error = 'Ukuran bukti transfer maksimal 8 MB.'
+
+        if error is None:
+            try:
+                img = Image.open(io.BytesIO(file_bytes))
+                img.verify()
+                img = Image.open(io.BytesIO(file_bytes))
+                img = ImageOps.exif_transpose(img)
+                if img.width > 1280 or img.height > 1280:
+                    img.thumbnail((1280, 1280), Image.Resampling.LANCZOS)
+                if img.mode != 'RGB':
+                    if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+                        bg = Image.new('RGB', img.size, (255, 255, 255))
+                        rgba = img.convert('RGBA')
+                        bg.paste(rgba, mask=rgba.split()[3])
+                        img = bg
+                    else:
+                        img = img.convert('RGB')
+
+                proof_folder = os.path.join(current_app.instance_path, 'payment_proofs')
+                os.makedirs(proof_folder, exist_ok=True)
+                t_prefix = dt.now().strftime('%Y%m%d%H%M%S')
+                rand_hex = secrets.token_hex(4)
+                filename = f'proof-{current_user.id}-{t_prefix}-{rand_hex}.webp'
+                save_path = os.path.join(proof_folder, filename)
+                img.save(save_path, 'WEBP', quality=80, method=4)
+
+                db.execute(
+                    '''INSERT INTO payments (user_id, type, amount, sender_name, note, proof_file, status)
+                       VALUES (?, ?, ?, ?, ?, ?, 'pending')''',
+                    (current_user.id, pay_type, amount, sender_name, note or None, filename)
+                )
+                db.commit()
+                flash('Konfirmasi pembayaran berhasil dikirim. Admin akan memverifikasi secepatnya.', 'sukses')
+                return redirect(url_for('dashboard.donasi'))
+            except Exception as e:
+                current_app.logger.error(f"Error processing payment proof: {e}")
+                error = 'Berkas bukti transfer tidak valid atau rusak. Gunakan JPG, PNG, atau WebP.'
+
+        flash(error, 'error')
+
+    payments = db.execute(
+        '''SELECT * FROM payments
+           WHERE user_id = ?
+           ORDER BY created_at DESC
+           LIMIT 20''',
+        (current_user.id,)
+    ).fetchall()
+
+    return render_template(
+        'dashboard/donasi.html',
+        payments=payments,
+        min_premium=MIN_PREMIUM_AMOUNT,
+        is_premium=is_prem,
+    )
+
+@dashboard_bp.route('/bukti-pembayaran/<int:payment_id>')
+@login_required
+def view_payment_proof(payment_id):
+    db = get_db()
+    payment = db.execute(
+        'SELECT id, user_id, proof_file FROM payments WHERE id = ?',
+        (payment_id,)
+    ).fetchone()
+    if payment is None:
+        abort(404)
+    if not current_user.is_admin and payment['user_id'] != current_user.id:
+        abort(403)
+
+    proof_folder = os.path.join(current_app.instance_path, 'payment_proofs')
+    return send_from_directory(proof_folder, payment['proof_file'])
+
+@dashboard_bp.route('/admin/pembayaran')
+@login_required
+def admin_payments():
+    if not current_user.is_admin:
+        abort(403)
+
+    status_filter = request.args.get('status', 'pending').strip().lower()
+    if status_filter not in ('pending', 'verified', 'rejected', 'all'):
+        status_filter = 'pending'
+
+    db = get_db()
+    counts_rows = db.execute(
+        'SELECT status, COUNT(*) as total FROM payments GROUP BY status'
+    ).fetchall()
+    counts = {'pending': 0, 'verified': 0, 'rejected': 0}
+    for cr in counts_rows:
+        if cr['status'] in counts:
+            counts[cr['status']] = cr['total']
+    counts['all'] = sum(counts.values())
+
+    sum_rows = db.execute(
+        '''SELECT type, COALESCE(SUM(amount), 0) as total
+           FROM payments
+           WHERE status = 'verified'
+           GROUP BY type'''
+    ).fetchall()
+    sums = {'donation': 0, 'premium': 0}
+    for sr in sum_rows:
+        if sr['type'] in sums:
+            sums[sr['type']] = sr['total']
+
+    base_query = '''SELECT p.*, u.username, u.display_name, u.email, u.is_premium
+                    FROM payments p
+                    JOIN users u ON p.user_id = u.id'''
+    if status_filter == 'all':
+        rows = db.execute(base_query + ' ORDER BY p.created_at DESC').fetchall()
+    else:
+        rows = db.execute(
+            base_query + ' WHERE p.status = ? ORDER BY p.created_at DESC',
+            (status_filter,)
+        ).fetchall()
+
+    return render_template(
+        'dashboard/admin_pembayaran.html',
+        payments=rows,
+        status_filter=status_filter,
+        counts=counts,
+        sums=sums,
+    )
+
+@dashboard_bp.route('/admin/pembayaran/<int:payment_id>/review', methods=['POST'])
+@login_required
+def admin_review_payment(payment_id):
+    if not current_user.is_admin:
+        abort(403)
+
+    decision = request.form.get('decision', '').strip()
+    admin_note = request.form.get('admin_note', '').strip()
+    current_filter = request.form.get('current_filter', 'pending').strip()
+    if current_filter not in ('pending', 'verified', 'rejected', 'all'):
+        current_filter = 'pending'
+
+    if decision not in ('verified', 'rejected', 'pending'):
+        flash('Keputusan verifikasi tidak valid.', 'error')
+        return redirect(url_for('dashboard.admin_payments', status=current_filter))
+
+    if len(admin_note) > 300:
+        flash('Catatan admin maksimal 300 karakter.', 'error')
+        return redirect(url_for('dashboard.admin_payments', status=current_filter))
+
+    db = get_db()
+    payment = db.execute(
+        '''SELECT p.*, u.username
+           FROM payments p
+           JOIN users u ON p.user_id = u.id
+           WHERE p.id = ?''',
+        (payment_id,)
+    ).fetchone()
+    if payment is None:
+        flash('Data pembayaran tidak ditemukan.', 'error')
+        return redirect(url_for('dashboard.admin_payments', status=current_filter))
+
+    if decision == 'verified':
+        db.execute(
+            '''UPDATE payments
+               SET status = 'verified', admin_note = ?, verified_at = CURRENT_TIMESTAMP
+               WHERE id = ?''',
+            (admin_note or None, payment_id)
+        )
+        if payment['type'] == 'premium':
+            db.execute(
+                '''UPDATE users
+                   SET is_premium = 1, can_upload_image = 1,
+                       premium_since = COALESCE(premium_since, CURRENT_TIMESTAMP)
+                   WHERE id = ?''',
+                (payment['user_id'],)
+            )
+            db.commit()
+            update_sitemap()
+            flash(f"Pembayaran @{payment['username']} terverifikasi dan status Premium otomatis aktif!", 'sukses')
+            return redirect(url_for('dashboard.admin_payments', status=current_filter))
+        db.commit()
+        flash(f"Donasi dari @{payment['username']} berhasil diverifikasi.", 'sukses')
+    else:
+        db.execute(
+            '''UPDATE payments
+               SET status = ?, admin_note = ?, verified_at = NULL
+               WHERE id = ?''',
+            (decision, admin_note or None, payment_id)
+        )
+        db.commit()
+        label = 'ditolak' if decision == 'rejected' else 'dikembalikan ke menunggu verifikasi'
+        flash(f"Pembayaran dari @{payment['username']} {label}.", 'sukses')
+
+    return redirect(url_for('dashboard.admin_payments', status=current_filter))

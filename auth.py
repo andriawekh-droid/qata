@@ -12,7 +12,7 @@ from database import get_db
 auth_bp = Blueprint('auth', __name__)
 
 class User(UserMixin):
-    def __init__(self, id, username, email, display_name, bio, website, twitter, instagram, is_admin, active, theme_preference='light', can_upload_image=0, threads=None, letterbird=None):
+    def __init__(self, id, username, email, display_name, bio, website, twitter, instagram, is_admin, active, theme_preference='light', can_upload_image=0, threads=None, letterbird=None, is_premium=0, premium_since=None):
         self.id = id
         self.username = username
         self.email = email
@@ -26,7 +26,9 @@ class User(UserMixin):
         self.is_admin = is_admin
         self.active = active
         self.theme_preference = theme_preference or 'light'
-        self.can_upload_image = bool(can_upload_image or is_admin)
+        self.is_premium = bool(is_premium or is_admin)
+        self.premium_since = premium_since
+        self.can_upload_image = bool(can_upload_image or is_premium or is_admin)
 
     def get_id(self):
         return str(self.id)
@@ -35,43 +37,37 @@ class User(UserMixin):
     def is_active(self):
         return bool(self.active)
 
+def _user_from_row(row):
+    if row is None:
+        return None
+    keys = row.keys()
+    can_upload = row['can_upload_image'] if 'can_upload_image' in keys else 0
+    theme = row['theme_preference'] if 'theme_preference' in keys else 'light'
+    threads = row['threads'] if 'threads' in keys else None
+    letterbird = row['letterbird'] if 'letterbird' in keys else None
+    is_premium = row['is_premium'] if 'is_premium' in keys else 0
+    premium_since = row['premium_since'] if 'premium_since' in keys else None
+    return User(
+        row['id'], row['username'], row['email'],
+        row['display_name'], row['bio'], row['website'],
+        row['twitter'], row['instagram'], row['is_admin'],
+        row['is_active'], theme,
+        can_upload,
+        threads,
+        letterbird,
+        is_premium,
+        premium_since
+    )
+
 def get_user_by_id(user_id):
     db = get_db()
     row = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
-    if row:
-        can_upload = row['can_upload_image'] if 'can_upload_image' in row.keys() else 0
-        theme = row['theme_preference'] if 'theme_preference' in row.keys() else 'light'
-        threads = row['threads'] if 'threads' in row.keys() else None
-        letterbird = row['letterbird'] if 'letterbird' in row.keys() else None
-        return User(
-            row['id'], row['username'], row['email'],
-            row['display_name'], row['bio'], row['website'],
-            row['twitter'], row['instagram'], row['is_admin'],
-            row['is_active'], theme,
-            can_upload,
-            threads,
-            letterbird
-        )
-    return None
+    return _user_from_row(row)
 
 def get_user_by_username(username):
     db = get_db()
     row = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
-    if row:
-        can_upload = row['can_upload_image'] if 'can_upload_image' in row.keys() else 0
-        theme = row['theme_preference'] if 'theme_preference' in row.keys() else 'light'
-        threads = row['threads'] if 'threads' in row.keys() else None
-        letterbird = row['letterbird'] if 'letterbird' in row.keys() else None
-        return User(
-            row['id'], row['username'], row['email'],
-            row['display_name'], row['bio'], row['website'],
-            row['twitter'], row['instagram'], row['is_admin'],
-            row['is_active'], theme,
-            can_upload,
-            threads,
-            letterbird
-        )
-    return None
+    return _user_from_row(row)
 
 MODE_OPEN = 'open'
 MODE_INVITE = 'invite_only'
@@ -88,6 +84,8 @@ USERNAME_RESERVED = {
     'robots', 'sitemap', 'favicon', 'login', 'logout', 'register',
     'tulisan', 'tentang', 'page', 'rss', 'sistem', 'system',
     'jelajahi', 'explore', 'discover',
+    'mail', 'cdn', 'blog', 'app', 'dev', 'staging', 'test', 'smtp', 'ftp',
+    'ns1', 'ns2', 'status', 'docs', 'doc', 'donasi', 'premium', 'pembayaran',
 }
 
 PASSWORD_MIN = 8
@@ -307,19 +305,7 @@ def login():
             )
             db.commit()
 
-            can_upload = row['can_upload_image'] if 'can_upload_image' in row.keys() else 0
-            theme = row['theme_preference'] if 'theme_preference' in row.keys() else 'light'
-            threads = row['threads'] if 'threads' in row.keys() else None
-            letterbird = row['letterbird'] if 'letterbird' in row.keys() else None
-            user = User(
-                row['id'], row['username'], row['email'],
-                row['display_name'], row['bio'], row['website'],
-                row['twitter'], row['instagram'], row['is_admin'],
-                row['is_active'], theme,
-                can_upload,
-                threads,
-                letterbird
-            )
+            user = _user_from_row(row)
             login_user(user)
             return redirect(url_for('dashboard.index'))
 

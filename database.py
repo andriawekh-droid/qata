@@ -34,6 +34,8 @@ def init_db():
             is_admin INTEGER DEFAULT 0,
             is_active INTEGER DEFAULT 1,
             can_upload_image INTEGER NOT NULL DEFAULT 0,
+            is_premium INTEGER NOT NULL DEFAULT 0,
+            premium_since TIMESTAMP,
             theme_preference TEXT NOT NULL DEFAULT 'light',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -123,6 +125,27 @@ def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_login_attempts_user
             ON login_attempts (username, created_at);
+
+        CREATE TABLE IF NOT EXISTS payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            amount INTEGER NOT NULL,
+            sender_name TEXT NOT NULL,
+            note TEXT,
+            proof_file TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            admin_note TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            verified_at TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_payments_user
+            ON payments (user_id, created_at);
+
+        CREATE INDEX IF NOT EXISTS idx_payments_status
+            ON payments (status, created_at);
     ''')
     db.commit()
 
@@ -131,6 +154,13 @@ def init_db():
     if 'can_upload_image' not in user_cols:
         db.execute("ALTER TABLE users ADD COLUMN can_upload_image INTEGER NOT NULL DEFAULT 0")
         db.execute("UPDATE users SET can_upload_image = 1 WHERE is_admin = 1")
+        db.commit()
+    if 'is_premium' not in user_cols:
+        db.execute("ALTER TABLE users ADD COLUMN is_premium INTEGER NOT NULL DEFAULT 0")
+        db.execute("UPDATE users SET is_premium = 1 WHERE is_admin = 1")
+        db.commit()
+    if 'premium_since' not in user_cols:
+        db.execute("ALTER TABLE users ADD COLUMN premium_since TIMESTAMP")
         db.commit()
     if 'threads' not in user_cols:
         db.execute("ALTER TABLE users ADD COLUMN threads TEXT")
@@ -151,7 +181,15 @@ def update_sitemap(app=None):
         return
 
     db = get_db()
-    base_url = 'https://qata.blog'
+    base_domain = os.environ.get('QATA_BASE_DOMAIN', 'qata.blog').strip().lower()
+    subdomain_enabled = os.environ.get('QATA_SUBDOMAIN_ENABLED', '0').strip().lower() in ('1', 'true', 'yes', 'on')
+    base_url = f'https://{base_domain}'
+
+    def user_base(uname, is_prem):
+        if subdomain_enabled and is_prem:
+            return f'https://{uname}.{base_domain}'
+        return f'{base_url}/{uname}'
+
     xml_lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
@@ -162,16 +200,19 @@ def update_sitemap(app=None):
     xml_lines.append(f'  <url><loc>{base_url}/jelajahi</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>')
 
     # Blog & arsip pengguna aktif
-    users = db.execute('SELECT username FROM users WHERE is_active = 1').fetchall()
+    users = db.execute('SELECT username, is_premium, is_admin FROM users WHERE is_active = 1').fetchall()
     for u in users:
         uname = u['username']
-        xml_lines.append(f'  <url><loc>{base_url}/{uname}</loc><changefreq>daily</changefreq><priority>0.8</priority></url>')
-        xml_lines.append(f'  <url><loc>{base_url}/{uname}/tulisan</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>')
-        xml_lines.append(f'  <url><loc>{base_url}/{uname}/tentang</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>')
+        is_prem = bool(u['is_premium'] or u['is_admin'])
+        ub = user_base(uname, is_prem)
+        blog_root = f'{ub}/' if (subdomain_enabled and is_prem) else ub
+        xml_lines.append(f'  <url><loc>{blog_root}</loc><changefreq>daily</changefreq><priority>0.8</priority></url>')
+        xml_lines.append(f'  <url><loc>{ub}/tulisan</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>')
+        xml_lines.append(f'  <url><loc>{ub}/tentang</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>')
 
     # Tulisan yang terbit
     posts = db.execute('''
-        SELECT p.slug, p.updated_at, p.created_at, u.username
+        SELECT p.slug, p.updated_at, p.created_at, u.username, u.is_premium, u.is_admin
         FROM posts p
         JOIN users u ON p.user_id = u.id
         WHERE p.status = 'published' AND u.is_active = 1
@@ -179,24 +220,28 @@ def update_sitemap(app=None):
     ''').fetchall()
     for p in posts:
         uname = p['username']
+        is_prem = bool(p['is_premium'] or p['is_admin'])
+        ub = user_base(uname, is_prem)
         slug = p['slug']
         tgl = str(p['updated_at'] or p['created_at'] or '')[:10]
         lastmod = f'<lastmod>{tgl}</lastmod>' if tgl else ''
-        xml_lines.append(f'  <url><loc>{base_url}/{uname}/{slug}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.9</priority></url>')
+        xml_lines.append(f'  <url><loc>{ub}/{slug}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.9</priority></url>')
 
     # Halaman custom
     pages = db.execute('''
-        SELECT pg.slug, pg.updated_at, u.username
+        SELECT pg.slug, pg.updated_at, u.username, u.is_premium, u.is_admin
         FROM pages pg
         JOIN users u ON pg.user_id = u.id
         WHERE pg.type = 'custom' AND u.is_active = 1
     ''').fetchall()
     for pg in pages:
         uname = pg['username']
+        is_prem = bool(pg['is_premium'] or pg['is_admin'])
+        ub = user_base(uname, is_prem)
         slug = pg['slug']
         tgl = str(pg['updated_at'] or '')[:10]
         lastmod = f'<lastmod>{tgl}</lastmod>' if tgl else ''
-        xml_lines.append(f'  <url><loc>{base_url}/{uname}/page/{slug}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.6</priority></url>')
+        xml_lines.append(f'  <url><loc>{ub}/page/{slug}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.6</priority></url>')
 
     xml_lines.append('</urlset>\n')
     xml_content = '\n'.join(xml_lines)

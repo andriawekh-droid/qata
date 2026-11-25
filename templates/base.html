@@ -6,7 +6,7 @@
     <title>{% block title %}Qata{% endblock %}</title>
     {% block meta %}{% endblock %}
     {% block head %}{% endblock %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=21">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=22">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
@@ -21,9 +21,9 @@
         {% block content %}{% endblock %}
 
         <footer class="footer">
-            <span class="footer-left">Dibuat dengan <a href="{{ url_for('public.index') }}">Qata</a></span>
+            <span class="footer-left">Dibuat dengan <a href="{{ main_url('public.index') }}">Qata</a></span>
             {% if current_user.is_authenticated %}
-            <a class="footer-right" href="{{ url_for('dashboard.index') }}">Dashboard</a>
+            <a class="footer-right" href="{{ main_url('dashboard.index') }}">Dashboard</a>
             {% endif %}
         </footer>
     </main>

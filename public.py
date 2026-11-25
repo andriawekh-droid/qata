@@ -1,7 +1,7 @@
 import hashlib
 import re
 import mistune
-from flask import Blueprint, render_template, request, abort, jsonify, Response, redirect, url_for, flash
+from flask import Blueprint, render_template, request, abort, jsonify, Response, redirect, url_for, flash, current_app, g
 from database import get_db
 
 def render_markdown(content):
@@ -48,13 +48,35 @@ def get_site_setting(db, key, default=''):
     ).fetchone()
     return row['value'] if row else default
 
+def _check_subdomain_redirect(user, subpath=''):
+    """Arahkan URL antara subdomain & path utama sesuai status Premium & konfigurasi."""
+    keys = user.keys()
+    is_prem = bool((user['is_premium'] if 'is_premium' in keys else 0) or (user['is_admin'] if 'is_admin' in keys else 0))
+    base_domain = current_app.config.get('BASE_DOMAIN', 'qata.blog')
+    subdomain_enabled = current_app.config.get('SUBDOMAIN_ENABLED', False)
+    sub_user = getattr(g, 'subdomain_user', None)
+
+    if subpath and not subpath.startswith('/'):
+        subpath = '/' + subpath
+
+    if sub_user:
+        if not is_prem:
+            return redirect(f"https://{base_domain}/{user['username']}{subpath}", code=302)
+        if sub_user != user['username']:
+            return redirect(f"https://{user['username']}.{base_domain}{subpath or '/'}", code=301)
+    elif subdomain_enabled and is_prem:
+        req_host = (request.host or '').split(':')[0].lower()
+        if req_host == base_domain:
+            return redirect(f"https://{user['username']}.{base_domain}{subpath or '/'}", code=301)
+    return None
+
 @public_bp.route('/')
 def index():
     db = get_db()
 
     # 3 tulisan terbaru dari semua user
     recent_posts = db.execute(
-        '''SELECT p.*, u.username, u.display_name,
+        '''SELECT p.*, u.username, u.display_name, u.is_premium, u.is_admin,
            COUNT(DISTINCT l.id) as like_count
            FROM posts p
            JOIN users u ON p.user_id = u.id
@@ -67,7 +89,7 @@ def index():
 
     # 3 tulisan populer dari semua user
     popular_posts = db.execute(
-        '''SELECT p.*, u.username, u.display_name,
+        '''SELECT p.*, u.username, u.display_name, u.is_premium, u.is_admin,
            COUNT(DISTINCT l.id) as like_count
            FROM posts p
            JOIN users u ON p.user_id = u.id
@@ -120,7 +142,7 @@ def explore():
     if current_filter == 'acak':
         # Postingan acak dari para penulis di Qata
         posts = db.execute(
-            f'''SELECT p.*, u.username, u.display_name,
+            f'''SELECT p.*, u.username, u.display_name, u.is_premium, u.is_admin,
                       COUNT(DISTINCT l.id) as like_count
                {base_from}
                ORDER BY RANDOM()
@@ -137,7 +159,7 @@ def explore():
         offset = (page - 1) * per_page
 
         posts = db.execute(
-            f'''SELECT p.*, u.username, u.display_name,
+            f'''SELECT p.*, u.username, u.display_name, u.is_premium, u.is_admin,
                       COUNT(DISTINCT l.id) as like_count
                {base_from}
                ORDER BY p.created_at DESC
@@ -155,7 +177,7 @@ def explore():
         offset = (page - 1) * per_page
 
         posts = db.execute(
-            f'''SELECT p.*, u.username, u.display_name,
+            f'''SELECT p.*, u.username, u.display_name, u.is_premium, u.is_admin,
                       COUNT(DISTINCT l.id) as like_count
                {base_from}
                ORDER BY like_count DESC, p.created_at DESC
@@ -206,6 +228,10 @@ def user_blog(username):
 
     if user is None:
         abort(404)
+
+    redir = _check_subdomain_redirect(user, '')
+    if redir:
+        return redir
 
     # 3 tulisan terbaru
     recent_posts = db.execute(
@@ -266,6 +292,10 @@ def user_archive(username):
     if user is None:
         abort(404)
 
+    redir = _check_subdomain_redirect(user, '/tulisan')
+    if redir:
+        return redir
+
     posts = db.execute(
         '''SELECT p.*, COUNT(DISTINCT l.id) as like_count
            FROM posts p
@@ -312,6 +342,10 @@ def user_about(username):
     if user is None:
         abort(404)
 
+    redir = _check_subdomain_redirect(user, '/tentang')
+    if redir:
+        return redir
+
     # Ambil page tentang dari tabel pages
     page = db.execute(
         'SELECT * FROM pages WHERE user_id = ? AND type = ?',
@@ -344,6 +378,10 @@ def user_page(username, slug):
 
     if user is None:
         abort(404)
+
+    redir = _check_subdomain_redirect(user, f'/page/{slug}')
+    if redir:
+        return redir
 
     page = db.execute(
         'SELECT * FROM pages WHERE user_id = ? AND slug = ? AND type = ?',
@@ -378,6 +416,10 @@ def post_detail(username, slug):
 
     if user is None:
         abort(404)
+
+    redir = _check_subdomain_redirect(user, f'/{slug}')
+    if redir:
+        return redir
 
     post = db.execute(
         '''SELECT p.*, COUNT(DISTINCT l.id) as like_count
@@ -486,6 +528,10 @@ def user_rss(username):
     if user is None:
         abort(404)
 
+    redir = _check_subdomain_redirect(user, '/rss')
+    if redir:
+        return redir
+
     posts = db.execute(
         '''SELECT * FROM posts
            WHERE user_id = ? AND status = 'published'
@@ -494,12 +540,19 @@ def user_rss(username):
         (user['id'],)
     ).fetchall()
 
-    base_url = 'https://qata.blog'
-    blog_url = f"{base_url}/{username}"
+    base_domain = current_app.config.get('BASE_DOMAIN', 'qata.blog')
+    subdomain_enabled = current_app.config.get('SUBDOMAIN_ENABLED', False)
+    is_prem = bool((user['is_premium'] if 'is_premium' in user.keys() else 0) or user['is_admin'])
+    if (subdomain_enabled or getattr(g, 'subdomain_user', None) == username) and is_prem:
+        blog_url_root = f"https://{username}.{base_domain}"
+        blog_url = f"{blog_url_root}/"
+    else:
+        blog_url_root = f"https://{base_domain}/{username}"
+        blog_url = blog_url_root
 
     items = ''
     for post in posts:
-        post_url = f"{base_url}/{username}/{post['slug']}"
+        post_url = f"{blog_url_root}/{post['slug']}"
         title = str(post['title']).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
         desc = str(post['content_html'] or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
         pub_date = str(post['created_at'])[:19]

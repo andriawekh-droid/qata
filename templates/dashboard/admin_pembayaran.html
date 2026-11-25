@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Verifikasi Pembayaran — Admin Qata{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1>Verifikasi Pembayaran</h1>
+        <p class="donasi-sub">Kelola konfirmasi QRIS untuk fitur Premium &amp; Donasi</p>
+    </div>
+    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">&larr; Panel Admin</a>
+</div>
+
+<section class="admin-payment-summary">
+    <div class="summary-card">
+        <span class="summary-label">Donasi Terverifikasi</span>
+        <strong class="summary-value">{{ sums['donation'] | rupiah }}</strong>
+    </div>
+    <div class="summary-card">
+        <span class="summary-label">Premium Terverifikasi</span>
+        <strong class="summary-value">{{ sums['premium'] | rupiah }}</strong>
+    </div>
+    <div class="summary-card">
+        <span class="summary-label">Menunggu Verifikasi</span>
+        <strong class="summary-value">{{ counts['pending'] }}</strong>
+    </div>
+</section>
+
+<nav class="explore-tabs mb-md" aria-label="Filter status pembayaran">
+    <a href="{{ url_for('dashboard.admin_payments', status='pending') }}"
+       class="tab-item {% if status_filter == 'pending' %}active{% endif %}">
+        Menunggu ({{ counts['pending'] }})
+    </a>
+    <a href="{{ url_for('dashboard.admin_payments', status='verified') }}"
+       class="tab-item {% if status_filter == 'verified' %}active{% endif %}">
+        Terverifikasi ({{ counts['verified'] }})
+    </a>
+    <a href="{{ url_for('dashboard.admin_payments', status='rejected') }}"
+       class="tab-item {% if status_filter == 'rejected' %}active{% endif %}">
+        Ditolak ({{ counts['rejected'] }})
+    </a>
+    <a href="{{ url_for('dashboard.admin_payments', status='all') }}"
+       class="tab-item {% if status_filter == 'all' %}active{% endif %}">
+        Semua ({{ counts['all'] }})
+    </a>
+</nav>
+
+{% if payments %}
+<ul class="admin-payment-list">
+    {% for p in payments %}
+    <li class="admin-payment-card">
+        <a href="{{ url_for('dashboard.view_payment_proof', payment_id=p['id']) }}" target="_blank" rel="noopener" class="admin-proof-thumb-link" title="Buka bukti ukuran penuh">
+            <img src="{{ url_for('dashboard.view_payment_proof', payment_id=p['id']) }}"
+                 alt="Bukti transfer {{ p['sender_name'] }}"
+                 loading="lazy"
+                 class="admin-proof-thumb">
+        </a>
+
+        <div class="admin-payment-body">
+            <div class="payment-history-top">
+                <div class="payment-history-meta">
+                    <strong class="payment-amount">{{ p['amount'] | rupiah }}</strong>
+                    <span class="badge payment-type-badge">
+                        {{ 'Premium' if p['type'] == 'premium' else 'Donasi' }}
+                    </span>
+                    <span class="badge payment-status-badge status-{{ p['status'] }}">
+                        {% if p['status'] == 'verified' %}Terverifikasi
+                        {% elif p['status'] == 'rejected' %}Ditolak
+                        {% else %}Menunggu verifikasi{% endif %}
+                    </span>
+                </div>
+                <span class="payment-date">{{ p['created_at'] | tanggal }}</span>
+            </div>
+
+            <div class="admin-payment-owner">
+                Pengirim: <strong>{{ p['sender_name'] }}</strong>
+                &middot; Akun: {{ p['display_name'] or p['username'] }}
+                (<a href="{{ blog_url(p['username'], '', is_premium=p['is_premium']) }}" target="_blank">@{{ p['username'] }}</a>, {{ p['email'] }})
+            </div>
+
+            {% if p['type'] == 'premium' and p['status'] == 'pending' %}
+            <div class="admin-premium-hint">
+                Menekan <strong>Verifikasi</strong> akan otomatis mengaktifkan status Premium selamanya, izin unggah gambar, dan subdomain <code>{{ p['username'] }}.{{ base_domain }}</code> untuk akun ini.
+            </div>
+            {% endif %}
+
+            {% if p['note'] %}
+            <p class="payment-note">&ldquo;{{ p['note'] }}&rdquo;</p>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('dashboard.admin_review_payment', payment_id=p['id']) }}" class="admin-review-form">
+                <input type="hidden" name="current_filter" value="{{ status_filter }}">
+                <input type="text" name="admin_note"
+                       value="{{ p['admin_note'] or '' }}"
+                       maxlength="300"
+                       placeholder="Catatan admin (opsional, terlihat oleh pengguna)">
+                <div class="admin-review-actions">
+                    {% if p['status'] != 'verified' %}
+                    <button type="submit" name="decision" value="verified" class="btn btn-verify">
+                        Verifikasi &check;
+                    </button>
+                    {% endif %}
+                    {% if p['status'] != 'rejected' %}
+                    <button type="submit" name="decision" value="rejected" class="btn btn-reject">
+                        Tolak &cross;
+                    </button>
+                    {% endif %}
+                    {% if p['status'] != 'pending' %}
+                    <button type="submit" name="decision" value="pending" class="btn btn-secondary">
+                        Kembalikan ke menunggu
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="empty-state">Tidak ada data konfirmasi pembayaran pada filter ini.</p>
+{% endif %}
+
+<section class="dashboard-nav">
+    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">&larr; Panel Admin</a>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Dashboard</a>
+</section>
+{% endblock %}

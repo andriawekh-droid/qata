@@ -4,7 +4,12 @@
 
 {% block content %}
 <div class="dashboard-header">
-    <h1>Halo, {{ current_user.display_name }}!</h1>
+    <div>
+        <h1>Halo, {{ current_user.display_name }}!</h1>
+        {% if is_premium_user %}
+        <span class="badge badge-premium">Premium</span>
+        {% endif %}
+    </div>
     <a href="{{ url_for('dashboard.new_post') }}" class="btn">Tulis Baru</a>
 </div>
 
@@ -92,10 +97,10 @@
             <span class="menu-divider">&middot;</span>
             <a href="{{ url_for('dashboard.invite_codes') }}">Kode Undangan</a>
             <span class="menu-divider">&middot;</span>
-            <a href="{{ url_for('dashboard.donasi') }}">Dukungan & Donasi</a>
+            <a href="{{ url_for('dashboard.donasi') }}">Premium &amp; Donasi</a>
         </div>
         <div class="dashboard-menu-links">
-            <a href="{{ url_for('public.user_blog', username=current_user.username) }}" target="_blank">Lihat Blog Saya &rarr;</a>
+            <a href="{{ blog_url(current_user) }}" target="_blank">Lihat Blog Saya &rarr;</a>
             <span class="menu-divider">&middot;</span>
             <a href="{{ url_for('public.explore') }}" target="_blank">Jelajahi Qata &rarr;</a>
         </div>
@@ -106,6 +111,10 @@
         <span class="dashboard-menu-heading">Administrasi</span>
         <div class="dashboard-menu-links">
             <a href="{{ url_for('dashboard.admin_index') }}">Panel Admin</a>
+            <span class="menu-divider">&middot;</span>
+            <a href="{{ url_for('dashboard.admin_payments') }}">
+                Verifikasi Pembayaran{% if pending_payments_count %} ({{ pending_payments_count }}){% endif %}
+            </a>
             <span class="menu-divider">&middot;</span>
             <a href="{{ url_for('dashboard.admin_landing') }}">Edit Landing Page</a>
             <span class="menu-divider">&middot;</span>

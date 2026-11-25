@@ -1,12 +1,79 @@
 import os
 import secrets
 import sqlite3
-from flask import Flask, send_from_directory, g
+from flask import Flask, send_from_directory, g, request, url_for
 from flask_login import LoginManager, current_user
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+BASE_DOMAIN = os.environ.get('QATA_BASE_DOMAIN', 'qata.blog').strip().lower()
+SUBDOMAIN_ENABLED = os.environ.get('QATA_SUBDOMAIN_ENABLED', '0').strip().lower() in ('1', 'true', 'yes', 'on')
+
+class SubdomainRouterMiddleware:
+    """Memetakan permintaan <username>.<base_domain> ke rute /<username>/..."""
+
+    PASSTHROUGH_PREFIXES = ('/static/', '/like/', '/.well-known/')
+    PASSTHROUGH_PATHS = ('/favicon.ico', '/robots.txt')
+    MAIN_DOMAIN_EXACT = (
+        '/masuk', '/daftar', '/keluar',
+        '/jelajahi', '/explore', '/discover',
+        '/jelajahi/acak', '/discover/random',
+    )
+
+    def __init__(self, wsgi_app, base_domain):
+        self.wsgi_app = wsgi_app
+        self.base_domain = base_domain
+
+    def _redirect(self, start_response, location, status='302 Found'):
+        start_response(status, [
+            ('Location', location),
+            ('Content-Length', '0'),
+            ('Cache-Control', 'no-store') if status.startswith('302') else ('Cache-Control', 'public, max-age=300'),
+        ])
+        return [b'']
+
+    def __call__(self, environ, start_response):
+        host = (environ.get('HTTP_HOST') or '').split(':')[0].strip().lower()
+        suffix = '.' + self.base_domain
+        if host.endswith(suffix) and len(host) > len(suffix):
+            sub = host[:-len(suffix)]
+            if sub and '.' not in sub:
+                path = environ.get('PATH_INFO', '/') or '/'
+                qs = environ.get('QUERY_STRING', '')
+                qs_suffix = ('?' + qs) if qs else ''
+
+                if sub == 'www':
+                    return self._redirect(
+                        start_response,
+                        f'https://{self.base_domain}{path}{qs_suffix}',
+                        status='301 Moved Permanently',
+                    )
+
+                if path in self.PASSTHROUGH_PATHS or path.startswith(self.PASSTHROUGH_PREFIXES):
+                    return self.wsgi_app(environ, start_response)
+
+                if path == '/dashboard' or path.startswith('/dashboard/') or path in self.MAIN_DOMAIN_EXACT:
+                    return self._redirect(
+                        start_response,
+                        f'https://{self.base_domain}{path}{qs_suffix}',
+                        status='302 Found',
+                    )
+
+                if path == f'/{sub}' or path.startswith(f'/{sub}/'):
+                    stripped = path[len(sub) + 1:] or '/'
+                    return self._redirect(
+                        start_response,
+                        f'https://{sub}.{self.base_domain}{stripped}{qs_suffix}',
+                        status='301 Moved Permanently',
+                    )
+
+                environ['PATH_INFO'] = f'/{sub}' if path == '/' else f'/{sub}{path}'
+                environ['HTTP_X_QATA_SUBDOMAIN_USER'] = sub
+
+        return self.wsgi_app(environ, start_response)
+
 app = Flask(__name__, instance_relative_config=True)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+app.wsgi_app = SubdomainRouterMiddleware(app.wsgi_app, BASE_DOMAIN)
 
 _secret_key = os.environ.get('SECRET_KEY')
 if not _secret_key:
@@ -15,11 +82,14 @@ if not _secret_key:
 app.config.from_mapping(
     SECRET_KEY=_secret_key,
     DATABASE=app.instance_path + '/qata.db',
+    BASE_DOMAIN=BASE_DOMAIN,
+    SUBDOMAIN_ENABLED=SUBDOMAIN_ENABLED,
 )
 
 @app.before_request
-def set_csp_nonce():
+def set_request_context():
     g.csp_nonce = secrets.token_urlsafe(16)
+    g.subdomain_user = request.environ.get('HTTP_X_QATA_SUBDOMAIN_USER')
 
 @app.after_request
 def set_security_headers(response):
@@ -111,6 +181,58 @@ def format_waktu_relatif(value):
     else:
         return dt.strftime('%d %b %Y')
 
+@app.template_filter('rupiah')
+def format_rupiah(value):
+    try:
+        nominal = int(value or 0)
+    except (TypeError, ValueError):
+        nominal = 0
+    return f"Rp{nominal:,}".replace(',', '.')
+
+def main_url(endpoint, **values):
+    """Bangun URL menuju domain utama (berguna saat user mengakses subdomain)."""
+    rel = url_for(endpoint, **values)
+    if getattr(g, 'subdomain_user', None) and rel.startswith('/'):
+        return f"https://{BASE_DOMAIN}{rel}"
+    return rel
+
+def blog_url(user_or_username, subpath='', is_premium=None, external=False):
+    """Bangun URL blog pengguna (otomatis memakai subdomain jika Premium & aktif)."""
+    if isinstance(user_or_username, str):
+        uname = user_or_username
+        prem = bool(is_premium)
+    else:
+        uname = user_or_username['username'] if isinstance(user_or_username, (dict, sqlite3.Row)) else user_or_username.username
+        if is_premium is not None:
+            prem = bool(is_premium)
+        elif isinstance(user_or_username, (dict, sqlite3.Row)):
+            keys = user_or_username.keys()
+            prem = bool((user_or_username['is_premium'] if 'is_premium' in keys else 0) or (user_or_username['is_admin'] if 'is_admin' in keys else 0))
+        else:
+            prem = bool(getattr(user_or_username, 'is_premium', False) or getattr(user_or_username, 'is_admin', False))
+
+    if subpath and not subpath.startswith('/'):
+        subpath = '/' + subpath
+
+    sub_user = getattr(g, 'subdomain_user', None)
+    if SUBDOMAIN_ENABLED and prem:
+        if sub_user == uname and not external:
+            return subpath or '/'
+        return f"https://{uname}.{BASE_DOMAIN}{subpath or '/'}"
+
+    if sub_user == uname:
+        if external:
+            return f"https://{uname}.{BASE_DOMAIN}{subpath or '/'}"
+        return subpath or '/'
+
+    rel = f"/{uname}{subpath}"
+    if external:
+        try:
+            return f"{request.url_root.rstrip('/')}{rel}"
+        except RuntimeError:
+            return f"https://{BASE_DOMAIN}{rel}"
+    return rel
+
 @app.context_processor
 def inject_page_theme():
     # Default untuk halaman yang tidak override page_theme secara eksplisit
@@ -124,7 +246,14 @@ def inject_page_theme():
     if not nonce:
         nonce = secrets.token_urlsafe(16)
         g.csp_nonce = nonce
-    return dict(page_theme=theme, csp_nonce=nonce)
+    return dict(
+        page_theme=theme,
+        csp_nonce=nonce,
+        main_url=main_url,
+        blog_url=blog_url,
+        base_domain=BASE_DOMAIN,
+        subdomain_enabled=SUBDOMAIN_ENABLED,
+    )
 
 login_manager = LoginManager()
 login_manager.init_app(app)
