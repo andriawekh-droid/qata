@@ -8,31 +8,31 @@
       href="{{ blog_url(user, '/rss') }}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Qata">
-<meta property="og:title" content="Tulisan — {{ user['display_name'] }}">
+<meta property="og:title" content="{{ t('archive.title', name=user['display_name']) }}">
 <meta property="og:description" content="{{ meta_description }}">
 <meta property="og:url" content="{{ blog_url(user, '/tulisan', external=True) }}">
 {% endblock %}
 
-{% block title %}Tulisan — {{ user['display_name'] }}{% endblock %}
+{% block title %}{{ t('archive.title', name=user['display_name']) }}{% endblock %}
 
 {% block content %}
 <header class="site-header">
     <a href="{{ main_url('public.index') }}" class="wordmark">Qata</a>
     <div class="header-links">
-        <a href="{{ main_url('public.index') }}">Rumah</a>
+        <a href="{{ main_url('public.index') }}">{{ t('nav.home') }}</a>
     </div>
 </header>
 
 <div class="profile-block">
     <h1>{{ user['display_name'] }}</h1>
     <nav class="profile-nav">
-        <a href="{{ blog_url(user) }}">Rumah</a>
-        <a href="{{ blog_url(user, '/tulisan') }}" class="current">Tulisan</a>
-        <a href="{{ blog_url(user, '/tentang') }}">Tentang</a>
+        <a href="{{ blog_url(user) }}">{{ t('nav.home') }}</a>
+        <a href="{{ blog_url(user, '/tulisan') }}" class="current">{{ t('nav.posts') }}</a>
+        <a href="{{ blog_url(user, '/tentang') }}">{{ t('nav.about') }}</a>
         {% for cp in custom_pages %}
         <a href="{{ blog_url(user, '/page/' ~ cp['slug']) }}">{{ cp['title'] }}</a>
         {% endfor %}
-        <a href="{{ blog_url(user, '/rss') }}" class="rss-link">RSS</a>
+        <a href="{{ blog_url(user, '/rss') }}" class="rss-link">{{ t('nav.rss') }}</a>
     </nav>
 </div>
 
@@ -49,7 +49,7 @@
                 <span class="archive-meta">
                     <span>{{ post['created_at'] | waktu_relatif }}</span>
                     <span class="dot">&middot;</span>
-                    <span>{{ post['reading_time'] }} mnt baca</span>
+                    <span>{{ post['reading_time'] }} {{ t('post.min_read') }}</span>
                     {% if post['like_count'] > 0 %}
                     <span class="dot">&middot;</span>
                     <span class="heart-stat">
@@ -63,7 +63,7 @@
         </div>
         {% endfor %}
     {% else %}
-        <p class="empty-state">Belum ada tulisan yang diterbitkan.</p>
+        <p class="empty-state">{{ t('blog.empty') }}</p>
     {% endif %}
 </section>
 {% endblock %}

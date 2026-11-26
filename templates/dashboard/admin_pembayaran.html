@@ -1,57 +1,65 @@
 {% extends 'base.html' %}
 
-{% block title %}Verifikasi Pembayaran — Admin Qata{% endblock %}
+{% block title %}{{ t('admin_pay.title') }}{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
     <div>
-        <h1>Verifikasi Pembayaran</h1>
-        <p class="donasi-sub">Kelola konfirmasi QRIS untuk fitur Premium &amp; Donasi</p>
+        <h1>{{ t('admin_pay.heading') }}</h1>
+        <p class="donasi-sub">{{ t('admin_pay.sub') }}</p>
     </div>
-    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">&larr; Panel Admin</a>
+    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">{{ t('admin_pay.back_admin') }}</a>
 </div>
 
 <section class="admin-payment-summary">
     <div class="summary-card">
-        <span class="summary-label">Donasi Terverifikasi</span>
-        <strong class="summary-value">{{ sums['donation'] | rupiah }}</strong>
+        <span class="summary-label">{{ t('admin_pay.sum_donation') }}</span>
+        <strong class="summary-value">{{ sums['donation_idr'] | rupiah }}</strong>
+        {% if sums['donation_usd'] %}
+        <span class="summary-subvalue">+ {{ format_money(sums['donation_usd'], 'USD') }}</span>
+        {% endif %}
     </div>
     <div class="summary-card">
-        <span class="summary-label">Premium Terverifikasi</span>
-        <strong class="summary-value">{{ sums['premium'] | rupiah }}</strong>
+        <span class="summary-label">{{ t('admin_pay.sum_premium') }}</span>
+        <strong class="summary-value">{{ sums['premium_idr'] | rupiah }}</strong>
+        {% if sums['premium_usd'] %}
+        <span class="summary-subvalue">+ {{ format_money(sums['premium_usd'], 'USD') }}</span>
+        {% endif %}
     </div>
     <div class="summary-card">
-        <span class="summary-label">Menunggu Verifikasi</span>
+        <span class="summary-label">{{ t('admin_pay.sum_pending') }}</span>
         <strong class="summary-value">{{ counts['pending'] }}</strong>
     </div>
 </section>
 
-<nav class="explore-tabs mb-md" aria-label="Filter status pembayaran">
+<nav class="explore-tabs mb-md" aria-label="{{ t('admin_pay.heading') }}">
     <a href="{{ url_for('dashboard.admin_payments', status='pending') }}"
        class="tab-item {% if status_filter == 'pending' %}active{% endif %}">
-        Menunggu ({{ counts['pending'] }})
+        {{ t('admin_pay.filter_pending', count=counts['pending']) }}
     </a>
     <a href="{{ url_for('dashboard.admin_payments', status='verified') }}"
        class="tab-item {% if status_filter == 'verified' %}active{% endif %}">
-        Terverifikasi ({{ counts['verified'] }})
+        {{ t('admin_pay.filter_verified', count=counts['verified']) }}
     </a>
     <a href="{{ url_for('dashboard.admin_payments', status='rejected') }}"
        class="tab-item {% if status_filter == 'rejected' %}active{% endif %}">
-        Ditolak ({{ counts['rejected'] }})
+        {{ t('admin_pay.filter_rejected', count=counts['rejected']) }}
     </a>
     <a href="{{ url_for('dashboard.admin_payments', status='all') }}"
        class="tab-item {% if status_filter == 'all' %}active{% endif %}">
-        Semua ({{ counts['all'] }})
+        {{ t('admin_pay.filter_all', count=counts['all']) }}
     </a>
 </nav>
 
 {% if payments %}
 <ul class="admin-payment-list">
     {% for p in payments %}
+    {% set p_currency = p['currency'] if 'currency' in p.keys() and p['currency'] else 'IDR' %}
+    {% set p_method = p['method'] if 'method' in p.keys() and p['method'] else 'qris' %}
     <li class="admin-payment-card">
-        <a href="{{ url_for('dashboard.view_payment_proof', payment_id=p['id']) }}" target="_blank" rel="noopener" class="admin-proof-thumb-link" title="Buka bukti ukuran penuh">
+        <a href="{{ url_for('dashboard.view_payment_proof', payment_id=p['id']) }}" target="_blank" rel="noopener" class="admin-proof-thumb-link" title="{{ t('admin_pay.open_proof') }}">
             <img src="{{ url_for('dashboard.view_payment_proof', payment_id=p['id']) }}"
-                 alt="Bukti transfer {{ p['sender_name'] }}"
+                 alt="Proof {{ p['sender_name'] }}"
                  loading="lazy"
                  class="admin-proof-thumb">
         </a>
@@ -59,28 +67,31 @@
         <div class="admin-payment-body">
             <div class="payment-history-top">
                 <div class="payment-history-meta">
-                    <strong class="payment-amount">{{ p['amount'] | rupiah }}</strong>
+                    <strong class="payment-amount">{{ format_money(p['amount'], p_currency) }}</strong>
                     <span class="badge payment-type-badge">
-                        {{ 'Premium' if p['type'] == 'premium' else 'Donasi' }}
+                        {{ t('payment.type_premium') if p['type'] == 'premium' else t('payment.type_donation') }}
+                    </span>
+                    <span class="badge payment-type-badge">
+                        {{ 'PayPal' if p_method == 'paypal' else 'QRIS' }}
                     </span>
                     <span class="badge payment-status-badge status-{{ p['status'] }}">
-                        {% if p['status'] == 'verified' %}Terverifikasi
-                        {% elif p['status'] == 'rejected' %}Ditolak
-                        {% else %}Menunggu verifikasi{% endif %}
+                        {% if p['status'] == 'verified' %}{{ t('payment.status_verified') }}
+                        {% elif p['status'] == 'rejected' %}{{ t('payment.status_rejected') }}
+                        {% else %}{{ t('payment.status_pending') }}{% endif %}
                     </span>
                 </div>
                 <span class="payment-date">{{ p['created_at'] | tanggal }}</span>
             </div>
 
             <div class="admin-payment-owner">
-                Pengirim: <strong>{{ p['sender_name'] }}</strong>
-                &middot; Akun: {{ p['display_name'] or p['username'] }}
+                {{ t('payment.sender_prefix') }} <strong>{{ p['sender_name'] }}</strong>
+                &middot; {{ t('admin_pay.account_prefix') }} {{ p['display_name'] or p['username'] }}
                 (<a href="{{ blog_url(p['username'], '', is_premium=p['is_premium']) }}" target="_blank">@{{ p['username'] }}</a>, {{ p['email'] }})
             </div>
 
             {% if p['type'] == 'premium' and p['status'] == 'pending' %}
             <div class="admin-premium-hint">
-                Menekan <strong>Verifikasi</strong> akan otomatis mengaktifkan status Premium selamanya, izin unggah gambar, dan subdomain <code>{{ p['username'] }}.{{ base_domain }}</code> untuk akun ini.
+                {{ t('admin_pay.premium_hint', subdomain=(p['username'] ~ '.' ~ base_domain)) }}
             </div>
             {% endif %}
 
@@ -93,21 +104,21 @@
                 <input type="text" name="admin_note"
                        value="{{ p['admin_note'] or '' }}"
                        maxlength="300"
-                       placeholder="Catatan admin (opsional, terlihat oleh pengguna)">
+                       placeholder="{{ t('admin_pay.note_placeholder') }}">
                 <div class="admin-review-actions">
                     {% if p['status'] != 'verified' %}
                     <button type="submit" name="decision" value="verified" class="btn btn-verify">
-                        Verifikasi &check;
+                        {{ t('admin_pay.btn_verify') }}
                     </button>
                     {% endif %}
                     {% if p['status'] != 'rejected' %}
                     <button type="submit" name="decision" value="rejected" class="btn btn-reject">
-                        Tolak &cross;
+                        {{ t('admin_pay.btn_reject') }}
                     </button>
                     {% endif %}
                     {% if p['status'] != 'pending' %}
                     <button type="submit" name="decision" value="pending" class="btn btn-secondary">
-                        Kembalikan ke menunggu
+                        {{ t('admin_pay.btn_reopen') }}
                     </button>
                     {% endif %}
                 </div>
@@ -117,11 +128,11 @@
     {% endfor %}
 </ul>
 {% else %}
-<p class="empty-state">Tidak ada data konfirmasi pembayaran pada filter ini.</p>
+<p class="empty-state">{{ t('admin_pay.empty') }}</p>
 {% endif %}
 
 <section class="dashboard-nav">
-    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">&larr; Panel Admin</a>
-    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Dashboard</a>
+    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">{{ t('admin_pay.back_admin') }}</a>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">{{ t('nav.dashboard') }}</a>
 </section>
 {% endblock %}

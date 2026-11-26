@@ -1,36 +1,36 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if page %}Edit Halaman{% else %}Buat Halaman Baru{% endif %} — Qata{% endblock %}
+{% block title %}{% if page %}{{ t('pages.edit_page_title') }}{% else %}{{ t('pages.new_page_title') }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="editor-container">
-    <h1>{% if page %}Edit Halaman{% else %}Buat Halaman Baru{% endif %}</h1>
+    <h1>{% if page %}{{ t('pages.edit_page_heading') }}{% else %}{{ t('pages.new_page_heading') }}{% endif %}</h1>
     <form method="POST">
         <div class="form-group">
-            <label for="title">Judul</label>
+            <label for="title">{{ t('editor.field_title') }}</label>
             <input type="text" id="title" name="title" required autofocus
                    value="{{ page['title'] if page else '' }}"
                    {% if page and page['type'] in ('landing', 'tentang') %}readonly{% endif %}>
             {% if page and page['type'] in ('landing', 'tentang') %}
-            <small>Judul halaman ini tidak dapat diubah.</small>
+            <small>{{ t('pages.title_locked') }}</small>
             {% endif %}
         </div>
 
         <div class="form-group">
             <div class="editor-toolbar">
                 <div class="editor-toolbar-left">
-                    <label for="content" class="mb-0">Isi Halaman (Markdown)</label>
+                    <label for="content" class="mb-0">{{ t('pages.field_content') }}</label>
                     <a href="https://qata.blog/awekh/panduan-menulis-di-qata-markdown" 
                        target="_blank" 
                        rel="noopener noreferrer" 
                        class="markdown-guide-link"
-                       title="Buka panduan menulis Markdown di Qata">
+                       title="{{ t('editor.md_guide_title') }}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
-                        <span>Panduan Markdown ↗</span>
+                        <span>{{ t('editor.md_guide') }}</span>
                     </a>
                 </div>
                 {% if can_upload_image %}
@@ -42,7 +42,7 @@
                             <circle cx="9" cy="9" r="2"/>
                             <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
                         </svg>
-                        <span>Sisipkan Gambar</span>
+                        <span>{{ t('editor.insert_image') }}</span>
                     </button>
                 </div>
                 {% endif %}
@@ -56,26 +56,26 @@
         <div class="editor-footer">
             <div></div>
             <div class="editor-actions">
-                <a href="{{ url_for('dashboard.pages') }}" class="btn btn-secondary">Batal</a>
-                <button type="submit" class="btn">Simpan</button>
+                <a href="{{ url_for('dashboard.pages') }}" class="btn btn-secondary">{{ t('editor.cancel') }}</a>
+                <button type="submit" class="btn">{{ t('pages.save') }}</button>
             </div>
         </div>
     </form>
 
     {% if page %}
     <div class="editor-page-guide">
-        <strong>URL halaman ini:</strong>
+        <strong>{{ t('pages.url_label') }}</strong>
         {% if page['type'] == 'tentang' %}
-            <a href="{{ url_for('public.user_about', username=current_user.username) }}" target="_blank">
-                qata.blog/{{ current_user.username }}/tentang
+            <a href="{{ blog_url(current_user, '/tentang') }}" target="_blank">
+                {{ blog_url(current_user, '/tentang', external=True) }}
             </a>
         {% elif page['type'] == 'landing' %}
-            <a href="{{ url_for('public.user_blog', username=current_user.username) }}" target="_blank">
-                qata.blog/{{ current_user.username }}
+            <a href="{{ blog_url(current_user) }}" target="_blank">
+                {{ blog_url(current_user, '', external=True) }}
             </a>
         {% else %}
-            <a href="{{ url_for('public.user_page', username=current_user.username, slug=page['slug']) }}" target="_blank">
-                qata.blog/{{ current_user.username }}/page/{{ page['slug'] }}
+            <a href="{{ blog_url(current_user, '/page/' ~ page['slug']) }}" target="_blank">
+                {{ blog_url(current_user, '/page/' ~ page['slug'], external=True) }}
             </a>
         {% endif %}
     </div>
@@ -87,6 +87,13 @@
 const imageInput = document.getElementById('imageInput');
 const contentArea = document.getElementById('content');
 const uploadStatus = document.getElementById('uploadStatus');
+const msgInvalidType = {{ t('editor.js_invalid_type') | tojson }};
+const msgMaxSize = {{ t('editor.js_max_size') | tojson }};
+const msgCompressing = {{ t('editor.js_compressing') | tojson }};
+const msgUploading = {{ t('editor.js_uploading') | tojson }};
+const msgUploadOk = {{ t('editor.js_upload_ok') | tojson }};
+const msgUploadErr = {{ t('editor.js_upload_err') | tojson }};
+const msgNetworkErr = {{ t('editor.js_network_err') | tojson }};
 
 document.getElementById('insertImageBtn')?.addEventListener('click', function() {
     imageInput?.click();
@@ -98,23 +105,23 @@ function handleImageUpload(file) {
     const validExtensions = /\.(jpe?g|png|webp)$/i;
     if (!file.name.match(validExtensions) && !file.type.match(/^image\/(jpeg|png|webp)$/)) {
         uploadStatus.style.color = 'var(--danger)';
-        uploadStatus.textContent = 'Format berkas harus JPG, PNG, atau WebP.';
+        uploadStatus.textContent = msgInvalidType;
         imageInput.value = '';
         return;
     }
 
     if (file.size > 25 * 1024 * 1024) {
         uploadStatus.style.color = 'var(--danger)';
-        uploadStatus.textContent = 'Ukuran berkas terlalu besar (maksimal 25 MB).';
+        uploadStatus.textContent = msgMaxSize;
         imageInput.value = '';
         return;
     }
 
     uploadStatus.style.color = 'var(--ink-faint)';
-    uploadStatus.textContent = 'Mengompres gambar...';
+    uploadStatus.textContent = msgCompressing;
 
     function sendFile(blobOrFile, filename) {
-        uploadStatus.textContent = 'Mengunggah gambar...';
+        uploadStatus.textContent = msgUploading;
         const formData = new FormData();
         formData.append('image', blobOrFile, filename);
 
@@ -126,7 +133,7 @@ function handleImageUpload(file) {
         .then(({ status, body }) => {
             if (status === 200 && body.success) {
                 uploadStatus.style.color = 'var(--success)';
-                uploadStatus.textContent = 'Gambar berhasil diunggah dan disisipkan!';
+                uploadStatus.textContent = msgUploadOk;
 
                 const start = contentArea.selectionStart;
                 const end = contentArea.selectionEnd;
@@ -140,19 +147,18 @@ function handleImageUpload(file) {
                 setTimeout(() => { uploadStatus.textContent = ''; }, 4000);
             } else {
                 uploadStatus.style.color = 'var(--danger)';
-                uploadStatus.textContent = body.error || 'Gagal mengunggah gambar.';
+                uploadStatus.textContent = body.error || msgUploadErr;
             }
         })
         .catch(() => {
             uploadStatus.style.color = 'var(--danger)';
-            uploadStatus.textContent = 'Terjadi kesalahan jaringan saat mengunggah.';
+            uploadStatus.textContent = msgNetworkErr;
         })
         .finally(() => {
             imageInput.value = '';
         });
     }
 
-    // Auto-resize di client menggunakan Canvas untuk gambar kamera HP resolusi tinggi
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
 
@@ -162,7 +168,6 @@ function handleImageUpload(file) {
         let width = img.naturalWidth || img.width;
         let height = img.naturalHeight || img.height;
 
-        // Jika gambar sudah kecil (lebar & tinggi <= 1600px dan ukuran < 1.5 MB), kirim langsung
         if (width <= MAX_WIDTH && height <= MAX_WIDTH && file.size <= 1.5 * 1024 * 1024) {
             sendFile(file, file.name);
             return;

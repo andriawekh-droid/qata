@@ -3,6 +3,7 @@ import re
 import mistune
 from flask import Blueprint, render_template, request, abort, jsonify, Response, redirect, url_for, flash, current_app, g
 from database import get_db
+from i18n import t, get_lang
 
 def render_markdown(content):
     markdown = mistune.create_markdown(plugins=['strikethrough', 'table'])
@@ -100,15 +101,23 @@ def index():
            LIMIT 3'''
     ).fetchall()
 
-    raw_desc = get_site_setting(db, 'landing_desc')
+    lang = get_lang()
+    def get_localized_setting(key):
+        if lang == 'en':
+            val_en = get_site_setting(db, f'{key}_en')
+            if val_en:
+                return val_en
+        return get_site_setting(db, key)
+
+    raw_desc = get_localized_setting('landing_desc')
     settings = {
-        'landing_title': get_site_setting(db, 'landing_title'),
+        'landing_title': get_localized_setting('landing_title'),
         'landing_desc': render_markdown(raw_desc),
-        'landing_features': render_markdown(get_site_setting(db, 'landing_features')),
-        'landing_cta': get_site_setting(db, 'landing_cta'),
-        'landing_brand_sub': get_site_setting(db, 'landing_brand_sub'),
+        'landing_features': render_markdown(get_localized_setting('landing_features')),
+        'landing_cta': get_localized_setting('landing_cta'),
+        'landing_brand_sub': get_localized_setting('landing_brand_sub'),
     }
-    meta_description = extract_excerpt(raw_desc, max_len=155) or 'Platform blogging minimalis yang berfokus pada ketenangan tulisan dan kenyamanan membaca.'
+    meta_description = extract_excerpt(raw_desc, max_len=155) or t('landing.meta_default')
 
     return render_template('public/index.html',
                            recent_posts=recent_posts,
@@ -197,7 +206,7 @@ def explore():
         current_filter=current_filter,
         page=page,
         total_pages=total_pages,
-        meta_description='Jelajahi daftar tulisan acak, terbaru, dan populer dari para penulis di Qata.'
+        meta_description=t('explore.meta_desc')
     )
 
 @public_bp.route('/jelajahi/acak')
@@ -215,7 +224,7 @@ def random_post():
 
     if row:
         return redirect(url_for('public.post_detail', username=row['username'], slug=row['slug']))
-    flash('Belum ada tulisan yang diterbitkan.', 'info')
+    flash(t('explore.no_published'), 'info')
     return redirect(url_for('public.explore'))
 
 @public_bp.route('/<username>')
@@ -270,7 +279,7 @@ def user_blog(username):
     ).fetchall()
 
     raw_bio = (landing_page['content'] if landing_page else '') or user['bio'] or ''
-    meta_description = extract_excerpt(raw_bio, max_len=155) or f"Tulisan dan catatan oleh {user['display_name'] or user['username']} di Qata."
+    meta_description = extract_excerpt(raw_bio, max_len=155) or t('blog.meta_default', name=(user['display_name'] or user['username']))
 
     return render_template('public/blog.html',
                            user=user,
@@ -322,7 +331,7 @@ def user_archive(username):
         (user['id'], 'custom')
     ).fetchall()
 
-    meta_description = f"Arsip seluruh tulisan oleh {user['display_name'] or user['username']} di Qata."
+    meta_description = t('archive.meta_desc', name=(user['display_name'] or user['username']))
 
     return render_template('public/archive.html',
                            user=user,
@@ -359,7 +368,7 @@ def user_about(username):
     ).fetchall()
 
     raw_about = (page['content'] if page else '') or user['bio'] or ''
-    meta_description = extract_excerpt(raw_about, max_len=155) or f"Tentang {user['display_name'] or user['username']} di Qata."
+    meta_description = extract_excerpt(raw_about, max_len=155) or t('about.meta_desc', name=(user['display_name'] or user['username']))
 
     return render_template('public/tentang.html',
                            user=user,
@@ -463,7 +472,7 @@ def post_detail(username, slug):
         (user['id'], post['id'])
     ).fetchall()
 
-    meta_description = extract_excerpt(post['content'], max_len=155) or f"{post['title']} — tulisan oleh {user['display_name'] or user['username']} di Qata."
+    meta_description = extract_excerpt(post['content'], max_len=155) or t('post.meta_default', title=post['title'], name=(user['display_name'] or user['username']))
     post_image = extract_first_image(post['content'])
     if post_image and post_image.startswith('/'):
         post_image = request.url_root.rstrip('/') + post_image
@@ -487,7 +496,7 @@ def like_post(post_id):
     ).fetchone()
 
     if post is None:
-        return jsonify({'error': 'Post tidak ditemukan'}), 404
+        return jsonify({'error': t('post.not_found')}), 404
 
     ip_hash = hash_ip(request.remote_addr)
     sudah_like = db.execute(

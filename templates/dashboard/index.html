@@ -1,59 +1,59 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard — Qata{% endblock %}
+{% block title %}{{ t('dash.title') }}{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
     <div>
-        <h1>Halo, {{ current_user.display_name }}!</h1>
+        <h1>{{ t('dash.greeting', name=current_user.display_name) }}</h1>
         {% if is_premium_user %}
-        <span class="badge badge-premium">Premium</span>
+        <span class="badge badge-premium">{{ t('dash.premium_badge') }}</span>
         {% endif %}
     </div>
-    <a href="{{ url_for('dashboard.new_post') }}" class="btn">Tulis Baru</a>
+    <a href="{{ url_for('dashboard.new_post') }}" class="btn">{{ t('dash.new_post') }}</a>
 </div>
 
 <section class="post-list">
-    <h2>Tulisan Saya</h2>
+    <h2>{{ t('dash.my_posts') }}</h2>
     {% if posts %}
     <div class="table-responsive">
         <table class="post-table">
             <thead>
                 <tr>
-                    <th>Judul</th>
-                    <th>Status</th>
-                    <th>Kunjungan</th>
-                    <th>Like</th>
-                    <th>Tanggal</th>
-                    <th>Aksi</th>
+                    <th>{{ t('dash.col_title') }}</th>
+                    <th>{{ t('dash.col_status') }}</th>
+                    <th>{{ t('dash.col_views') }}</th>
+                    <th>{{ t('dash.col_likes') }}</th>
+                    <th>{{ t('dash.col_date') }}</th>
+                    <th>{{ t('dash.col_actions') }}</th>
                 </tr>
             </thead>
             <tbody>
             {% for post in posts %}
             <tr>
-                <td data-label="Judul">
+                <td data-label="{{ t('dash.col_title') }}">
                     {% if post['status'] == 'published' %}
-                        <a href="{{ url_for('public.post_detail', username=current_user.username, slug=post['slug']) }}">
+                        <a href="{{ blog_url(current_user, '/' ~ post['slug']) }}">
                             {{ post['title'] }}
                         </a>
                     {% else %}
                         {{ post['title'] }}
                     {% endif %}
                 </td>
-                <td data-label="Status">
+                <td data-label="{{ t('dash.col_status') }}">
                     <span class="badge badge-{{ post['status'] }}">
-                        {% if post['status'] == 'published' %}Terbit{% else %}Draf{% endif %}
+                        {% if post['status'] == 'published' %}{{ t('dash.status_published') }}{% else %}{{ t('dash.status_draft') }}{% endif %}
                     </span>
                 </td>
-                <td data-label="Kunjungan">{{ post['view_count'] }}</td>
-                <td data-label="Like">{{ post['like_count'] }}</td>
-                <td data-label="Tanggal">{{ post['created_at'] | tanggal }}</td>
-                <td data-label="Aksi">
+                <td data-label="{{ t('dash.col_views') }}">{{ post['view_count'] }}</td>
+                <td data-label="{{ t('dash.col_likes') }}">{{ post['like_count'] }}</td>
+                <td data-label="{{ t('dash.col_date') }}">{{ post['created_at'] | tanggal }}</td>
+                <td data-label="{{ t('dash.col_actions') }}">
                     <div class="post-actions">
-                        <a href="{{ url_for('dashboard.edit_post', post_id=post['id']) }}">Edit</a>
+                        <a href="{{ url_for('dashboard.edit_post', post_id=post['id']) }}">{{ t('dash.edit') }}</a>
                         <form method="POST" action="{{ url_for('dashboard.delete_post', post_id=post['id']) }}"
-                              data-confirm="Yakin ingin menghapus tulisan ini?">
-                            <button type="submit" class="btn-link btn-hapus">Hapus</button>
+                              data-confirm="{{ t('dash.confirm_delete_post') }}">
+                            <button type="submit" class="btn-link btn-hapus">{{ t('dash.delete') }}</button>
                         </form>
                     </div>
                 </td>
@@ -66,65 +66,65 @@
         {% if total_pages > 1 %}
         <div class="pagination">
             {% if page > 1 %}
-                <a href="{{ url_for('dashboard.index', page=page-1) }}" class="btn-page">&larr; Sebelumnya</a>
+                <a href="{{ url_for('dashboard.index', page=page-1) }}" class="btn-page">{{ t('pagination.prev') }}</a>
             {% else %}
-                <span class="btn-page disabled">&larr; Sebelumnya</span>
+                <span class="btn-page disabled">{{ t('pagination.prev') }}</span>
             {% endif %}
 
-            <span class="page-info">Halaman {{ page }} dari {{ total_pages }}</span>
+            <span class="page-info">{{ t('pagination.info', page=page, total=total_pages) }}</span>
 
             {% if page < total_pages %}
-                <a href="{{ url_for('dashboard.index', page=page+1) }}" class="btn-page">Berikutnya &rarr;</a>
+                <a href="{{ url_for('dashboard.index', page=page+1) }}" class="btn-page">{{ t('pagination.next') }}</a>
             {% else %}
-                <span class="btn-page disabled">Berikutnya &rarr;</span>
+                <span class="btn-page disabled">{{ t('pagination.next') }}</span>
             {% endif %}
         </div>
         {% endif %}
     {% else %}
-        <p class="empty-state">Belum ada tulisan. <a href="{{ url_for('dashboard.new_post') }}">Mulai menulis sekarang</a>.</p>
+        <p class="empty-state">{{ t('dash.empty_posts') }} <a href="{{ url_for('dashboard.new_post') }}">{{ t('dash.start_writing') }}</a>.</p>
     {% endif %}
 </section>
 
 <nav class="dashboard-menu" aria-label="Menu Dashboard">
     <div class="dashboard-menu-group">
-        <span class="dashboard-menu-heading">Akun & Konten</span>
+        <span class="dashboard-menu-heading">{{ t('dash.menu_group_account') }}</span>
         <div class="dashboard-menu-links">
-            <a href="{{ url_for('dashboard.profile') }}">Pengaturan Profil</a>
+            <a href="{{ url_for('dashboard.profile') }}">{{ t('dash.menu_profile') }}</a>
             <span class="menu-divider">&middot;</span>
-            <a href="{{ url_for('dashboard.change_password') }}">Ubah Password</a>
+            <a href="{{ url_for('dashboard.change_password') }}">{{ t('dash.menu_password') }}</a>
             <span class="menu-divider">&middot;</span>
-            <a href="{{ url_for('dashboard.pages') }}">Halaman</a>
+            <a href="{{ url_for('dashboard.pages') }}">{{ t('dash.menu_pages') }}</a>
             <span class="menu-divider">&middot;</span>
-            <a href="{{ url_for('dashboard.invite_codes') }}">Kode Undangan</a>
+            <a href="{{ url_for('dashboard.invite_codes') }}">{{ t('dash.menu_invites') }}</a>
             <span class="menu-divider">&middot;</span>
-            <a href="{{ url_for('dashboard.donasi') }}">Premium &amp; Donasi</a>
+            <a href="{{ url_for('dashboard.donasi') }}">{{ t('dash.menu_premium') }}</a>
         </div>
         <div class="dashboard-menu-links">
-            <a href="{{ blog_url(current_user) }}" target="_blank">Lihat Blog Saya &rarr;</a>
+            <a href="{{ blog_url(current_user) }}" target="_blank">{{ t('dash.menu_view_blog') }}</a>
             <span class="menu-divider">&middot;</span>
-            <a href="{{ url_for('public.explore') }}" target="_blank">Jelajahi Qata &rarr;</a>
+            <a href="{{ url_for('public.explore') }}" target="_blank">{{ t('dash.menu_explore') }}</a>
         </div>
     </div>
 
     {% if current_user.is_admin %}
     <div class="dashboard-menu-group">
-        <span class="dashboard-menu-heading">Administrasi</span>
+        <span class="dashboard-menu-heading">{{ t('dash.menu_group_admin') }}</span>
         <div class="dashboard-menu-links">
-            <a href="{{ url_for('dashboard.admin_index') }}">Panel Admin</a>
+            <a href="{{ url_for('dashboard.admin_index') }}">{{ t('dash.menu_admin_panel') }}</a>
             <span class="menu-divider">&middot;</span>
             <a href="{{ url_for('dashboard.admin_payments') }}">
-                Verifikasi Pembayaran{% if pending_payments_count %} ({{ pending_payments_count }}){% endif %}
+                {{ t('dash.menu_admin_payments') }}{% if pending_payments_count %} ({{ pending_payments_count }}){% endif %}
             </a>
             <span class="menu-divider">&middot;</span>
-            <a href="{{ url_for('dashboard.admin_landing') }}">Edit Landing Page</a>
+            <a href="{{ url_for('dashboard.admin_landing') }}">{{ t('dash.menu_admin_landing') }}</a>
             <span class="menu-divider">&middot;</span>
-            <a href="{{ url_for('dashboard.sistem') }}">Status Sistem</a>
+            <a href="{{ url_for('dashboard.sistem') }}">{{ t('dash.menu_system') }}</a>
         </div>
     </div>
     {% endif %}
 
     <div class="dashboard-menu-group dashboard-menu-footer">
-        <a href="{{ url_for('auth.logout') }}" class="logout-link">Keluar dari Akun</a>
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">{{ t('dash.logout') }}</a>
     </div>
 </nav>
 {% endblock %}

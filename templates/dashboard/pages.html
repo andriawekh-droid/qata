@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Halaman Saya — Qata{% endblock %}
+{% block title %}{{ t('pages.title') }}{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
-    <h1>Halaman Saya</h1>
+    <h1>{{ t('pages.heading') }}</h1>
     {% if bisa_buat %}
-    <a href="{{ url_for('dashboard.new_page') }}" class="btn">Buat Halaman Baru</a>
+    <a href="{{ url_for('dashboard.new_page') }}" class="btn">{{ t('pages.new_btn') }}</a>
     {% endif %}
 </div>
 
@@ -15,10 +15,10 @@
     <table class="post-table">
         <thead>
             <tr>
-                <th>Judul</th>
-                <th>Jenis</th>
-                <th>Terakhir Diperbarui</th>
-                <th>Aksi</th>
+                <th>{{ t('pages.col_title') }}</th>
+                <th>{{ t('pages.col_type') }}</th>
+                <th>{{ t('pages.col_updated') }}</th>
+                <th>{{ t('pages.col_actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -26,35 +26,35 @@
             <tr>
                 <td>
                     {% if page['type'] == 'tentang' %}
-                        <a href="{{ url_for('public.user_about', username=current_user.username) }}">
+                        <a href="{{ blog_url(current_user, '/tentang') }}">
                             {{ page['title'] }}
                         </a>
                     {% elif page['type'] == 'landing' %}
-                        <a href="{{ url_for('public.user_blog', username=current_user.username) }}">
+                        <a href="{{ blog_url(current_user) }}">
                             {{ page['title'] }}
                         </a>
                     {% else %}
-                        <a href="{{ url_for('public.user_page', username=current_user.username, slug=page['slug']) }}">
+                        <a href="{{ blog_url(current_user, '/page/' ~ page['slug']) }}">
                             {{ page['title'] }}
                         </a>
                     {% endif %}
                 </td>
                 <td>
                     <span class="badge badge-published">
-                        {% if page['type'] == 'landing' %}Utama
-                        {% elif page['type'] == 'tentang' %}Tentang
-                        {% else %}Bebas{% endif %}
+                        {% if page['type'] == 'landing' %}{{ t('pages.type_landing') }}
+                        {% elif page['type'] == 'tentang' %}{{ t('pages.type_about') }}
+                        {% else %}{{ t('pages.type_custom') }}{% endif %}
                     </span>
                 </td>
                 <td>{{ page['updated_at'] | tanggal }}</td>
                 <td>
                     <div class="post-actions">
-                        <a href="{{ url_for('dashboard.edit_page', page_id=page['id']) }}">Edit</a>
+                        <a href="{{ url_for('dashboard.edit_page', page_id=page['id']) }}">{{ t('dash.edit') }}</a>
                         {% if page['type'] == 'custom' %}
                         <form method="POST"
                               action="{{ url_for('dashboard.delete_page', page_id=page['id']) }}"
-                              data-confirm="Yakin ingin menghapus halaman ini?">
-                            <button type="submit" class="btn-link btn-hapus">Hapus</button>
+                              data-confirm="{{ t('pages.confirm_delete') }}">
+                            <button type="submit" class="btn-link btn-hapus">{{ t('dash.delete') }}</button>
                         </form>
                         {% endif %}
                     </div>
@@ -64,11 +64,11 @@
         </tbody>
     </table>
     {% else %}
-    <p class="empty-state">Belum ada halaman.</p>
+    <p class="empty-state">{{ t('pages.empty') }}</p>
     {% endif %}
 </section>
 
 <section class="dashboard-nav">
-    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">&larr; Kembali ke Dashboard</a>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">{{ t('pages.back_dash') }}</a>
 </section>
 {% endblock %}

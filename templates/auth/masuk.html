@@ -1,27 +1,27 @@
 {% extends 'base.html' %}
 
-{% block title %}Masuk — Qata{% endblock %}
+{% block title %}{{ t('auth.login_title') }}{% endblock %}
 
 {% block content %}
 <div class="auth-container">
-    <h1>Masuk</h1>
+    <h1>{{ t('auth.login_heading') }}</h1>
     <form method="POST">
         <div class="form-group">
-            <label for="username">Username</label>
+            <label for="username">{{ t('auth.username') }}</label>
             <input type="text" id="username" name="username" value="{{ username }}" required autofocus>
         </div>
         <div class="form-group">
-            <label for="password">Password</label>
+            <label for="password">{{ t('auth.password') }}</label>
             <input type="password" id="password" name="password" required>
         </div>
-        <button type="submit" class="btn">Masuk</button>
+        <button type="submit" class="btn">{{ t('auth.login_btn') }}</button>
     </form>
     {% if mode == 'open' %}
-    <p class="auth-link">Belum punya akun? <a href="{{ url_for('auth.register') }}">Daftar</a></p>
+    <p class="auth-link">{{ t('auth.no_account') }} <a href="{{ url_for('auth.register') }}">{{ t('auth.register_link') }}</a></p>
     {% elif mode == 'invite_only' %}
-    <p class="auth-link">Belum punya akun? <a href="{{ url_for('auth.register') }}">Daftar dengan kode undangan</a></p>
+    <p class="auth-link">{{ t('auth.no_account') }} <a href="{{ url_for('auth.register') }}">{{ t('auth.register_invite_link') }}</a></p>
     {% else %}
-    <p class="auth-link">Pendaftaran akun baru sedang ditutup.</p>
+    <p class="auth-link">{{ t('auth.register_closed_short') }}</p>
     {% endif %}
 </div>
 {% endblock %}

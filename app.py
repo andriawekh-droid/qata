@@ -1,9 +1,20 @@
 import os
 import secrets
 import sqlite3
-from flask import Flask, send_from_directory, g, request, url_for
+from urllib.parse import urlsplit
+from flask import Flask, send_from_directory, g, request, url_for, redirect, flash
 from flask_login import LoginManager, current_user
 from werkzeug.middleware.proxy_fix import ProxyFix
+from i18n import (
+    SUPPORTED_LANGS,
+    LANG_COOKIE,
+    detect_lang,
+    get_lang,
+    t,
+    format_date_localized,
+    format_relative_time_localized,
+    format_money,
+)
 
 BASE_DOMAIN = os.environ.get('QATA_BASE_DOMAIN', 'qata.blog').strip().lower()
 SUBDOMAIN_ENABLED = os.environ.get('QATA_SUBDOMAIN_ENABLED', '0').strip().lower() in ('1', 'true', 'yes', 'on')
@@ -11,7 +22,7 @@ SUBDOMAIN_ENABLED = os.environ.get('QATA_SUBDOMAIN_ENABLED', '0').strip().lower(
 class SubdomainRouterMiddleware:
     """Memetakan permintaan <username>.<base_domain> ke rute /<username>/..."""
 
-    PASSTHROUGH_PREFIXES = ('/static/', '/like/', '/.well-known/')
+    PASSTHROUGH_PREFIXES = ('/static/', '/like/', '/.well-known/', '/lang/')
     PASSTHROUGH_PATHS = ('/favicon.ico', '/robots.txt')
     MAIN_DOMAIN_EXACT = (
         '/masuk', '/daftar', '/keluar',
@@ -90,9 +101,12 @@ app.config.from_mapping(
 def set_request_context():
     g.csp_nonce = secrets.token_urlsafe(16)
     g.subdomain_user = request.environ.get('HTTP_X_QATA_SUBDOMAIN_USER')
+    g.lang = detect_lang(request)
 
 @app.after_request
 def set_security_headers(response):
+    response.vary.add('Accept-Language')
+    response.vary.add('Cookie')
     response.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
     response.headers.setdefault('X-Content-Type-Options', 'nosniff')
     response.headers.setdefault('X-XSS-Protection', '1; mode=block')
@@ -135,59 +149,57 @@ def sitemap_xml():
         os.path.join(app.root_path, 'static'),
         'sitemap.xml', mimetype='application/xml')
 
+@app.route('/lang/<lang_code>')
+def set_language(lang_code):
+    lang = lang_code.strip().lower()
+    if lang not in SUPPORTED_LANGS:
+        lang = 'id'
+
+    raw_next = (request.args.get('next') or request.referrer or '/').strip()
+    target = '/'
+    if raw_next.startswith('/') and not raw_next.startswith('//'):
+        target = raw_next
+    elif raw_next:
+        parsed = urlsplit(raw_next)
+        host = (parsed.hostname or '').lower()
+        if parsed.scheme in ('http', 'https') and (
+            host == BASE_DOMAIN
+            or host.endswith('.' + BASE_DOMAIN)
+            or host in ('localhost', '127.0.0.1')
+            or host.endswith('.localhost')
+        ):
+            target = raw_next
+
+    resp = redirect(target)
+    cookie_kwargs = dict(max_age=31536000, samesite='Lax', httponly=True)
+    req_host = (request.host or '').split(':')[0].strip().lower()
+    if '.' in BASE_DOMAIN and (req_host == BASE_DOMAIN or req_host.endswith('.' + BASE_DOMAIN)):
+        cookie_kwargs['domain'] = '.' + BASE_DOMAIN
+    resp.set_cookie(LANG_COOKIE, lang, **cookie_kwargs)
+    return resp
+
 @app.template_filter('tanggal')
 def format_tanggal(value):
-    if value is None:
-        return ''
-    if hasattr(value, 'strftime'):
-        return value.strftime('%d %b %Y')
-    try:
-        s = str(value)
-        return s[:10]
-    except Exception:
-        return ''
+    return format_date_localized(value)
 
 @app.template_filter('waktu_relatif')
 def format_waktu_relatif(value):
-    if value is None:
-        return ''
-
-    from datetime import datetime
-
-    try:
-        if hasattr(value, 'strftime'):
-            dt = value
-        else:
-            s = str(value)
-            dt = datetime.strptime(s[:19], '%Y-%m-%d %H:%M:%S')
-    except Exception:
-        return str(value)[:10]
-
-    now = datetime.now()
-    diff = now - dt
-    detik = diff.total_seconds()
-
-    if detik < 60:
-        return 'Baru saja'
-    elif detik < 3600:
-        menit = int(detik // 60)
-        return f'{menit} menit yang lalu'
-    elif detik < 86400:
-        jam = int(detik // 3600)
-        return f'{jam} jam yang lalu'
-    elif detik < 604800:
-        hari = int(detik // 86400)
-        return f'{hari} hari yang lalu'
-    else:
-        return dt.strftime('%d %b %Y')
+    return format_relative_time_localized(value)
 
 @app.template_filter('rupiah')
 def format_rupiah(value):
+    return format_money(value, 'IDR')
+
+@app.template_filter('money')
+def format_money_filter(value, currency='IDR'):
+    return format_money(value, currency)
+
+def switch_lang_url(lang_code):
     try:
-        nominal = int(value or 0)
-    except (TypeError, ValueError):
-        nominal = 0
-    return f"Rp{nominal:,}".replace(',', '.')
+        next_path = request.full_path.rstrip('?') or '/'
+    except RuntimeError:
+        next_path = '/'
+    return url_for('set_language', lang_code=lang_code, next=next_path)
 
 def main_url(endpoint, **values):
     """Bangun URL menuju domain utama (berguna saat user mengakses subdomain)."""
@@ -253,12 +265,20 @@ def inject_page_theme():
         blog_url=blog_url,
         base_domain=BASE_DOMAIN,
         subdomain_enabled=SUBDOMAIN_ENABLED,
+        t=t,
+        current_lang=get_lang(),
+        switch_lang_url=switch_lang_url,
+        format_money=format_money,
     )
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
-login_manager.login_message = 'Silakan login terlebih dahulu.'
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    flash(t('auth.login_required'), 'error')
+    return redirect(url_for('auth.login'))
 
 from auth import auth_bp, get_user_by_id
 from dashboard import dashboard_bp

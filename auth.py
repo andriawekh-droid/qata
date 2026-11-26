@@ -8,6 +8,7 @@ import bcrypt
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, UserMixin
 from database import get_db
+from i18n import t
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -180,13 +181,13 @@ def register():
     # Honeypot: manusia tidak melihat kolom ini, bot biasanya mengisinya.
     # Pura-pura sukses agar bot tidak tahu ia ditolak.
     if request.form.get('website_url', '').strip():
-        flash('Pendaftaran berhasil! Silakan login.', 'sukses')
+        flash(t('auth.msg_register_ok'), 'sukses')
         return redirect(url_for('auth.login'))
 
     ip_hash = _ip_hash()
     if _terlalu_banyak_percobaan(db, ip_hash):
         db.commit()
-        flash('Terlalu banyak percobaan pendaftaran dari jaringan Anda. Coba lagi dalam satu jam.', 'error')
+        flash(t('auth.err_too_many_reg'), 'error')
         return _render_register(mode, request.form)
 
     cur = db.execute(
@@ -207,9 +208,9 @@ def register():
     if mode == MODE_OPEN:
         jawaban = request.form.get('jawaban', '').strip()
         if expected is None or jawaban != expected:
-            error = 'Jawaban pertanyaan keamanan salah.'
+            error = t('auth.err_security_answer')
         elif rendered_at is None or time.time() - rendered_at < MIN_DETIK_ISI_FORM:
-            error = 'Formulir dikirim terlalu cepat. Silakan coba lagi.'
+            error = t('auth.err_form_too_fast')
 
     code_row = None
     if error is None and mode == MODE_INVITE:
@@ -218,25 +219,25 @@ def register():
             (invite_code,)
         ).fetchone()
         if not code_row:
-            error = 'Kode undangan tidak valid atau sudah digunakan.'
+            error = t('auth.err_invite_invalid')
 
     if error is None:
         if not username or not email or not password:
-            error = 'Semua kolom wajib diisi.'
+            error = t('auth.err_required_all')
         elif not USERNAME_RE.match(username):
-            error = 'Username 3-30 karakter: huruf kecil, angka, dan tanda hubung (tidak di awal/akhir).'
+            error = t('auth.err_username_format')
         elif username in USERNAME_RESERVED:
-            error = 'Username ini tidak tersedia.'
+            error = t('auth.err_username_reserved')
         elif not EMAIL_RE.match(email):
-            error = 'Format email tidak valid.'
+            error = t('auth.err_email_format')
         elif len(password) < PASSWORD_MIN:
-            error = f'Password minimal {PASSWORD_MIN} karakter.'
+            error = t('auth.err_pw_min', min=PASSWORD_MIN)
         elif len(password.encode('utf-8')) > PASSWORD_MAX_BYTES:
-            error = 'Password terlalu panjang (maksimal 72 byte).'
+            error = t('auth.err_pw_max')
         elif db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone():
-            error = 'Username sudah digunakan.'
+            error = t('auth.err_username_taken')
         elif db.execute('SELECT id FROM users WHERE email = ?', (email,)).fetchone():
-            error = 'Email sudah terdaftar.'
+            error = t('auth.err_email_taken')
 
     if error is None:
         hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -264,9 +265,9 @@ def register():
             db.commit()
         except sqlite3.IntegrityError:
             db.rollback()
-            error = 'Username atau email sudah digunakan.'
+            error = t('auth.err_user_or_email_taken')
         else:
-            flash('Pendaftaran berhasil! Silakan login.', 'sukses')
+            flash(t('auth.msg_register_ok'), 'sukses')
             return redirect(url_for('auth.login'))
 
     flash(error, 'error')
@@ -284,18 +285,18 @@ def login():
         # Cek rate limit login
         if _terlalu_banyak_gagal_login(db, ip_hash, username):
             db.commit()
-            flash('Terlalu banyak percobaan login yang gagal. Silakan tunggu 15 menit sebelum mencoba lagi.', 'error')
+            flash(t('auth.err_too_many_login'), 'error')
             return render_template('auth/masuk.html', mode=get_registration_mode(db), username=username)
 
         row = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
         error = None
 
         if row is None:
-            error = 'Username atau password salah.'
+            error = t('auth.err_invalid_creds')
         elif not row['is_active']:
-            error = 'Akun ini telah dinonaktifkan.'
+            error = t('auth.err_account_inactive')
         elif not bcrypt.checkpw(password.encode('utf-8'), row['password'].encode('utf-8')):
-            error = 'Username atau password salah.'
+            error = t('auth.err_invalid_creds')
 
         if error is None:
             # Catat login sukses
@@ -325,5 +326,5 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('Anda telah keluar.', 'sukses')
+    flash(t('auth.msg_logout_ok'), 'sukses')
     return redirect(url_for('auth.login'))

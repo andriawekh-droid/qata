@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="{{ page_theme|default('light') }}">
+<html lang="{{ current_lang }}" data-theme="{{ page_theme|default('light') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
     {% block meta %}{% endblock %}
     {% block head %}{% endblock %}
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=21">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=23">
 </head>
 <body>
     <main class="container">
@@ -21,12 +21,18 @@
         {% block content %}{% endblock %}
 
         <footer class="footer">
-            <span class="footer-left">Qata &mdash; &copy; 2026. Dibuat oleh <a href="https://qata.blog/awekh">awekh</a> untuk penulis, dengan tenang.</span>
+            <span class="footer-left">Qata &mdash; &copy; 2026. {{ t('footer.landing_made_by') }} <a href="{{ blog_url('awekh', is_premium=True) }}">awekh</a> {{ t('footer.landing_suffix') }}</span>
             <div class="footer-right">
-                <a href="{{ url_for('public.explore') }}">Jelajahi</a>
+                <span class="lang-switcher" aria-label="{{ t('lang.label') }}">
+                    <a href="{{ switch_lang_url('id') }}" class="lang-link {% if current_lang == 'id' %}active{% endif %}">ID</a>
+                    <span class="lang-sep">/</span>
+                    <a href="{{ switch_lang_url('en') }}" class="lang-link {% if current_lang == 'en' %}active{% endif %}">EN</a>
+                </span>
+                <span class="dot">&middot;</span>
+                <a href="{{ main_url('public.explore') }}">{{ t('nav.explore') }}</a>
                 {% if current_user.is_authenticated %}
                 <span class="dot">&middot;</span>
-                <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                <a href="{{ main_url('dashboard.index') }}">{{ t('nav.dashboard') }}</a>
                 {% endif %}
             </div>
         </footer>

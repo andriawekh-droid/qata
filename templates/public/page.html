@@ -16,20 +16,20 @@
 <header class="site-header">
     <a href="{{ main_url('public.index') }}" class="wordmark">Qata</a>
     <div class="header-links">
-        <a href="{{ main_url('public.index') }}">Rumah</a>
+        <a href="{{ main_url('public.index') }}">{{ t('nav.home') }}</a>
     </div>
 </header>
 
 <div class="profile-block">
     <h1>{{ user['display_name'] }}</h1>
     <nav class="profile-nav">
-        <a href="{{ blog_url(user) }}">Rumah</a>
-        <a href="{{ blog_url(user, '/tulisan') }}">Tulisan</a>
-        <a href="{{ blog_url(user, '/tentang') }}">Tentang</a>
+        <a href="{{ blog_url(user) }}">{{ t('nav.home') }}</a>
+        <a href="{{ blog_url(user, '/tulisan') }}">{{ t('nav.posts') }}</a>
+        <a href="{{ blog_url(user, '/tentang') }}">{{ t('nav.about') }}</a>
         {% for cp in custom_pages %}
         <a href="{{ blog_url(user, '/page/' ~ cp['slug']) }}" {% if cp['slug'] == page['slug'] %}class="current"{% endif %}>{{ cp['title'] }}</a>
         {% endfor %}
-        <a href="{{ blog_url(user, '/rss') }}" class="rss-link">RSS</a>
+        <a href="{{ blog_url(user, '/rss') }}" class="rss-link">{{ t('nav.rss') }}</a>
     </nav>
 </div>
 
@@ -41,7 +41,7 @@
     <div class="post-footer">
         <a href="{{ blog_url(user) }}" class="back-link m-0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-            Kembali ke blog {{ user['display_name'] }}
+            {{ t('about.back_blog', name=user['display_name']) }}
         </a>
     </div>
 </article>

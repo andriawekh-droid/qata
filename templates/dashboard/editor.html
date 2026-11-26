@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if post %}Edit Tulisan{% else %}Tulis Baru{% endif %} — Qata{% endblock %}
+{% block title %}{% if post %}{{ t('editor.edit_title') }}{% else %}{{ t('editor.new_title') }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="editor-container">
-    <h1>{% if post %}Edit Tulisan{% else %}Tulis Baru{% endif %}</h1>
+    <h1>{% if post %}{{ t('editor.edit_heading') }}{% else %}{{ t('editor.new_heading') }}{% endif %}</h1>
     <form method="POST">
         <div class="form-group">
-            <label for="title">Judul</label>
+            <label for="title">{{ t('editor.field_title') }}</label>
             <input type="text" id="title" name="title" required autofocus
                    value="{{ post['title'] if post else '' }}">
         </div>
@@ -15,18 +15,18 @@
         <div class="form-group">
             <div class="editor-toolbar">
                 <div class="editor-toolbar-left">
-                    <label for="content" class="mb-0">Isi Tulisan (Markdown)</label>
+                    <label for="content" class="mb-0">{{ t('editor.field_content') }}</label>
                     <a href="https://qata.blog/awekh/panduan-menulis-di-qata-markdown" 
                        target="_blank" 
                        rel="noopener noreferrer" 
                        class="markdown-guide-link"
-                       title="Buka panduan menulis Markdown di Qata">
+                       title="{{ t('editor.md_guide_title') }}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
-                        <span>Panduan Markdown ↗</span>
+                        <span>{{ t('editor.md_guide') }}</span>
                     </a>
                 </div>
                 <div class="editor-toolbar-right">
@@ -35,12 +35,12 @@
                             formtarget="_blank" 
                             formnovalidate 
                             class="btn-upload" 
-                            title="Buka pratinjau tulisan di tab baru">
+                            title="{{ t('editor.preview_title') }}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>
-                        <span>Pratinjau</span>
+                        <span>{{ t('editor.preview') }}</span>
                     </button>
                     {% if can_upload_image %}
                     <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" class="d-none">
@@ -50,7 +50,7 @@
                             <circle cx="9" cy="9" r="2"/>
                             <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
                         </svg>
-                        <span>Sisipkan Gambar</span>
+                        <span>{{ t('editor.insert_image') }}</span>
                     </button>
                     {% endif %}
                 </div>
@@ -63,27 +63,27 @@
 
         <div class="editor-footer">
             <div class="form-group">
-                <label for="status">Status</label>
+                <label for="status">{{ t('editor.status') }}</label>
                 <select id="status" name="status">
                     <option value="draft" {% if not post or post['status'] == 'draft' %}selected{% endif %}>
-                        Draf
+                        {{ t('dash.status_draft') }}
                     </option>
                     <option value="published" {% if post and post['status'] == 'published' %}selected{% endif %}>
-                        Terbit
+                        {{ t('dash.status_published') }}
                     </option>
                 </select>
             </div>
             <div class="editor-actions">
-                <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Batal</a>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">{{ t('editor.cancel') }}</a>
                 <button type="submit" 
                         formaction="{{ url_for('dashboard.preview_post') }}" 
                         formtarget="_blank" 
                         formnovalidate 
                         class="btn btn-secondary">
-                    Pratinjau
+                    {{ t('editor.preview') }}
                 </button>
                 <button type="submit" id="saveBtn" class="btn">
-                    {% if post and post['status'] == 'published' %}Terbitkan{% else %}Simpan Draf{% endif %}
+                    {% if post and post['status'] == 'published' %}{{ t('editor.save_publish') }}{% else %}{{ t('editor.save_draft') }}{% endif %}
                 </button>
             </div>
         </div>
@@ -93,13 +93,11 @@
 <script nonce="{{ csp_nonce }}">
 const statusSelect = document.getElementById('status');
 const saveBtn = document.getElementById('saveBtn');
+const labelPublish = {{ t('editor.save_publish') | tojson }};
+const labelDraft = {{ t('editor.save_draft') | tojson }};
 if (statusSelect && saveBtn) {
     statusSelect.addEventListener('change', function() {
-        if (this.value === 'published') {
-            saveBtn.textContent = 'Terbitkan';
-        } else {
-            saveBtn.textContent = 'Simpan Draf';
-        }
+        saveBtn.textContent = (this.value === 'published') ? labelPublish : labelDraft;
     });
 }
 </script>
@@ -109,6 +107,13 @@ if (statusSelect && saveBtn) {
 const imageInput = document.getElementById('imageInput');
 const contentArea = document.getElementById('content');
 const uploadStatus = document.getElementById('uploadStatus');
+const msgInvalidType = {{ t('editor.js_invalid_type') | tojson }};
+const msgMaxSize = {{ t('editor.js_max_size') | tojson }};
+const msgCompressing = {{ t('editor.js_compressing') | tojson }};
+const msgUploading = {{ t('editor.js_uploading') | tojson }};
+const msgUploadOk = {{ t('editor.js_upload_ok') | tojson }};
+const msgUploadErr = {{ t('editor.js_upload_err') | tojson }};
+const msgNetworkErr = {{ t('editor.js_network_err') | tojson }};
 
 document.getElementById('insertImageBtn')?.addEventListener('click', function() {
     imageInput?.click();
@@ -120,23 +125,23 @@ function handleImageUpload(file) {
     const validExtensions = /\.(jpe?g|png|webp)$/i;
     if (!file.name.match(validExtensions) && !file.type.match(/^image\/(jpeg|png|webp)$/)) {
         uploadStatus.style.color = 'var(--danger)';
-        uploadStatus.textContent = 'Format berkas harus JPG, PNG, atau WebP.';
+        uploadStatus.textContent = msgInvalidType;
         imageInput.value = '';
         return;
     }
 
     if (file.size > 25 * 1024 * 1024) {
         uploadStatus.style.color = 'var(--danger)';
-        uploadStatus.textContent = 'Ukuran berkas terlalu besar (maksimal 25 MB).';
+        uploadStatus.textContent = msgMaxSize;
         imageInput.value = '';
         return;
     }
 
     uploadStatus.style.color = 'var(--ink-faint)';
-    uploadStatus.textContent = 'Mengompres gambar...';
+    uploadStatus.textContent = msgCompressing;
 
     function sendFile(blobOrFile, filename) {
-        uploadStatus.textContent = 'Mengunggah gambar...';
+        uploadStatus.textContent = msgUploading;
         const formData = new FormData();
         formData.append('image', blobOrFile, filename);
 
@@ -148,9 +153,8 @@ function handleImageUpload(file) {
         .then(({ status, body }) => {
             if (status === 200 && body.success) {
                 uploadStatus.style.color = 'var(--success)';
-                uploadStatus.textContent = 'Gambar berhasil diunggah dan disisipkan!';
+                uploadStatus.textContent = msgUploadOk;
 
-                // Sisipkan markdown gambar di posisi kursor
                 const start = contentArea.selectionStart;
                 const end = contentArea.selectionEnd;
                 const text = contentArea.value;
@@ -163,19 +167,18 @@ function handleImageUpload(file) {
                 setTimeout(() => { uploadStatus.textContent = ''; }, 4000);
             } else {
                 uploadStatus.style.color = 'var(--danger)';
-                uploadStatus.textContent = body.error || 'Gagal mengunggah gambar.';
+                uploadStatus.textContent = body.error || msgUploadErr;
             }
         })
         .catch(() => {
             uploadStatus.style.color = 'var(--danger)';
-            uploadStatus.textContent = 'Terjadi kesalahan jaringan saat mengunggah.';
+            uploadStatus.textContent = msgNetworkErr;
         })
         .finally(() => {
             imageInput.value = '';
         });
     }
 
-    // Auto-resize di client menggunakan Canvas untuk gambar kamera HP resolusi tinggi
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
 
@@ -185,7 +188,6 @@ function handleImageUpload(file) {
         let width = img.naturalWidth || img.width;
         let height = img.naturalHeight || img.height;
 
-        // Jika gambar sudah kecil (lebar & tinggi <= 1600px dan ukuran < 1.5 MB), kirim langsung
         if (width <= MAX_WIDTH && height <= MAX_WIDTH && file.size <= 1.5 * 1024 * 1024) {
             sendFile(file, file.name);
             return;

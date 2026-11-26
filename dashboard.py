@@ -10,6 +10,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from database import get_db, update_sitemap
 from auth import get_registration_mode, MODE_VALID, PASSWORD_MIN, PASSWORD_MAX_BYTES
+from i18n import t, get_lang
 import requests
 from datetime import datetime as dt
 
@@ -19,6 +20,7 @@ BATAS_UNDANGAN = 5
 BATAS_PAGE = 3
 SDMFSRD_URL = "https://sdmfsrd.web.id"
 MIN_PREMIUM_AMOUNT = 25000
+MIN_PREMIUM_USD = 3
 MAX_PROOF_SIZE = 8 * 1024 * 1024  # 8 MB batas bukti transfer
 
 def user_is_premium(db, user):
@@ -152,9 +154,9 @@ def new_post():
         error = None
 
         if not title:
-            error = 'Judul tidak boleh kosong.'
+            error = t('editor.err_title_empty')
         elif not content:
-            error = 'Isi tulisan tidak boleh kosong.'
+            error = t('editor.err_content_empty')
 
         if error is None:
             db = get_db()
@@ -178,10 +180,10 @@ def new_post():
             db.commit()
             update_sitemap()
             if status == 'draft':
-                flash('Draf berhasil disimpan.', 'sukses')
+                flash(t('editor.msg_draft_saved'), 'sukses')
                 return redirect(url_for('dashboard.edit_post', post_id=new_post_id))
             else:
-                flash('Tulisan berhasil diterbitkan.', 'sukses')
+                flash(t('editor.msg_published'), 'sukses')
                 return redirect(url_for('dashboard.index'))
 
         flash(error, 'error')
@@ -198,7 +200,7 @@ def edit_post(post_id):
     ).fetchone()
 
     if post is None:
-        flash('Tulisan tidak ditemukan.', 'error')
+        flash(t('editor.err_not_found'), 'error')
         return redirect(url_for('dashboard.index'))
 
     if request.method == 'POST':
@@ -208,9 +210,9 @@ def edit_post(post_id):
         error = None
 
         if not title:
-            error = 'Judul tidak boleh kosong.'
+            error = t('editor.err_title_empty')
         elif not content:
-            error = 'Isi tulisan tidak boleh kosong.'
+            error = t('editor.err_content_empty')
 
         if error is None:
             content_html = render_markdown(content)
@@ -225,10 +227,10 @@ def edit_post(post_id):
             db.commit()
             update_sitemap()
             if status == 'draft':
-                flash('Draf berhasil disimpan.', 'sukses')
+                flash(t('editor.msg_draft_saved'), 'sukses')
                 return redirect(url_for('dashboard.edit_post', post_id=post_id))
             else:
-                flash('Tulisan berhasil diperbarui.', 'sukses')
+                flash(t('editor.msg_updated'), 'sukses')
                 return redirect(url_for('dashboard.index'))
 
         flash(error, 'error')
@@ -238,9 +240,9 @@ def edit_post(post_id):
 @dashboard_bp.route('/tulisan/preview', methods=['POST'])
 @login_required
 def preview_post():
-    title = request.form.get('title', '').strip() or 'Tanpa Judul'
+    title = request.form.get('title', '').strip() or t('editor.untitled')
     content = request.form.get('content', '')
-    content_html = render_markdown(content) if content.strip() else '<p><em>(Belum ada isi tulisan)</em></p>'
+    content_html = render_markdown(content) if content.strip() else f'<p><em>{t("editor.empty_preview")}</em></p>'
     reading_time = hitung_waktu_baca(content)
 
     db = get_db()
@@ -279,7 +281,7 @@ def delete_post(post_id):
     ).fetchone()
 
     if post is None:
-        flash('Tulisan tidak ditemukan.', 'error')
+        flash(t('editor.err_not_found'), 'error')
         return redirect(url_for('dashboard.index'))
 
     db.execute('DELETE FROM likes WHERE post_id = ?', (post_id,))
@@ -287,7 +289,7 @@ def delete_post(post_id):
     db.execute('DELETE FROM posts WHERE id = ?', (post_id,))
     db.commit()
     update_sitemap()
-    flash('Tulisan berhasil dihapus.', 'sukses')
+    flash(t('editor.msg_deleted'), 'sukses')
     return redirect(url_for('dashboard.index'))
 
 def _clean_handle(value, base_domains=()):
@@ -319,9 +321,9 @@ def profile():
         error = None
 
         if not display_name:
-            error = 'Nama tampilan tidak boleh kosong.'
+            error = t('profile.err_display_empty')
         elif theme_preference not in TEMA_VALID:
-            error = 'Tema tidak valid.'
+            error = t('profile.err_theme_invalid')
 
         if error is None:
             db = get_db()
@@ -332,7 +334,7 @@ def profile():
                 (display_name, website, twitter, instagram, threads, letterbird, theme_preference, current_user.id)
             )
             db.commit()
-            flash('Profil berhasil diperbarui.', 'sukses')
+            flash(t('profile.msg_updated'), 'sukses')
             return redirect(url_for('dashboard.profile'))
 
         flash(error, 'error')
@@ -352,23 +354,23 @@ def change_password():
         error = None
 
         if not current_password or not new_password or not confirm_password:
-            error = 'Semua kolom wajib diisi.'
+            error = t('auth.err_required_all')
         elif not bcrypt.checkpw(current_password.encode('utf-8'), row['password'].encode('utf-8')):
-            error = 'Password saat ini salah.'
+            error = t('pw.err_wrong_current')
         elif new_password != confirm_password:
-            error = 'Konfirmasi password baru tidak cocok.'
+            error = t('pw.err_mismatch')
         elif len(new_password) < PASSWORD_MIN:
-            error = f'Password baru minimal {PASSWORD_MIN} karakter.'
+            error = t('auth.err_pw_min', min=PASSWORD_MIN)
         elif len(new_password.encode('utf-8')) > PASSWORD_MAX_BYTES:
-            error = 'Password baru terlalu panjang (maksimal 72 byte).'
+            error = t('auth.err_pw_max')
         elif current_password == new_password:
-            error = 'Password baru tidak boleh sama dengan password saat ini.'
+            error = t('pw.err_same')
 
         if error is None:
             hashed = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
             db.execute('UPDATE users SET password = ? WHERE id = ?', (hashed.decode('utf-8'), current_user.id))
             db.commit()
-            flash('Password Anda berhasil diubah.', 'sukses')
+            flash(t('pw.msg_updated'), 'sukses')
             return redirect(url_for('dashboard.profile'))
 
         flash(error, 'error')
@@ -384,24 +386,24 @@ MAX_IMAGE_WIDTH = 1200             # Lebar proporsional maksimal artikel
 def upload_image():
     db = get_db()
     if not user_can_upload_image(db, current_user):
-        return jsonify({'error': 'Fitur unggah gambar saat ini dinonaktifkan atau khusus akun admin.'}), 403
+        return jsonify({'error': t('upload.err_forbidden')}), 403
 
     if 'image' not in request.files:
-        return jsonify({'error': 'Tidak ada berkas yang dikirim.'}), 400
+        return jsonify({'error': t('upload.err_no_file')}), 400
 
     file = request.files['image']
     if not file or not file.filename:
-        return jsonify({'error': 'Berkas tidak boleh kosong.'}), 400
+        return jsonify({'error': t('upload.err_empty_file')}), 400
 
     # Cek ekstensi
     _, ext = os.path.splitext(file.filename.lower())
     if ext not in ALLOWED_EXTENSIONS:
-        return jsonify({'error': 'Format berkas harus JPG, PNG, atau WebP.'}), 400
+        return jsonify({'error': t('upload.err_ext')}), 400
 
     # Baca byte ke memory buffer untuk validasi dan kompresi
     file_bytes = file.read()
     if len(file_bytes) > MAX_UPLOAD_SIZE:
-        return jsonify({'error': 'Ukuran berkas maksimal 10 MB.'}), 400
+        return jsonify({'error': t('upload.err_size')}), 400
 
     try:
         # Buka gambar menggunakan Pillow
@@ -446,7 +448,7 @@ def upload_image():
         })
 
     except Exception as e:
-        return jsonify({'error': 'Gagal memproses gambar. Pastikan format berkas valid.'}), 400
+        return jsonify({'error': t('upload.err_process')}), 400
 
 @dashboard_bp.route('/kode-undangan')
 @login_required
@@ -478,7 +480,7 @@ def create_invite_code():
         ).fetchone()[0]
 
         if total_codes >= BATAS_UNDANGAN:
-            flash(f'Anda hanya dapat membuat maksimal {BATAS_UNDANGAN} kode undangan.', 'error')
+            flash(t('invites.err_limit', limit=BATAS_UNDANGAN), 'error')
             return redirect(url_for('dashboard.invite_codes'))
 
     import secrets
@@ -488,7 +490,7 @@ def create_invite_code():
         (code, current_user.id)
     )
     db.commit()
-    flash(f'Kode undangan berhasil dibuat: {code}', 'sukses')
+    flash(t('invites.msg_created', code=code), 'sukses')
     return redirect(url_for('dashboard.invite_codes'))
 
 # Page routes
@@ -518,7 +520,7 @@ def edit_page(page_id):
     ).fetchone()
 
     if page is None:
-        flash('Halaman tidak ditemukan.', 'error')
+        flash(t('pages.err_not_found'), 'error')
         return redirect(url_for('dashboard.pages'))
 
     if request.method == 'POST':
@@ -527,9 +529,9 @@ def edit_page(page_id):
         error = None
 
         if not title:
-            error = 'Judul tidak boleh kosong.'
+            error = t('editor.err_title_empty')
         elif not content:
-            error = 'Isi halaman tidak boleh kosong.'
+            error = t('pages.err_content_empty')
 
         if error is None:
             content_html = render_markdown(content)
@@ -542,7 +544,7 @@ def edit_page(page_id):
             )
             db.commit()
             update_sitemap()
-            flash('Halaman berhasil diperbarui.', 'sukses')
+            flash(t('pages.msg_updated'), 'sukses')
             return redirect(url_for('dashboard.pages'))
 
         flash(error, 'error')
@@ -559,7 +561,7 @@ def new_page():
     ).fetchone()[0]
 
     if total_custom >= 1:
-        flash('Anda hanya dapat membuat 1 halaman bebas.', 'error')
+        flash(t('pages.err_max_custom'), 'error')
         return redirect(url_for('dashboard.pages'))
 
     if request.method == 'POST':
@@ -568,9 +570,9 @@ def new_page():
         error = None
 
         if not title:
-            error = 'Judul tidak boleh kosong.'
+            error = t('editor.err_title_empty')
         elif not content:
-            error = 'Isi halaman tidak boleh kosong.'
+            error = t('pages.err_content_empty')
 
         if error is None:
             slug = generate_slug(title)
@@ -590,7 +592,7 @@ def new_page():
             )
             db.commit()
             update_sitemap()
-            flash('Halaman berhasil dibuat.', 'sukses')
+            flash(t('pages.msg_created'), 'sukses')
             return redirect(url_for('dashboard.pages'))
 
         flash(error, 'error')
@@ -617,7 +619,7 @@ def delete_page(page_id):
     db.execute('DELETE FROM pages WHERE id = ?', (page_id,))
     db.commit()
     update_sitemap()
-    flash('Halaman berhasil dihapus.', 'sukses')
+    flash(t('pages.msg_deleted'), 'sukses')
     return redirect(url_for('dashboard.pages'))
 
 # Admin routes
@@ -648,7 +650,7 @@ def admin_registration_mode():
 
     mode = request.form.get('registration_mode', '').strip()
     if mode not in MODE_VALID:
-        flash('Mode pendaftaran tidak valid.', 'error')
+        flash(t('admin.err_reg_mode'), 'error')
         return redirect(url_for('dashboard.admin_index'))
 
     db = get_db()
@@ -659,7 +661,7 @@ def admin_registration_mode():
         (mode, mode)
     )
     db.commit()
-    flash('Mode pendaftaran berhasil diperbarui.', 'sukses')
+    flash(t('admin.msg_reg_updated'), 'sukses')
     return redirect(url_for('dashboard.admin_index'))
 
 @dashboard_bp.route('/admin/toggle-upload-gambar/<int:user_id>', methods=['POST'])
@@ -671,19 +673,19 @@ def admin_toggle_upload_image(user_id):
     db = get_db()
     target = db.execute('SELECT id, username, can_upload_image, is_admin FROM users WHERE id = ?', (user_id,)).fetchone()
     if not target:
-        flash('Pengguna tidak ditemukan.', 'error')
+        flash(t('admin.err_user_not_found'), 'error')
         return redirect(url_for('dashboard.admin_index'))
 
     if target['is_admin']:
-        flash('Akun admin selalu memiliki izin upload gambar.', 'error')
+        flash(t('admin.err_admin_upload_locked'), 'error')
         return redirect(url_for('dashboard.admin_index'))
 
     new_val = 0 if target['can_upload_image'] else 1
     db.execute('UPDATE users SET can_upload_image = ? WHERE id = ?', (new_val, user_id))
     db.commit()
 
-    status_str = 'diaktifkan' if new_val else 'dinonaktifkan'
-    flash(f"Izin upload gambar untuk @{target['username']} berhasil {status_str}.", 'sukses')
+    state = t('admin.state_enabled') if new_val else t('admin.state_disabled')
+    flash(t('admin.msg_upload_toggled', username=target['username'], state=state), 'sukses')
     return redirect(url_for('dashboard.admin_index'))
 
 @dashboard_bp.route('/admin/toggle-premium/<int:user_id>', methods=['POST'])
@@ -695,11 +697,11 @@ def admin_toggle_premium(user_id):
     db = get_db()
     target = db.execute('SELECT id, username, is_premium, is_admin FROM users WHERE id = ?', (user_id,)).fetchone()
     if not target:
-        flash('Pengguna tidak ditemukan.', 'error')
+        flash(t('admin.err_user_not_found'), 'error')
         return redirect(url_for('dashboard.admin_index'))
 
     if target['is_admin']:
-        flash('Akun admin selalu berstatus Premium.', 'error')
+        flash(t('admin.err_admin_premium_locked'), 'error')
         return redirect(url_for('dashboard.admin_index'))
 
     new_val = 0 if target['is_premium'] else 1
@@ -716,8 +718,8 @@ def admin_toggle_premium(user_id):
     db.commit()
     update_sitemap()
 
-    status_str = 'diaktifkan' if new_val else 'dinonaktifkan'
-    flash(f"Status Premium untuk @{target['username']} berhasil {status_str}.", 'sukses')
+    state = t('admin.state_enabled') if new_val else t('admin.state_disabled')
+    flash(t('admin.msg_premium_toggled', username=target['username'], state=state), 'sukses')
     return redirect(url_for('dashboard.admin_index'))
 
 @dashboard_bp.route('/admin/reset-password/<int:user_id>', methods=['GET', 'POST'])
@@ -732,7 +734,7 @@ def admin_reset_password(user_id):
     ).fetchone()
 
     if target is None:
-        flash('User tidak ditemukan.', 'error')
+        flash(t('admin.err_user_not_found'), 'error')
         return redirect(url_for('dashboard.admin_index'))
 
     if request.method == 'POST':
@@ -743,9 +745,9 @@ def admin_reset_password(user_id):
         if generated:
             password = secrets.token_urlsafe(9)
         elif len(password) < PASSWORD_MIN:
-            error = f'Password minimal {PASSWORD_MIN} karakter.'
+            error = t('auth.err_pw_min', min=PASSWORD_MIN)
         elif len(password.encode('utf-8')) > PASSWORD_MAX_BYTES:
-            error = 'Password terlalu panjang (maksimal 72 byte).'
+            error = t('auth.err_pw_max')
 
         if error is None:
             hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -774,14 +776,14 @@ def admin_delete_user(user_id):
         abort(403)
 
     if user_id == current_user.id:
-        flash('Anda tidak dapat menghapus akun sendiri.', 'error')
+        flash(t('admin.err_delete_self'), 'error')
         return redirect(url_for('dashboard.admin_index'))
 
     db = get_db()
     user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
 
     if user is None:
-        flash('User tidak ditemukan.', 'error')
+        flash(t('admin.err_user_not_found'), 'error')
         return redirect(url_for('dashboard.admin_index'))
 
     post_ids = db.execute(
@@ -811,7 +813,7 @@ def admin_delete_user(user_id):
     db.execute('DELETE FROM users WHERE id = ?', (user_id,))
     db.commit()
 
-    flash(f'User @{user["username"]} dan semua datanya berhasil dihapus.', 'sukses')
+    flash(t('admin.msg_user_deleted', username=user['username']), 'sukses')
     return redirect(url_for('dashboard.admin_index'))
 
 @dashboard_bp.route('/admin/landing', methods=['GET', 'POST'])
@@ -824,11 +826,16 @@ def admin_landing():
 
     if request.method == 'POST':
         settings = [
-            ('landing_brand_sub', request.form['landing_brand_sub'].strip()),
-            ('landing_title', request.form['landing_title'].strip()),
-            ('landing_desc', request.form['landing_desc'].strip()),
-            ('landing_features', request.form['landing_features'].strip()),
-            ('landing_cta', request.form['landing_cta'].strip()),
+            ('landing_brand_sub', request.form.get('landing_brand_sub', '').strip()),
+            ('landing_title', request.form.get('landing_title', '').strip()),
+            ('landing_desc', request.form.get('landing_desc', '').strip()),
+            ('landing_features', request.form.get('landing_features', '').strip()),
+            ('landing_cta', request.form.get('landing_cta', '').strip()),
+            ('landing_brand_sub_en', request.form.get('landing_brand_sub_en', '').strip()),
+            ('landing_title_en', request.form.get('landing_title_en', '').strip()),
+            ('landing_desc_en', request.form.get('landing_desc_en', '').strip()),
+            ('landing_features_en', request.form.get('landing_features_en', '').strip()),
+            ('landing_cta_en', request.form.get('landing_cta_en', '').strip()),
         ]
 
         for key, value in settings:
@@ -839,7 +846,7 @@ def admin_landing():
                 (key, value, value)
             )
         db.commit()
-        flash('Landing page berhasil diperbarui.', 'sukses')
+        flash(t('admin_landing.msg_updated'), 'sukses')
         return redirect(url_for('dashboard.admin_landing'))
 
     settings = {}
@@ -865,7 +872,12 @@ def sistem():
 
     boot_time = datetime.fromtimestamp(psutil.boot_time())
     uptime = datetime.now() - boot_time
-    uptime_str = f"{uptime.days} hari, {uptime.seconds // 3600} jam, {(uptime.seconds % 3600) // 60} menit"
+    uptime_str = t(
+        'sys.uptime_fmt',
+        days=uptime.days,
+        hours=uptime.seconds // 3600,
+        mins=(uptime.seconds % 3600) // 60,
+    )
 
     db = get_db()
     total_users = db.execute('SELECT COUNT(*) FROM users').fetchone()[0]
@@ -901,41 +913,64 @@ def sistem():
 def donasi():
     db = get_db()
     is_prem = user_is_premium(db, current_user)
+    default_method = 'paypal' if get_lang() == 'en' else 'qris'
 
     if request.method == 'POST':
         pay_type = request.form.get('type', 'donation').strip()
         if pay_type not in ('donation', 'premium'):
-            flash('Jenis pembayaran tidak valid.', 'error')
+            flash(t('payment.err_invalid_type'), 'error')
             return redirect(url_for('dashboard.donasi'))
 
-        raw_amount = re.sub(r'[^\d]', '', request.form.get('amount', ''))
-        try:
-            amount = int(raw_amount) if raw_amount else 0
-        except ValueError:
-            amount = 0
+        pay_method = request.form.get('method', default_method).strip().lower()
+        if pay_method not in ('qris', 'paypal'):
+            flash(t('payment.err_invalid_method'), 'error')
+            return redirect(url_for('dashboard.donasi'))
+
+        currency = 'USD' if pay_method == 'paypal' else 'IDR'
+        raw_amount_input = request.form.get('amount', '').strip()
+
+        error = None
+        amount = 0
+        if pay_method == 'paypal':
+            cleaned_usd = raw_amount_input.replace('$', '').replace(' ', '').replace(',', '.')
+            try:
+                val = round(float(cleaned_usd), 2) if cleaned_usd else 0.0
+            except ValueError:
+                val = 0.0
+            if val <= 0:
+                error = t('payment.err_amount_zero')
+            elif pay_type == 'premium' and val < MIN_PREMIUM_USD:
+                error = t('payment.err_min_premium_usd', min=MIN_PREMIUM_USD)
+            amount = int(val) if val.is_integer() else val
+        else:
+            raw_digits = re.sub(r'[^\d]', '', raw_amount_input)
+            try:
+                amount = int(raw_digits) if raw_digits else 0
+            except ValueError:
+                amount = 0
+            if amount <= 0:
+                error = t('payment.err_amount_zero')
+            elif pay_type == 'premium' and amount < MIN_PREMIUM_AMOUNT:
+                error = t('payment.err_min_premium_idr')
 
         sender_name = request.form.get('sender_name', '').strip()
         note = request.form.get('note', '').strip()
         proof_file = request.files.get('proof')
 
-        error = None
-        if amount <= 0:
-            error = 'Nominal pembayaran harus lebih dari Rp0.'
-        elif pay_type == 'premium' and amount < MIN_PREMIUM_AMOUNT:
-            error = f'Nominal minimal untuk aktivasi Premium adalah Rp{MIN_PREMIUM_AMOUNT:,}.'.replace(',', '.')
-        elif len(sender_name) < 2 or len(sender_name) > 80:
-            error = 'Nama pengirim wajib diisi (2–80 karakter).'
-        elif len(note) > 300:
-            error = 'Catatan maksimal 300 karakter.'
-        elif not proof_file or proof_file.filename == '':
-            error = 'Bukti transfer wajib dilampirkan.'
+        if error is None:
+            if len(sender_name) < 2 or len(sender_name) > 80:
+                error = t('payment.err_sender_len')
+            elif len(note) > 300:
+                error = t('payment.err_note_len')
+            elif not proof_file or proof_file.filename == '':
+                error = t('payment.err_proof_required')
 
         if error is None:
             file_bytes = proof_file.read()
             if not file_bytes:
-                error = 'Berkas bukti transfer kosong.'
+                error = t('payment.err_proof_empty')
             elif len(file_bytes) > MAX_PROOF_SIZE:
-                error = 'Ukuran bukti transfer maksimal 8 MB.'
+                error = t('payment.err_proof_size')
 
         if error is None:
             try:
@@ -963,16 +998,16 @@ def donasi():
                 img.save(save_path, 'WEBP', quality=80, method=4)
 
                 db.execute(
-                    '''INSERT INTO payments (user_id, type, amount, sender_name, note, proof_file, status)
-                       VALUES (?, ?, ?, ?, ?, ?, 'pending')''',
-                    (current_user.id, pay_type, amount, sender_name, note or None, filename)
+                    '''INSERT INTO payments (user_id, type, method, currency, amount, sender_name, note, proof_file, status)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')''',
+                    (current_user.id, pay_type, pay_method, currency, amount, sender_name, note or None, filename)
                 )
                 db.commit()
-                flash('Konfirmasi pembayaran berhasil dikirim. Admin akan memverifikasi secepatnya.', 'sukses')
+                flash(t('payment.msg_submitted'), 'sukses')
                 return redirect(url_for('dashboard.donasi'))
             except Exception as e:
                 current_app.logger.error(f"Error processing payment proof: {e}")
-                error = 'Berkas bukti transfer tidak valid atau rusak. Gunakan JPG, PNG, atau WebP.'
+                error = t('payment.err_proof_invalid')
 
         flash(error, 'error')
 
@@ -988,6 +1023,8 @@ def donasi():
         'dashboard/donasi.html',
         payments=payments,
         min_premium=MIN_PREMIUM_AMOUNT,
+        min_premium_usd=MIN_PREMIUM_USD,
+        default_method=default_method,
         is_premium=is_prem,
     )
 
@@ -1028,15 +1065,16 @@ def admin_payments():
     counts['all'] = sum(counts.values())
 
     sum_rows = db.execute(
-        '''SELECT type, COALESCE(SUM(amount), 0) as total
+        '''SELECT type, COALESCE(currency, 'IDR') as currency, COALESCE(SUM(amount), 0) as total
            FROM payments
            WHERE status = 'verified'
-           GROUP BY type'''
+           GROUP BY type, COALESCE(currency, 'IDR')'''
     ).fetchall()
-    sums = {'donation': 0, 'premium': 0}
+    sums = {'donation_idr': 0, 'donation_usd': 0, 'premium_idr': 0, 'premium_usd': 0}
     for sr in sum_rows:
-        if sr['type'] in sums:
-            sums[sr['type']] = sr['total']
+        key = f"{sr['type']}_{(sr['currency'] or 'IDR').lower()}"
+        if key in sums:
+            sums[key] = sr['total']
 
     base_query = '''SELECT p.*, u.username, u.display_name, u.email, u.is_premium
                     FROM payments p
@@ -1070,11 +1108,11 @@ def admin_review_payment(payment_id):
         current_filter = 'pending'
 
     if decision not in ('verified', 'rejected', 'pending'):
-        flash('Keputusan verifikasi tidak valid.', 'error')
+        flash(t('admin_pay.err_decision'), 'error')
         return redirect(url_for('dashboard.admin_payments', status=current_filter))
 
     if len(admin_note) > 300:
-        flash('Catatan admin maksimal 300 karakter.', 'error')
+        flash(t('admin_pay.err_note_len'), 'error')
         return redirect(url_for('dashboard.admin_payments', status=current_filter))
 
     db = get_db()
@@ -1086,7 +1124,7 @@ def admin_review_payment(payment_id):
         (payment_id,)
     ).fetchone()
     if payment is None:
-        flash('Data pembayaran tidak ditemukan.', 'error')
+        flash(t('admin_pay.err_not_found'), 'error')
         return redirect(url_for('dashboard.admin_payments', status=current_filter))
 
     if decision == 'verified':
@@ -1106,10 +1144,10 @@ def admin_review_payment(payment_id):
             )
             db.commit()
             update_sitemap()
-            flash(f"Pembayaran @{payment['username']} terverifikasi dan status Premium otomatis aktif!", 'sukses')
+            flash(t('admin_pay.msg_premium_ok', username=payment['username']), 'sukses')
             return redirect(url_for('dashboard.admin_payments', status=current_filter))
         db.commit()
-        flash(f"Donasi dari @{payment['username']} berhasil diverifikasi.", 'sukses')
+        flash(t('admin_pay.msg_donation_ok', username=payment['username']), 'sukses')
     else:
         db.execute(
             '''UPDATE payments
@@ -1118,7 +1156,7 @@ def admin_review_payment(payment_id):
             (decision, admin_note or None, payment_id)
         )
         db.commit()
-        label = 'ditolak' if decision == 'rejected' else 'dikembalikan ke menunggu verifikasi'
-        flash(f"Pembayaran dari @{payment['username']} {label}.", 'sukses')
+        msg_key = 'admin_pay.msg_rejected' if decision == 'rejected' else 'admin_pay.msg_reopened'
+        flash(t(msg_key, username=payment['username']), 'sukses')
 
     return redirect(url_for('dashboard.admin_payments', status=current_filter))

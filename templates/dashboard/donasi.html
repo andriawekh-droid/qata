@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Premium &amp; Donasi — Qata{% endblock %}
+{% block title %}{{ t('payment.page_title') }}{% endblock %}
 
 {% block content %}
 <a href="{{ url_for('dashboard.index') }}" class="back-link">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-    Kembali ke Dashboard
+    {{ t('pages.back_dash') | replace('← ', '') }}
 </a>
 
 <div class="donasi-container donasi-container-wide">
@@ -15,118 +15,172 @@
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             </div>
             <div>
-                <h1>Premium &amp; Donasi</h1>
-                <p class="donasi-sub">Dukung Qata &amp; Buka Fitur Premium Selamanya</p>
+                <h1>{{ t('payment.heading') }}</h1>
+                <p class="donasi-sub">{{ t('payment.sub') }}</p>
             </div>
         </div>
 
         {% if is_premium %}
         <div class="premium-status-box is-active">
             <div class="premium-status-head">
-                <span class="badge badge-premium">Premium Aktif</span>
-                <strong>Terima kasih, akun Anda sudah Premium!</strong>
+                <span class="badge badge-premium">{{ t('payment.active_badge') }}</span>
+                <strong>{{ t('payment.active_title') }}</strong>
             </div>
             <p class="premium-status-desc">
-                Semua fitur Premium sudah terbuka selamanya: izin <strong>Unggah Gambar</strong> di editor tulisan dan alamat blog khusus
-                <code>{{ current_user.username }}.{{ base_domain }}</code>{% if not subdomain_enabled %} (segera aktif setelah propagasi domain){% endif %}.
-                Anda tetap dapat berdonasi secara sukarela kapan saja di bawah ini.
+                {{ t('payment.active_desc', subdomain=(current_user.username ~ '.' ~ base_domain), pending_note=('' if subdomain_enabled else t('payment.subdomain_pending_note'))) }}
             </p>
         </div>
         {% else %}
         <div class="premium-status-box">
             <div class="premium-status-head">
-                <span class="badge badge-premium">Sekali Bayar Selamanya</span>
-                <strong>Qata Premium &mdash; {{ min_premium | rupiah }}</strong>
+                <span class="badge badge-premium">{{ t('payment.promo_badge') }}</span>
+                <strong>{{ t('payment.promo_title', idr=format_money(min_premium, 'IDR'), usd=format_money(min_premium_usd, 'USD')) }}</strong>
             </div>
             <ul class="premium-benefits">
-                <li><strong>Unggah Gambar:</strong> Sisipkan ilustrasi langsung ke dalam tulisan melalui editor.</li>
-                <li><strong>Subdomain Pribadi:</strong> Alamat blog eksklusif <code>{{ current_user.username }}.{{ base_domain }}</code>.</li>
-                <li><strong>Dukung Kemandirian Qata:</strong> Bebas iklan, tanpa pelacak, dan berkelanjutan.</li>
+                <li>{{ t('payment.benefit_upload') }}</li>
+                <li>{{ t('payment.benefit_subdomain', subdomain=(current_user.username ~ '.' ~ base_domain)) }}</li>
+                <li>{{ t('payment.benefit_support') }}</li>
             </ul>
         </div>
         {% endif %}
 
-        <p class="donasi-desc">
-            Pindai QRIS di bawah ini menggunakan GoPay, OVO, DANA, ShopeePay, BCA, Mandiri, BNI, BRI, atau m-Banking apa saja, lalu kirimkan konfirmasi pembayaran agar dapat segera diverifikasi admin.
-        </p>
-
-        <div class="qris-frame">
-            <img src="{{ url_for('static', filename='img/qris.jpg') }}" alt="QRIS Dukung Qata — Andri Permana" class="qris-img">
+        <div class="payment-method-section">
+            <span class="payment-method-label">{{ t('payment.method_label') }}</span>
+            <div class="payment-method-switcher" role="tablist" aria-label="{{ t('payment.method_label') }}">
+                <button type="button" role="tab"
+                        id="methodBtnQris"
+                        data-method="qris"
+                        aria-selected="{{ 'true' if default_method == 'qris' else 'false' }}"
+                        class="method-tab {% if default_method == 'qris' %}active{% endif %}">
+                    {{ t('payment.method_qris') }}
+                </button>
+                <button type="button" role="tab"
+                        id="methodBtnPaypal"
+                        data-method="paypal"
+                        aria-selected="{{ 'true' if default_method == 'paypal' else 'false' }}"
+                        class="method-tab {% if default_method == 'paypal' %}active{% endif %}">
+                    {{ t('payment.method_paypal') }}
+                </button>
+            </div>
         </div>
 
-        <div class="merchant-box">
-            <div class="merchant-row">
-                <span class="merchant-label">Merchant</span>
-                <span class="merchant-val">ANDRI PERMANA, DIGITAL &amp; KREATIF</span>
+        <div id="qrisPanel" class="{% if default_method != 'qris' %}d-none{% endif %}">
+            <p class="donasi-desc">{{ t('payment.desc_qris') }}</p>
+
+            <div class="qris-frame">
+                <img src="{{ url_for('static', filename='img/qris.jpg') }}" alt="QRIS Dukung Qata — Andri Permana" class="qris-img">
             </div>
-            <div class="merchant-row">
-                <span class="merchant-label">NMID</span>
-                <div class="merchant-nmid-group">
-                    <span id="nmidText" class="merchant-val mono">ID1025380378675</span>
-                    <button type="button" class="btn-copy" id="copyNmidBtn" title="Salin NMID">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                        </svg>
-                        <span id="copyLabel">Salin</span>
-                    </button>
+
+            <div class="merchant-box">
+                <div class="merchant-row">
+                    <span class="merchant-label">{{ t('payment.merchant') }}</span>
+                    <span class="merchant-val">ANDRI PERMANA, DIGITAL &amp; KREATIF</span>
+                </div>
+                <div class="merchant-row">
+                    <span class="merchant-label">{{ t('payment.nmid') }}</span>
+                    <div class="merchant-nmid-group">
+                        <span id="nmidText" class="merchant-val mono">ID1025380378675</span>
+                        <button type="button" class="btn-copy" id="copyNmidBtn" title="{{ t('payment.copy') }}" data-copy-label="{{ t('payment.copy') }}" data-copied-label="{{ t('payment.copied') }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                            </svg>
+                            <span id="copyLabel">{{ t('payment.copy') }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <div class="donasi-actions mb-md">
+                <a href="{{ url_for('static', filename='img/qris.jpg') }}" download="QRIS-Qata-Andri-Permana.jpg" class="btn btn-secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon-sm">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    {{ t('payment.download_qris') }}
+                </a>
+            </div>
         </div>
 
-        <div class="donasi-actions mb-md">
-            <a href="{{ url_for('static', filename='img/qris.jpg') }}" download="QRIS-Qata-Andri-Permana.jpg" class="btn btn-secondary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon-sm">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Unduh QR
-            </a>
+        <div id="paypalPanel" class="{% if default_method != 'paypal' %}d-none{% endif %}">
+            <p class="donasi-desc">{{ t('payment.desc_paypal') }}</p>
+
+            <div class="qris-frame paypal-frame">
+                <img src="{{ url_for('static', filename='img/paypal-qr.jpg') }}" alt="PayPal QR — Andri Permana" class="qris-img">
+            </div>
+
+            <div class="merchant-box paypal-box">
+                <div class="merchant-row">
+                    <span class="merchant-label">{{ t('payment.paypal_recipient') }}</span>
+                    <span class="merchant-val">Andri Permana</span>
+                </div>
+                <div class="merchant-row">
+                    <span class="merchant-label">{{ t('payment.paypal_currency') }}</span>
+                    <span class="merchant-val">{{ t('payment.paypal_currency_val') }}</span>
+                </div>
+            </div>
+
+            <div class="donasi-actions mb-md">
+                <a href="{{ url_for('static', filename='img/paypal-qr.jpg') }}" download="PayPal-QR-Qata-Andri-Permana.jpg" class="btn btn-secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon-sm">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    {{ t('payment.download_paypal') }}
+                </a>
+            </div>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" class="payment-form" id="paymentForm" data-min-premium="{{ min_premium }}">
-            <h2>Konfirmasi Pembayaran</h2>
+        <form method="POST" enctype="multipart/form-data" class="payment-form" id="paymentForm"
+              data-min-idr="{{ min_premium }}" data-min-usd="{{ min_premium_usd }}">
+            <h2>{{ t('payment.form_title') }}</h2>
             {% set default_type = 'donation' if is_premium else 'premium' %}
             <input type="hidden" name="type" id="paymentTypeInput" value="{{ default_type }}">
+            <input type="hidden" name="method" id="paymentMethodInput" value="{{ default_method }}">
 
-            <div class="payment-tabs" role="tablist" aria-label="Jenis pembayaran">
+            <div class="payment-tabs" role="tablist" aria-label="{{ t('payment.form_title') }}">
                 <button type="button" role="tab"
                         id="tabPremium"
                         data-type="premium"
                         aria-selected="{{ 'true' if default_type == 'premium' else 'false' }}"
                         class="payment-tab {% if default_type == 'premium' %}active{% endif %}">
-                    Buka Premium
+                    {{ t('payment.tab_premium') }}
                 </button>
                 <button type="button" role="tab"
                         id="tabDonation"
                         data-type="donation"
                         aria-selected="{{ 'true' if default_type == 'donation' else 'false' }}"
                         class="payment-tab {% if default_type == 'donation' %}active{% endif %}">
-                    Donasi Sukarela
+                    {{ t('payment.tab_donation') }}
                 </button>
             </div>
 
             <p class="payment-type-hint" id="paymentTypeHint">
                 {% if default_type == 'premium' %}
-                    Pembukaan fitur Premium selamanya, minimal <strong>{{ min_premium | rupiah }}</strong>.
+                    {{ t('payment.hint_premium_usd') if default_method == 'paypal' else t('payment.hint_premium_idr') }}
                 {% else %}
-                    Donasi sukarela dengan nominal bebas. Terima kasih sudah mendukung operasional Qata!
+                    {{ t('payment.hint_donation') }}
                 {% endif %}
             </p>
 
             <div class="payment-grid">
                 <div class="form-group">
-                    <label for="amountInput">Nominal (Rp)</label>
-                    <input type="text" id="amountInput" name="amount" inputmode="numeric" required
-                           placeholder="{{ '25.000' if default_type == 'premium' else '10.000' }}">
+                    <label for="amountInput" id="amountLabel">
+                        {{ t('payment.amount_usd') if default_method == 'paypal' else t('payment.amount_idr') }}
+                    </label>
+                    <input type="text" id="amountInput" name="amount" inputmode="decimal" required
+                           placeholder="{% if default_method == 'paypal' %}{{ '3' if default_type == 'premium' else '5' }}{% else %}{{ '25.000' if default_type == 'premium' else '10.000' }}{% endif %}">
                     <small id="amountMinError" class="field-error d-none">
-                        Minimal {{ min_premium | rupiah }} untuk aktivasi Premium.
+                        {{ t('payment.min_err_usd') if default_method == 'paypal' else t('payment.min_err_idr') }}
                     </small>
                 </div>
 
                 <div class="form-group">
-                    <label for="senderNameInput">Nama Pengirim (sesuai e-wallet/bank)</label>
+                    <label for="senderNameInput" id="senderLabel">
+                        {{ t('payment.sender_paypal') if default_method == 'paypal' else t('payment.sender_qris') }}
+                    </label>
                     <input type="text" id="senderNameInput" name="sender_name" required
                            minlength="2" maxlength="80"
                            value="{{ current_user.display_name or current_user.username }}">
@@ -134,52 +188,57 @@
             </div>
 
             <div class="form-group">
-                <label for="noteInput">Catatan (opsional)</label>
+                <label for="noteInput">{{ t('payment.note') }}</label>
                 <textarea id="noteInput" name="note" rows="2" maxlength="300"
-                          placeholder="Tulis catatan singkat atau pesan dukungan jika ada..."></textarea>
+                          placeholder="{{ t('payment.note_placeholder') }}"></textarea>
             </div>
 
             <div class="form-group">
-                <label for="proofInput">Bukti Transfer (gambar)</label>
+                <label for="proofInput">{{ t('payment.proof') }}</label>
                 <input type="file" id="proofInput" name="proof" required
                        accept="image/jpeg,image/png,image/webp">
-                <small>Format JPG, PNG, atau WebP (maks. 8 MB).</small>
+                <small>{{ t('payment.proof_hint') }}</small>
             </div>
 
-            <button type="submit" class="btn payment-submit-btn">Kirim Konfirmasi</button>
+            <button type="submit" class="btn payment-submit-btn">{{ t('payment.submit') }}</button>
         </form>
     </div>
 
     {% if payments %}
     <section class="payment-history-card">
-        <h2>Riwayat Konfirmasi Anda</h2>
+        <h2>{{ t('payment.history_title') }}</h2>
         <ul class="payment-history-list">
             {% for p in payments %}
+            {% set p_currency = p['currency'] if 'currency' in p.keys() and p['currency'] else 'IDR' %}
+            {% set p_method = p['method'] if 'method' in p.keys() and p['method'] else 'qris' %}
             <li class="payment-history-item">
                 <div class="payment-history-top">
                     <div class="payment-history-meta">
-                        <strong class="payment-amount">{{ p['amount'] | rupiah }}</strong>
+                        <strong class="payment-amount">{{ format_money(p['amount'], p_currency) }}</strong>
                         <span class="badge payment-type-badge">
-                            {{ 'Premium' if p['type'] == 'premium' else 'Donasi' }}
+                            {{ t('payment.type_premium') if p['type'] == 'premium' else t('payment.type_donation') }}
+                        </span>
+                        <span class="badge payment-type-badge">
+                            {{ 'PayPal' if p_method == 'paypal' else 'QRIS' }}
                         </span>
                         <span class="badge payment-status-badge status-{{ p['status'] }}">
-                            {% if p['status'] == 'verified' %}Terverifikasi
-                            {% elif p['status'] == 'rejected' %}Ditolak
-                            {% else %}Menunggu verifikasi{% endif %}
+                            {% if p['status'] == 'verified' %}{{ t('payment.status_verified') }}
+                            {% elif p['status'] == 'rejected' %}{{ t('payment.status_rejected') }}
+                            {% else %}{{ t('payment.status_pending') }}{% endif %}
                         </span>
                     </div>
                     <span class="payment-date">{{ p['created_at'] | tanggal }}</span>
                 </div>
                 <div class="payment-history-detail">
-                    <span>Pengirim: <strong>{{ p['sender_name'] }}</strong></span>
+                    <span>{{ t('payment.sender_prefix') }} <strong>{{ p['sender_name'] }}</strong></span>
                     <span class="menu-divider">&middot;</span>
-                    <a href="{{ url_for('dashboard.view_payment_proof', payment_id=p['id']) }}" target="_blank" rel="noopener">Lihat bukti</a>
+                    <a href="{{ url_for('dashboard.view_payment_proof', payment_id=p['id']) }}" target="_blank" rel="noopener">{{ t('payment.view_proof') }}</a>
                 </div>
                 {% if p['note'] %}
                 <p class="payment-note">&ldquo;{{ p['note'] }}&rdquo;</p>
                 {% endif %}
                 {% if p['admin_note'] %}
-                <p class="payment-admin-note">Catatan admin: {{ p['admin_note'] }}</p>
+                <p class="payment-admin-note">{{ t('payment.admin_note_prefix') }} {{ p['admin_note'] }}</p>
                 {% endif %}
             </li>
             {% endfor %}
@@ -190,13 +249,17 @@
 
 <script nonce="{{ csp_nonce }}">
 function salinNMID() {
-    const text = document.getElementById('nmidText').innerText.trim();
+    const btn = document.getElementById('copyNmidBtn');
+    const text = document.getElementById('nmidText')?.innerText.trim() || '';
+    const lbl = document.getElementById('copyLabel');
+    if (!btn || !lbl || !text) return;
+    const copyTxt = btn.dataset.copyLabel || 'Salin';
+    const copiedTxt = btn.dataset.copiedLabel || 'Tersalin!';
     navigator.clipboard.writeText(text).then(() => {
-        const lbl = document.getElementById('copyLabel');
-        lbl.innerText = 'Tersalin!';
+        lbl.innerText = copiedTxt;
         lbl.classList.add('copied');
         setTimeout(() => {
-            lbl.innerText = 'Salin';
+            lbl.innerText = copyTxt;
             lbl.classList.remove('copied');
         }, 2000);
     });
@@ -206,12 +269,31 @@ document.getElementById('copyNmidBtn')?.addEventListener('click', salinNMID);
 (function() {
     const form = document.getElementById('paymentForm');
     if (!form) return;
-    const minPremium = parseInt(form.dataset.minPremium || '25000', 10);
+    const minIdr = parseInt(form.dataset.minIdr || '25000', 10);
+    const minUsd = parseFloat(form.dataset.minUsd || '3');
     const typeInput = document.getElementById('paymentTypeInput');
+    const methodInput = document.getElementById('paymentMethodInput');
     const hintEl = document.getElementById('paymentTypeHint');
+    const amountLabel = document.getElementById('amountLabel');
+    const senderLabel = document.getElementById('senderLabel');
     const amountInput = document.getElementById('amountInput');
     const minError = document.getElementById('amountMinError');
-    const tabs = form.querySelectorAll('.payment-tab');
+    const qrisPanel = document.getElementById('qrisPanel');
+    const paypalPanel = document.getElementById('paypalPanel');
+    const typeTabs = form.querySelectorAll('.payment-tab');
+    const methodTabs = document.querySelectorAll('.method-tab');
+
+    const i18n = {
+        hintPremIdr: {{ t('payment.hint_premium_idr') | tojson }},
+        hintPremUsd: {{ t('payment.hint_premium_usd') | tojson }},
+        hintDonation: {{ t('payment.hint_donation') | tojson }},
+        amountIdr: {{ t('payment.amount_idr') | tojson }},
+        amountUsd: {{ t('payment.amount_usd') | tojson }},
+        minErrIdr: {{ t('payment.min_err_idr') | tojson }},
+        minErrUsd: {{ t('payment.min_err_usd') | tojson }},
+        senderQris: {{ t('payment.sender_qris') | tojson }},
+        senderPaypal: {{ t('payment.sender_paypal') | tojson }}
+    };
 
     function formatRibuan(raw) {
         const digits = raw.replace(/[^\d]/g, '');
@@ -219,47 +301,86 @@ document.getElementById('copyNmidBtn')?.addEventListener('click', salinNMID);
     }
 
     function numericAmount() {
+        if (methodInput.value === 'paypal') {
+            const clean = (amountInput.value || '').replace(/[^\d.,]/g, '').replace(',', '.');
+            return parseFloat(clean) || 0;
+        }
         return parseInt((amountInput.value || '').replace(/[^\d]/g, ''), 10) || 0;
     }
 
     function updateValidationHint() {
         const num = numericAmount();
-        if (typeInput.value === 'premium' && num > 0 && num < minPremium) {
+        const minVal = methodInput.value === 'paypal' ? minUsd : minIdr;
+        minError.textContent = methodInput.value === 'paypal' ? i18n.minErrUsd : i18n.minErrIdr;
+        if (typeInput.value === 'premium' && num > 0 && num < minVal) {
             minError.classList.remove('d-none');
         } else {
             minError.classList.add('d-none');
         }
     }
 
-    function selectTab(nextType) {
-        typeInput.value = nextType;
-        tabs.forEach((btn) => {
-            const active = btn.dataset.type === nextType;
+    function refreshUI() {
+        const isPaypal = methodInput.value === 'paypal';
+        const isPremium = typeInput.value === 'premium';
+
+        qrisPanel.classList.toggle('d-none', isPaypal);
+        paypalPanel.classList.toggle('d-none', !isPaypal);
+
+        methodTabs.forEach((btn) => {
+            const active = btn.dataset.method === methodInput.value;
             btn.classList.toggle('active', active);
             btn.setAttribute('aria-selected', active ? 'true' : 'false');
         });
-        if (nextType === 'premium') {
-            hintEl.innerHTML = 'Pembukaan fitur Premium selamanya, minimal <strong>Rp25.000</strong>.';
-            amountInput.placeholder = '25.000';
+
+        typeTabs.forEach((btn) => {
+            const active = btn.dataset.type === typeInput.value;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+
+        amountLabel.textContent = isPaypal ? i18n.amountUsd : i18n.amountIdr;
+        senderLabel.textContent = isPaypal ? i18n.senderPaypal : i18n.senderQris;
+        amountInput.placeholder = isPaypal ? (isPremium ? '3' : '5') : (isPremium ? '25.000' : '10.000');
+        amountInput.inputMode = isPaypal ? 'decimal' : 'numeric';
+
+        if (isPremium) {
+            hintEl.textContent = isPaypal ? i18n.hintPremUsd : i18n.hintPremIdr;
         } else {
-            hintEl.textContent = 'Donasi sukarela dengan nominal bebas. Terima kasih sudah mendukung operasional Qata!';
-            amountInput.placeholder = '10.000';
+            hintEl.textContent = i18n.hintDonation;
         }
         updateValidationHint();
     }
 
-    tabs.forEach((btn) => {
-        btn.addEventListener('click', () => selectTab(btn.dataset.type));
+    methodTabs.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (methodInput.value !== btn.dataset.method) {
+                methodInput.value = btn.dataset.method;
+                amountInput.value = '';
+                refreshUI();
+            }
+        });
+    });
+
+    typeTabs.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            typeInput.value = btn.dataset.type;
+            refreshUI();
+        });
     });
 
     amountInput.addEventListener('input', () => {
-        amountInput.value = formatRibuan(amountInput.value);
+        if (methodInput.value === 'qris') {
+            amountInput.value = formatRibuan(amountInput.value);
+        } else {
+            amountInput.value = amountInput.value.replace(/[^\d.,]/g, '');
+        }
         updateValidationHint();
     });
 
     form.addEventListener('submit', (e) => {
         const num = numericAmount();
-        if (typeInput.value === 'premium' && num < minPremium) {
+        const minVal = methodInput.value === 'paypal' ? minUsd : minIdr;
+        if (typeInput.value === 'premium' && num < minVal) {
             e.preventDefault();
             minError.classList.remove('d-none');
             amountInput.focus();

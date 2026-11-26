@@ -22,7 +22,7 @@
 <header class="site-header">
     <a href="{{ main_url('public.index') }}" class="wordmark">Qata</a>
     <div class="header-links">
-        <a href="{{ main_url('public.index') }}">Rumah</a>
+        <a href="{{ main_url('public.index') }}">{{ t('nav.home') }}</a>
     </div>
 </header>
 
@@ -37,20 +37,20 @@
     {% endif %}
 
     <nav class="profile-nav">
-        <a href="{{ blog_url(user) }}" class="current">Rumah</a>
-        <a href="{{ blog_url(user, '/tulisan') }}">Tulisan</a>
-        <a href="{{ blog_url(user, '/tentang') }}">Tentang</a>
+        <a href="{{ blog_url(user) }}" class="current">{{ t('nav.home') }}</a>
+        <a href="{{ blog_url(user, '/tulisan') }}">{{ t('nav.posts') }}</a>
+        <a href="{{ blog_url(user, '/tentang') }}">{{ t('nav.about') }}</a>
         {% for cp in custom_pages %}
         <a href="{{ blog_url(user, '/page/' ~ cp['slug']) }}">{{ cp['title'] }}</a>
         {% endfor %}
-        <a href="{{ blog_url(user, '/rss') }}" class="rss-link">RSS</a>
+        <a href="{{ blog_url(user, '/rss') }}" class="rss-link">{{ t('nav.rss') }}</a>
     </nav>
 </div>
 
 <div class="landing-lists">
     {% if recent_posts %}
     <div>
-        <div class="section-label">Terbaru</div>
+        <div class="section-label">{{ t('blog.recent') }}</div>
         <div class="post-list">
             {% for post in recent_posts %}
             <article class="post-row">
@@ -62,7 +62,7 @@
                 <div class="meta">
                     <span>{{ post['created_at'] | waktu_relatif }}</span>
                     <span class="dot">&middot;</span>
-                    <span>{{ post['reading_time'] }} mnt baca</span>
+                    <span>{{ post['reading_time'] }} {{ t('post.min_read') }}</span>
                     {% if post['like_count'] > 0 %}
                     <span class="dot">&middot;</span>
                     <span class="heart-stat">
@@ -79,7 +79,7 @@
 
     {% if popular_posts %}
     <div>
-        <div class="section-label">Populer</div>
+        <div class="section-label">{{ t('blog.popular') }}</div>
         <div class="post-list">
             {% for post in popular_posts %}
             <article class="post-row">
@@ -91,7 +91,7 @@
                 <div class="meta">
                     <span>{{ post['created_at'] | waktu_relatif }}</span>
                     <span class="dot">&middot;</span>
-                    <span>{{ post['reading_time'] }} mnt baca</span>
+                    <span>{{ post['reading_time'] }} {{ t('post.min_read') }}</span>
                     {% if post['like_count'] > 0 %}
                     <span class="dot">&middot;</span>
                     <span class="heart-stat">
@@ -104,6 +104,10 @@
             {% endfor %}
         </div>
     </div>
+    {% endif %}
+
+    {% if not recent_posts and not popular_posts %}
+    <p class="empty-state">{{ t('blog.empty') }}</p>
     {% endif %}
 </div>
 {% endblock %}

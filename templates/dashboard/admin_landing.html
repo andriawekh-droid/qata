@@ -1,51 +1,78 @@
 {% extends 'base.html' %}
 
-{% block title %}Edit Landing Page — Qata{% endblock %}
+{% block title %}{{ t('admin_landing.title') }}{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
-    <h1>Edit Landing Page</h1>
-    <a href="{{ url_for('public.index') }}" target="_blank" class="btn btn-secondary">Lihat →</a>
+    <h1>{{ t('admin_landing.heading') }}</h1>
+    <a href="{{ url_for('public.index') }}" target="_blank" class="btn btn-secondary">{{ t('admin_landing.view_btn') }}</a>
 </div>
 
 <form method="POST">
+    <h2 class="mt-sm mb-md">{{ t('admin_landing.section_id') }}</h2>
     <div class="form-group">
-        <label for="landing_brand_sub">Tagline di bawah nama Qata</label>
+        <label for="landing_brand_sub">{{ t('admin_landing.brand_sub') }}</label>
         <input type="text" id="landing_brand_sub" name="landing_brand_sub"
                value="{{ settings.get('landing_brand_sub', '') }}">
-        <small>Contoh: Platform blog yang sederhana, ringan, dan mengutamakan tulisan.</small>
+        <small>{{ t('admin_landing.brand_sub_hint') }}</small>
     </div>
     <div class="form-group">
-        <label for="landing_title">Judul Hero</label>
+        <label for="landing_title">{{ t('admin_landing.hero_title') }}</label>
         <input type="text" id="landing_title" name="landing_title"
                value="{{ settings.get('landing_title', '') }}">
-        <small>Contoh: Tempat tenang untuk menulis dan dibaca.</small>
+        <small>{{ t('admin_landing.hero_title_hint') }}</small>
     </div>
     <div class="form-group">
-        <label for="landing_desc">Deskripsi</label>
+        <label for="landing_desc">{{ t('admin_landing.desc') }}</label>
         <textarea id="landing_desc" name="landing_desc" rows="3">{{ settings.get('landing_desc', '') }}</textarea>
-        <small>Paragraf pendek di bawah judul hero.</small>
+        <small>{{ t('admin_landing.desc_hint') }}</small>
     </div>
     <div class="form-group">
-        <label for="landing_features">Daftar Fitur</label>
+        <label for="landing_features">{{ t('admin_landing.features') }}</label>
         <textarea id="landing_features" name="landing_features" rows="8">{{ settings.get('landing_features', '') }}</textarea>
-        <small>Satu fitur per baris.</small>
+        <small>{{ t('admin_landing.features_hint') }}</small>
     </div>
     <div class="form-group">
-        <label for="landing_cta">Teks Tombol CTA</label>
+        <label for="landing_cta">{{ t('admin_landing.cta') }}</label>
         <input type="text" id="landing_cta" name="landing_cta"
                value="{{ settings.get('landing_cta', '') }}">
-        <small>Contoh: Mulai menulis →</small>
+        <small>{{ t('admin_landing.cta_hint') }}</small>
     </div>
+
+    <h2 class="mt-md mb-md">{{ t('admin_landing.section_en') }}</h2>
+    <div class="form-group">
+        <label for="landing_brand_sub_en">{{ t('admin_landing.brand_sub') }} (EN)</label>
+        <input type="text" id="landing_brand_sub_en" name="landing_brand_sub_en"
+               value="{{ settings.get('landing_brand_sub_en', '') }}">
+    </div>
+    <div class="form-group">
+        <label for="landing_title_en">{{ t('admin_landing.hero_title') }} (EN)</label>
+        <input type="text" id="landing_title_en" name="landing_title_en"
+               value="{{ settings.get('landing_title_en', '') }}">
+    </div>
+    <div class="form-group">
+        <label for="landing_desc_en">{{ t('admin_landing.desc') }} (EN)</label>
+        <textarea id="landing_desc_en" name="landing_desc_en" rows="3">{{ settings.get('landing_desc_en', '') }}</textarea>
+    </div>
+    <div class="form-group">
+        <label for="landing_features_en">{{ t('admin_landing.features') }} (EN)</label>
+        <textarea id="landing_features_en" name="landing_features_en" rows="8">{{ settings.get('landing_features_en', '') }}</textarea>
+    </div>
+    <div class="form-group">
+        <label for="landing_cta_en">{{ t('admin_landing.cta') }} (EN)</label>
+        <input type="text" id="landing_cta_en" name="landing_cta_en"
+               value="{{ settings.get('landing_cta_en', '') }}">
+    </div>
+
     <div class="editor-actions">
-        <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">Kembali</a>
-        <button type="submit" class="btn">Simpan</button>
+        <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">{{ t('profile.back') }}</a>
+        <button type="submit" class="btn">{{ t('profile.save') }}</button>
     </div>
 </form>
 
 <section class="dashboard-nav">
-    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">&larr; Kembali ke Dashboard</a>
-    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">Panel Admin</a>
-    <a href="{{ url_for('dashboard.sistem') }}" class="btn btn-secondary">Status Sistem</a>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">{{ t('pages.back_dash') }}</a>
+    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">{{ t('dash.menu_admin_panel') }}</a>
+    <a href="{{ url_for('dashboard.sistem') }}" class="btn btn-secondary">{{ t('dash.menu_system') }}</a>
 </section>
 {% endblock %}

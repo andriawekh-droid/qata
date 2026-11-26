@@ -1,41 +1,41 @@
 {% extends 'base.html' %}
 
-{% block title %}Status Sistem — Qata{% endblock %}
+{% block title %}{{ t('sys.title') }}{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
-    <h1>Status Sistem</h1>
-    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Kembali</a>
+    <h1>{{ t('sys.heading') }}</h1>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">{{ t('profile.back') }}</a>
 </div>
 
 <section class="sistem-section">
-    <h2>Statistik Qata</h2>
+    <h2>{{ t('sys.stats_heading') }}</h2>
     <div class="sistem-grid">
         <div class="sistem-card">
-            <span class="sistem-label">Pengguna</span>
+            <span class="sistem-label">{{ t('sys.users') }}</span>
             <span class="sistem-value">{{ stats.total_users }}</span>
         </div>
         <div class="sistem-card">
-            <span class="sistem-label">Tulisan Terbit</span>
+            <span class="sistem-label">{{ t('sys.published_posts') }}</span>
             <span class="sistem-value">{{ stats.total_posts }}</span>
         </div>
         <div class="sistem-card">
-            <span class="sistem-label">Draf</span>
+            <span class="sistem-label">{{ t('sys.drafts') }}</span>
             <span class="sistem-value">{{ stats.total_drafts }}</span>
         </div>
         <div class="sistem-card">
-            <span class="sistem-label">Total Kunjungan</span>
+            <span class="sistem-label">{{ t('sys.total_views') }}</span>
             <span class="sistem-value">{{ stats.total_views }}</span>
         </div>
         <div class="sistem-card">
-            <span class="sistem-label">Total Like</span>
+            <span class="sistem-label">{{ t('sys.total_likes') }}</span>
             <span class="sistem-value">{{ stats.total_likes }}</span>
         </div>
     </div>
 </section>
 
 <section class="sistem-section">
-    <h2>Resource VPS</h2>
+    <h2>{{ t('sys.vps_heading') }}</h2>
     <div class="sistem-grid">
         <div class="sistem-card">
             <span class="sistem-label">CPU</span>
@@ -75,30 +75,30 @@
     <h2>Status SDMFSRD</h2>
     <div class="sistem-grid">
         <div class="sistem-card">
-            <span class="sistem-label">Status</span>
+            <span class="sistem-label">{{ t('sys.status_label') }}</span>
             <span class="sistem-value {% if stats.sdmfsrd.online %}sistem-ok{% else %}sistem-bar-warn{% endif %}">
                 {% if stats.sdmfsrd.online %}Online{% else %}Offline{% endif %}
             </span>
         </div>
         <div class="sistem-card">
-            <span class="sistem-label">Kode Status HTTP</span>
+            <span class="sistem-label">{{ t('sys.http_code') }}</span>
             <span class="sistem-value">{{ stats.sdmfsrd.status_code or '—' }}</span>
         </div>
         <div class="sistem-card">
-            <span class="sistem-label">Waktu Respons</span>
+            <span class="sistem-label">{{ t('sys.response_time') }}</span>
             <span class="sistem-value">{{ stats.sdmfsrd.response_time or '—' }} ms</span>
         </div>
     </div>
 </section>
 
 <section class="sistem-section">
-    <h2>Uptime</h2>
+    <h2>{{ t('sys.uptime') }}</h2>
     <p class="sistem-uptime">{{ stats.uptime }}</p>
 </section>
 
 <section class="dashboard-nav">
-    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">&larr; Kembali ke Dashboard</a>
-    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">Panel Admin</a>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">{{ t('pages.back_dash') }}</a>
+    <a href="{{ url_for('dashboard.admin_index') }}" class="btn btn-secondary">{{ t('dash.menu_admin_panel') }}</a>
 </section>
 
 <script nonce="{{ csp_nonce }}">

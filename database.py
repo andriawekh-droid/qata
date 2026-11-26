@@ -130,7 +130,9 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             type TEXT NOT NULL,
-            amount INTEGER NOT NULL,
+            method TEXT NOT NULL DEFAULT 'qris',
+            currency TEXT NOT NULL DEFAULT 'IDR',
+            amount NUMERIC NOT NULL,
             sender_name TEXT NOT NULL,
             note TEXT,
             proof_file TEXT NOT NULL,
@@ -168,6 +170,35 @@ def init_db():
     if 'letterbird' not in user_cols:
         db.execute("ALTER TABLE users ADD COLUMN letterbird TEXT")
         db.commit()
+
+    # Migrasi kolom tambahan pada payments jika belum ada
+    payment_cols = [c['name'] for c in db.execute("PRAGMA table_info(payments)").fetchall()]
+    if 'method' not in payment_cols:
+        db.execute("ALTER TABLE payments ADD COLUMN method TEXT NOT NULL DEFAULT 'qris'")
+        db.commit()
+    if 'currency' not in payment_cols:
+        db.execute("ALTER TABLE payments ADD COLUMN currency TEXT NOT NULL DEFAULT 'IDR'")
+        db.commit()
+
+    # Isi default site_settings (ID & EN) bila belum ada tanpa menimpa pengaturan existing
+    default_settings = [
+        ('landing_title', 'Tempat tenang untuk menulis dan dibaca.'),
+        ('landing_desc', 'Tanpa pelacak. Tanpa iklan. Tanpa tema yang membingungkan. Hanya halaman kosong, kursor, dan pembaca di seberang sana.'),
+        ('landing_features', '- Tampil rapi di perangkat apa pun\n- Halaman ringan, cepat dimuat\n- Tanpa pelacak, iklan, atau skrip\n- Daftar dalam hitungan detik\n- Tulis dengan Markdown sederhana\n- Dibuat agar tetap awet'),
+        ('landing_cta', 'Mulai menulis →'),
+        ('landing_brand_sub', 'Platform blog yang sederhana, ringan, dan mengutamakan tulisan.'),
+        ('landing_title_en', 'A quiet place to write and be read.'),
+        ('landing_desc_en', 'No trackers. No ads. No distracting themes. Just a blank page, a cursor, and a reader on the other side.'),
+        ('landing_features_en', '- Looks clean on any device\n- Lightweight pages that load fast\n- No trackers, ads, or bloated scripts\n- Sign up in seconds\n- Write in simple Markdown\n- Built to last'),
+        ('landing_cta_en', 'Start writing →'),
+        ('landing_brand_sub_en', 'A simple, lightweight blogging platform that puts writing first.'),
+    ]
+    for key, value in default_settings:
+        db.execute(
+            'INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)',
+            (key, value)
+        )
+    db.commit()
 
 def init_app(app):
     app.teardown_appcontext(close_db)

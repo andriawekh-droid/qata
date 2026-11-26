@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ page['title'] if page else 'Tentang' }} — {{ user['display_name'] }}{% endblock %}
+{% block title %}{{ page['title'] if (page and current_lang == 'id') else t('about.default_title') }} — {{ user['display_name'] }}{% endblock %}
 
 {% block meta %}
 <meta name="description" content="{{ meta_description }}">
 <link rel="canonical" href="{{ blog_url(user, '/tentang', external=True) }}">
 <meta property="og:type" content="profile">
 <meta property="og:site_name" content="Qata">
-<meta property="og:title" content="{{ page['title'] if page else 'Tentang' }} — {{ user['display_name'] }}">
+<meta property="og:title" content="{{ page['title'] if (page and current_lang == 'id') else t('about.default_title') }} — {{ user['display_name'] }}">
 <meta property="og:description" content="{{ meta_description }}">
 <meta property="og:url" content="{{ blog_url(user, '/tentang', external=True) }}">
 {% endblock %}
@@ -16,20 +16,20 @@
 <header class="site-header">
     <a href="{{ main_url('public.index') }}" class="wordmark">Qata</a>
     <div class="header-links">
-        <a href="{{ main_url('public.index') }}">Rumah</a>
+        <a href="{{ main_url('public.index') }}">{{ t('nav.home') }}</a>
     </div>
 </header>
 
 <div class="profile-block">
     <h1>{{ user['display_name'] }}</h1>
     <nav class="profile-nav">
-        <a href="{{ blog_url(user) }}">Rumah</a>
-        <a href="{{ blog_url(user, '/tulisan') }}">Tulisan</a>
-        <a href="{{ blog_url(user, '/tentang') }}" class="current">Tentang</a>
+        <a href="{{ blog_url(user) }}">{{ t('nav.home') }}</a>
+        <a href="{{ blog_url(user, '/tulisan') }}">{{ t('nav.posts') }}</a>
+        <a href="{{ blog_url(user, '/tentang') }}" class="current">{{ t('nav.about') }}</a>
         {% for cp in custom_pages %}
         <a href="{{ blog_url(user, '/page/' ~ cp['slug']) }}">{{ cp['title'] }}</a>
         {% endfor %}
-        <a href="{{ blog_url(user, '/rss') }}" class="rss-link">RSS</a>
+        <a href="{{ blog_url(user, '/rss') }}" class="rss-link">{{ t('nav.rss') }}</a>
     </nav>
 </div>
 
@@ -38,7 +38,7 @@
         {% if page and page['content_html'] %}
             {{ page['content_html'] | safe }}
         {% else %}
-            <p class="empty-state">Pengguna ini belum mengisi halaman tentang.</p>
+            <p class="empty-state">{{ t('about.empty') }}</p>
         {% endif %}
     </div>
 
@@ -46,18 +46,18 @@
     <div class="letterbird-contact-card">
         <div class="letterbird-card-info">
             <div class="letterbird-card-icon">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect width="20" height="16" x="2" y="4" rx="2"/>
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
             </div>
             <div>
-                <strong class="letterbird-card-title">Kirim surat ke {{ user['display_name'] }}</strong>
-                <p class="letterbird-card-desc">Punya pertanyaan, tanggapan, atau ingin bertukar kabar secara privat? Kirim pesan langsung melalui Letterbird.</p>
+                <strong class="letterbird-card-title">{{ t('about.letterbird_title', name=user['display_name']) }}</strong>
+                <p class="letterbird-card-desc">{{ t('about.letterbird_desc') }}</p>
             </div>
         </div>
         <a href="https://letterbird.co/{{ user['letterbird'] }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary letterbird-card-btn">
-            Tulis Pesan
+            {{ t('about.letterbird_btn') }}
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
         </a>
     </div>
@@ -66,7 +66,7 @@
     {% if user['website'] or user['twitter'] or user['instagram'] or user['threads'] or user['letterbird'] %}
     <div class="meta about-meta">
         {% if user['website'] %}
-        <a href="{{ user['website'] }}" target="_blank" rel="noopener">Website</a>
+        <a href="{{ user['website'] }}" target="_blank" rel="noopener">{{ t('about.website') }}</a>
         {% endif %}
         {% if user['twitter'] %}
         {% if user['website'] %}<span class="dot">&middot;</span>{% endif %}
@@ -90,7 +90,7 @@
     <div class="post-footer">
         <a href="{{ blog_url(user) }}" class="back-link m-0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-            Kembali ke blog {{ user['display_name'] }}
+            {{ t('about.back_blog', name=user['display_name']) }}
         </a>
     </div>
 </article>

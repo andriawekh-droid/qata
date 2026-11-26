@@ -1,17 +1,17 @@
 {% extends 'landing.html' %}
 
-{% block title %}Jelajahi Tulisan — Qata{% endblock %}
+{% block title %}{{ t('explore.title') }}{% endblock %}
 
 {% block meta %}
     <meta name="description" content="{{ meta_description }}">
     <link rel="canonical" href="{{ url_for('public.explore', _external=True) }}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Qata">
-    <meta property="og:title" content="Jelajahi Tulisan — Qata">
+    <meta property="og:title" content="{{ t('explore.title') }}">
     <meta property="og:description" content="{{ meta_description }}">
     <meta property="og:url" content="{{ url_for('public.explore', _external=True) }}">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Jelajahi Tulisan — Qata">
+    <meta name="twitter:title" content="{{ t('explore.title') }}">
     <meta name="twitter:description" content="{{ meta_description }}">
 {% endblock %}
 
@@ -19,12 +19,12 @@
 <header class="site-header">
     <a href="{{ url_for('public.index') }}" class="wordmark">Qata</a>
     <div class="header-links">
-        <a href="{{ url_for('public.index') }}">Beranda</a>
+        <a href="{{ url_for('public.index') }}">{{ t('nav.home_landing') }}</a>
         {% if current_user.is_authenticated %}
-        <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+        <a href="{{ url_for('dashboard.index') }}">{{ t('nav.dashboard') }}</a>
         {% else %}
-        <a href="{{ url_for('auth.login') }}">Masuk</a>
-        <a href="{{ url_for('auth.register') }}">Daftar</a>
+        <a href="{{ url_for('auth.login') }}">{{ t('nav.login') }}</a>
+        <a href="{{ url_for('auth.register') }}">{{ t('nav.register') }}</a>
         {% endif %}
     </div>
 </header>
@@ -32,11 +32,11 @@
 <div class="explore-hero">
     <div class="explore-header-row">
         <div>
-            <h1>Jelajahi</h1>
-            <p class="explore-desc">Daftar tulisan acak dan inspiratif dari para penulis di Qata.</p>
+            <h1>{{ t('explore.heading') }}</h1>
+            <p class="explore-desc">{{ t('explore.desc') }}</p>
         </div>
         <div class="explore-actions">
-            <a href="{{ url_for('public.random_post') }}" class="btn btn-secondary" title="Buka satu tulisan acak langsung">
+            <a href="{{ url_for('public.random_post') }}" class="btn btn-secondary" title="{{ t('explore.random_title') }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="explore-meta-icon">
                     <path d="M16 3h5v5"/>
                     <path d="M4 20L21 3"/>
@@ -44,29 +44,29 @@
                     <path d="M15 15l6 6"/>
                     <path d="M4 4l5 5"/>
                 </svg>
-                Baca Tulisan Acak &rarr;
+                {{ t('explore.random_btn') }} &rarr;
             </a>
         </div>
     </div>
 
     <div class="explore-tabs">
         <a href="{{ url_for('public.explore', filter='acak') }}" class="tab-item {% if current_filter == 'acak' %}active{% endif %}">
-            Acak
+            {{ t('explore.tab_random') }}
         </a>
         <a href="{{ url_for('public.explore', filter='terbaru') }}" class="tab-item {% if current_filter == 'terbaru' %}active{% endif %}">
-            Terbaru
+            {{ t('explore.tab_latest') }}
         </a>
         <a href="{{ url_for('public.explore', filter='populer') }}" class="tab-item {% if current_filter == 'populer' %}active{% endif %}">
-            Populer
+            {{ t('explore.tab_popular') }}
         </a>
 
         {% if current_filter == 'acak' %}
-        <a href="{{ url_for('public.explore', filter='acak') }}" class="tab-reload" title="Kocok ulang daftar tulisan acak">
+        <a href="{{ url_for('public.explore', filter='acak') }}" class="tab-reload" title="{{ t('explore.shuffle_title') }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="explore-meta-icon-sm">
                 <polyline points="23 4 23 10 17 10"/>
                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
             </svg>
-            Acak Ulang
+            {{ t('explore.shuffle') }}
         </a>
         {% endif %}
     </div>
@@ -94,7 +94,7 @@
                 <span class="dot">&middot;</span>
                 <span>{{ post['created_at'] | waktu_relatif }}</span>
                 <span class="dot">&middot;</span>
-                <span>{{ post['reading_time'] }} mnt baca</span>
+                <span>{{ post['reading_time'] }} {{ t('post.min_read') }}</span>
                 {% if post['like_count'] > 0 %}
                 <span class="dot">&middot;</span>
                 <span class="heart-stat">
@@ -109,20 +109,20 @@
         {% if total_pages > 1 %}
         <div class="pagination">
             {% if page > 1 %}
-                <a href="{{ url_for('public.explore', filter=current_filter, page=page-1) }}" class="btn-page">&larr; Sebelumnya</a>
+                <a href="{{ url_for('public.explore', filter=current_filter, page=page-1) }}" class="btn-page">{{ t('pagination.prev') }}</a>
             {% else %}
-                <span class="btn-page disabled">&larr; Sebelumnya</span>
+                <span class="btn-page disabled">{{ t('pagination.prev') }}</span>
             {% endif %}
-            <span class="page-info">Halaman {{ page }} dari {{ total_pages }}</span>
+            <span class="page-info">{{ t('pagination.info', page=page, total=total_pages) }}</span>
             {% if page < total_pages %}
-                <a href="{{ url_for('public.explore', filter=current_filter, page=page+1) }}" class="btn-page">Berikutnya &rarr;</a>
+                <a href="{{ url_for('public.explore', filter=current_filter, page=page+1) }}" class="btn-page">{{ t('pagination.next') }}</a>
             {% else %}
-                <span class="btn-page disabled">Berikutnya &rarr;</span>
+                <span class="btn-page disabled">{{ t('pagination.next') }}</span>
             {% endif %}
         </div>
         {% endif %}
     {% else %}
-        <p class="empty-state">Belum ada tulisan publik untuk dijelajahi saat ini.</p>
+        <p class="empty-state">{{ t('explore.empty') }}</p>
     {% endif %}
 </div>
 {% endblock %}

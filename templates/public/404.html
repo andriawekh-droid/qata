@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Halaman Tidak Ditemukan — Qata{% endblock %}
+{% block title %}{{ t('err404.title') }}{% endblock %}
 
 {% block content %}
 <div class="landing">
     <h1 class="landing-hero">404</h1>
-    <p class="landing-desc">Halaman yang Anda cari tidak ditemukan.</p>
-    <a href="{{ main_url('public.index') }}" class="landing-cta">Kembali ke beranda →</a>
+    <p class="landing-desc">{{ t('err404.desc') }}</p>
+    <a href="{{ main_url('public.index') }}" class="landing-cta">{{ t('err404.cta') }}</a>
 </div>
 {% endblock %}

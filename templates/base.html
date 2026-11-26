@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="{{ page_theme|default('light') }}">
+<html lang="{{ current_lang }}" data-theme="{{ page_theme|default('light') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Qata{% endblock %}</title>
     {% block meta %}{% endblock %}
     {% block head %}{% endblock %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=22">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=23">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
@@ -21,10 +21,18 @@
         {% block content %}{% endblock %}
 
         <footer class="footer">
-            <span class="footer-left">Dibuat dengan <a href="{{ main_url('public.index') }}">Qata</a></span>
-            {% if current_user.is_authenticated %}
-            <a class="footer-right" href="{{ main_url('dashboard.index') }}">Dashboard</a>
-            {% endif %}
+            <span class="footer-left">{{ t('footer.made_with') }} <a href="{{ main_url('public.index') }}">Qata</a></span>
+            <div class="footer-right">
+                <span class="lang-switcher" aria-label="{{ t('lang.label') }}">
+                    <a href="{{ switch_lang_url('id') }}" class="lang-link {% if current_lang == 'id' %}active{% endif %}">ID</a>
+                    <span class="lang-sep">/</span>
+                    <a href="{{ switch_lang_url('en') }}" class="lang-link {% if current_lang == 'en' %}active{% endif %}">EN</a>
+                </span>
+                {% if current_user.is_authenticated %}
+                <span class="dot">&middot;</span>
+                <a href="{{ main_url('dashboard.index') }}">{{ t('nav.dashboard') }}</a>
+                {% endif %}
+            </div>
         </footer>
     </main>
     <script nonce="{{ csp_nonce }}">

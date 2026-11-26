@@ -1,85 +1,85 @@
 {% extends 'base.html' %}
 
-{% block title %}Pengaturan Profil — Qata{% endblock %}
+{% block title %}{{ t('profile.title') }}{% endblock %}
 
 {% block content %}
 <div class="auth-container">
-    <h1>Pengaturan Profil</h1>
+    <h1>{{ t('profile.heading') }}</h1>
     <form method="POST">
         <div class="form-group">
-            <label>Username</label>
+            <label>{{ t('auth.username') }}</label>
             <input type="text" value="{{ current_user.username }}" disabled>
-            <small>Username tidak dapat diubah.</small>
+            <small>{{ t('profile.username_locked') }}</small>
         </div>
         <div class="form-group">
-            <label for="display_name">Nama Tampilan</label>
+            <label for="display_name">{{ t('profile.display_name') }}</label>
             <input type="text" id="display_name" name="display_name" required
                    value="{{ current_user.display_name or '' }}">
         </div>
         <div class="form-group">
-            <label for="bio">Bio</label>
+            <label for="bio">{{ t('profile.bio') }}</label>
             <textarea id="bio" name="bio" rows="4">{{ current_user.bio or '' }}</textarea>
-            <small>Ceritakan sedikit tentang diri Anda.</small>
+            <small>{{ t('profile.bio_hint') }}</small>
         </div>
         <div class="form-group">
-            <label for="website">Website</label>
+            <label for="website">{{ t('profile.website') }}</label>
             <input type="url" id="website" name="website"
                    value="{{ current_user.website or '' }}"
-                   placeholder="https://contoh.com">
+                   placeholder="https://example.com">
         </div>
         <div class="form-group">
-            <label for="twitter">Twitter/X</label>
+            <label for="twitter">{{ t('profile.twitter') }}</label>
             <input type="text" id="twitter" name="twitter"
                    value="{{ current_user.twitter or '' }}"
-                   placeholder="username tanpa @">
+                   placeholder="{{ t('profile.handle_hint') }}">
         </div>
         <div class="form-group">
-            <label for="instagram">Instagram</label>
+            <label for="instagram">{{ t('profile.instagram') }}</label>
             <input type="text" id="instagram" name="instagram"
                    value="{{ current_user.instagram or '' }}"
-                   placeholder="username tanpa @">
+                   placeholder="{{ t('profile.handle_hint') }}">
         </div>
         <div class="form-group">
-            <label for="threads">Threads</label>
+            <label for="threads">{{ t('profile.threads') }}</label>
             <input type="text" id="threads" name="threads"
                    value="{{ current_user.threads or '' }}"
-                   placeholder="username tanpa @">
-            <small>Username akun Threads Anda (tanpa @ atau URL profil).</small>
+                   placeholder="{{ t('profile.handle_hint') }}">
+            <small>{{ t('profile.threads_hint') }}</small>
         </div>
         <div class="form-group">
-            <label for="letterbird">Letterbird (Surat & Tanggapan Pembaca)</label>
+            <label for="letterbird">{{ t('profile.letterbird') }}</label>
             <input type="text" id="letterbird" name="letterbird"
                    value="{{ current_user.letterbird or '' }}"
-                   placeholder="username di letterbird.co">
-            <small>Username akun di <a href="https://letterbird.co" target="_blank" rel="noopener">letterbird.co</a> untuk menerima surat di halaman Tentang dan tanggapan privat di akhir tulisan.</small>
+                   placeholder="{{ t('profile.letterbird_placeholder') }}">
+            <small>{{ t('profile.letterbird_hint') }} (<a href="https://letterbird.co" target="_blank" rel="noopener">letterbird.co</a>)</small>
         </div>
         <div class="form-group">
-            <label for="theme_preference">Tema Blog</label>
+            <label for="theme_preference">{{ t('profile.theme') }}</label>
             <select name="theme_preference" id="theme_preference">
                 <option value="light" {% if current_user.theme_preference not in ('dark', 'sepia', 'forest') %}selected{% endif %}>
-                    Terang (default)
+                    {{ t('profile.theme_light') }}
                 </option>
                 <option value="dark" {% if current_user.theme_preference == 'dark' %}selected{% endif %}>
-                    Gelap
+                    {{ t('profile.theme_dark') }}
                 </option>
                 <option value="sepia" {% if current_user.theme_preference == 'sepia' %}selected{% endif %}>
-                    Sepia
+                    {{ t('profile.theme_sepia') }}
                 </option>
                 <option value="forest" {% if current_user.theme_preference == 'forest' %}selected{% endif %}>
-                    Forest
+                    {{ t('profile.theme_forest') }}
                 </option>
             </select>
-            <small>Tema ini akan terlihat oleh Anda dan pengunjung blog Anda.</small>
+            <small>{{ t('profile.theme_hint') }}</small>
         </div>
         <div class="editor-actions">
-            <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Kembali</a>
-            <button type="submit" class="btn">Simpan</button>
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">{{ t('profile.back') }}</a>
+            <button type="submit" class="btn">{{ t('profile.save') }}</button>
         </div>
     </form>
     <div class="profile-footer-links">
-        <a href="{{ url_for('dashboard.change_password') }}">Ubah Password Akun &rarr;</a>
-        <a href="{{ url_for('public.user_about', username=current_user.username) }}"
-           target="_blank">Lihat halaman Tentang saya &rarr;</a>
+        <a href="{{ url_for('dashboard.change_password') }}">{{ t('profile.change_pw_link') }}</a>
+        <a href="{{ blog_url(current_user, '/tentang') }}"
+           target="_blank">{{ t('profile.view_about_link') }}</a>
     </div>
 </div>
 {% endblock %}

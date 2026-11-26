@@ -2142,4 +2142,92 @@ td.post-actions { display: table-cell; white-space: nowrap; }
     opacity: 0.9;
 }
 
+/* Language Switcher & PayPal Payment Method Switcher */
+.lang-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.82rem;
+}
+
+.lang-link {
+    color: var(--ink-faint);
+    text-decoration: none;
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+.lang-link:hover {
+    color: var(--ink);
+}
+
+.lang-link.active {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.lang-sep {
+    color: var(--line);
+}
+
+.payment-method-section {
+    margin-bottom: 1.25rem;
+}
+
+.payment-method-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 0.45rem;
+}
+
+.payment-method-switcher {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.method-tab {
+    flex: 1;
+    min-width: 180px;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.method-tab:hover {
+    border-color: var(--ink-soft);
+    color: var(--ink);
+}
+
+.method-tab.active {
+    background: var(--accent-wash);
+    border-color: var(--accent);
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.paypal-frame {
+    background: #000000;
+}
+
+.summary-subvalue {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+}
+
 

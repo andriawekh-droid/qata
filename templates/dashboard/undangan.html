@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Kode Undangan — Qata{% endblock %}
+{% block title %}{{ t('invites.title') }}{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
-    <h1>Kode Undangan</h1>
+    <h1>{{ t('invites.heading') }}</h1>
     <form method="POST" action="{{ url_for('dashboard.create_invite_code') }}">
-        <button type="submit" class="btn">Buat Kode Baru</button>
+        <button type="submit" class="btn">{{ t('invites.create_btn') }}</button>
     </form>
 </div>
 
@@ -15,9 +15,9 @@
         <table class="post-table">
             <thead>
                 <tr>
-                    <th>Kode</th>
-                    <th>Status</th>
-                    <th>Dibuat</th>
+                    <th>{{ t('invites.col_code') }}</th>
+                    <th>{{ t('invites.col_status') }}</th>
+                    <th>{{ t('invites.col_created') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -26,7 +26,7 @@
                     <td><code>{{ code['code'] }}</code></td>
                     <td>
                         <span class="badge badge-{{ 'published' if not code['used'] else 'draft' }}">
-                            {{ 'Belum dipakai' if not code['used'] else 'Sudah dipakai' }}
+                            {{ t('invites.status_unused') if not code['used'] else t('invites.status_used') }}
                         </span>
                     </td>
                     <td>{{ code['created_at'] | tanggal }}</td>
@@ -35,11 +35,11 @@
             </tbody>
         </table>
     {% else %}
-        <p class="empty-state">Belum ada kode undangan. Buat kode baru untuk mengundang pengguna.</p>
+        <p class="empty-state">{{ t('invites.empty') }}</p>
     {% endif %}
 </section>
 
 <section class="dashboard-nav">
-    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">&larr; Kembali ke Dashboard</a>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">{{ t('pages.back_dash') }}</a>
 </section>
 {% endblock %}

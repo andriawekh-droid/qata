@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 
-{% block title %}Panel Admin — Qata{% endblock %}
+{% block title %}{{ t('admin.title') }}{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
     <div>
-        <h1>Panel Admin</h1>
-        <span class="badge badge-published">Admin</span>
+        <h1>{{ t('admin.heading') }}</h1>
+        <span class="badge badge-published">{{ t('admin.badge') }}</span>
     </div>
     <a href="{{ url_for('dashboard.admin_payments') }}" class="btn">
-        Verifikasi Pembayaran
+        {{ t('admin.payments_btn') }}
         {% if pending_payments_count %}
         <span class="badge badge-pending-count">{{ pending_payments_count }}</span>
         {% endif %}
@@ -17,44 +17,44 @@
 </div>
 
 <section class="admin-panel">
-    <h2>Mode Pendaftaran</h2>
+    <h2>{{ t('admin.reg_mode') }}</h2>
     <form method="POST" action="{{ url_for('dashboard.admin_registration_mode') }}">
         <label class="radio-option">
             <input type="radio" name="registration_mode" value="open" {% if registration_mode == 'open' %}checked{% endif %}>
-            <span>Terbuka
-                <small>Siapa saja bisa mendaftar tanpa kode undangan. Dilindungi honeypot, pertanyaan keamanan, dan batas pendaftaran per jaringan.</small>
+            <span>{{ t('admin.reg_open') }}
+                <small>{{ t('admin.reg_open_desc') }}</small>
             </span>
         </label>
         <label class="radio-option">
             <input type="radio" name="registration_mode" value="invite_only" {% if registration_mode == 'invite_only' %}checked{% endif %}>
-            <span>Hanya undangan
-                <small>Pendaftaran wajib memakai kode undangan sekali pakai.</small>
+            <span>{{ t('admin.reg_invite') }}
+                <small>{{ t('admin.reg_invite_desc') }}</small>
             </span>
         </label>
         <label class="radio-option">
             <input type="radio" name="registration_mode" value="closed" {% if registration_mode == 'closed' %}checked{% endif %}>
-            <span>Ditutup
-                <small>Tidak ada pendaftaran baru sama sekali, berguna saat ada gelombang spam.</small>
+            <span>{{ t('admin.reg_closed') }}
+                <small>{{ t('admin.reg_closed_desc') }}</small>
             </span>
         </label>
-        <button type="submit" class="btn mt-sm">Simpan</button>
+        <button type="submit" class="btn mt-sm">{{ t('profile.save') }}</button>
     </form>
 </section>
 
 <section class="post-list">
-    <h2>Daftar Pengguna ({{ users|length }})</h2>
+    <h2>{{ t('admin.user_list', count=users|length) }}</h2>
     {% if users %}
     <div class="table-responsive">
         <table class="post-table">
             <thead>
                 <tr>
-                    <th>Pengguna</th>
-                    <th>Tulisan</th>
-                    <th>Status</th>
-                    <th>Premium</th>
-                    <th>Gambar</th>
-                    <th>Bergabung</th>
-                    <th>Aksi</th>
+                    <th>{{ t('admin.col_user') }}</th>
+                    <th>{{ t('admin.col_posts') }}</th>
+                    <th>{{ t('admin.col_status') }}</th>
+                    <th>{{ t('admin.col_premium') }}</th>
+                    <th>{{ t('admin.col_images') }}</th>
+                    <th>{{ t('admin.col_joined') }}</th>
+                    <th>{{ t('admin.col_actions') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -65,28 +65,28 @@
                             @{{ user['username'] }}
                         </a>
                         {% if user['is_admin'] %}
-                            <span class="badge badge-published badge-admin-label">Admin</span>
+                            <span class="badge badge-published badge-admin-label">{{ t('admin.badge') }}</span>
                         {% endif %}
                         <div class="user-meta-email">{{ user['email'] }}</div>
                     </td>
                     <td>{{ user['post_count'] }}</td>
                     <td>
                         <span class="badge badge-{{ 'published' if user['is_active'] else 'draft' }}">
-                            {{ 'Aktif' if user['is_active'] else 'Nonaktif' }}
+                            {{ t('admin.user_active') if user['is_active'] else t('admin.user_inactive') }}
                         </span>
                     </td>
                     <td>
                         {% if user['is_admin'] %}
-                            <span class="badge badge-premium" title="Admin selalu berstatus Premium">Premium (Admin)</span>
+                            <span class="badge badge-premium">{{ t('admin.premium_admin') }}</span>
                         {% else %}
                             <form method="POST" action="{{ url_for('dashboard.admin_toggle_premium', user_id=user['id']) }}" class="d-inline">
                                 {% if user['is_premium'] %}
-                                    <button type="submit" class="badge badge-premium btn-toggle" title="Klik untuk menonaktifkan status Premium">
-                                        Premium &check;
+                                    <button type="submit" class="badge badge-premium btn-toggle">
+                                        {{ t('admin.premium_active') }}
                                     </button>
                                 {% else %}
-                                    <button type="submit" class="badge badge-draft btn-toggle" title="Klik untuk mengaktifkan status Premium">
-                                        Gratis
+                                    <button type="submit" class="badge badge-draft btn-toggle">
+                                        {{ t('admin.premium_free') }}
                                     </button>
                                 {% endif %}
                             </form>
@@ -94,16 +94,16 @@
                     </td>
                     <td>
                         {% if user['is_admin'] %}
-                            <span class="badge badge-published" title="Admin selalu memiliki izin upload gambar">Aktif (Admin)</span>
+                            <span class="badge badge-published">{{ t('admin.images_admin') }}</span>
                         {% else %}
                             <form method="POST" action="{{ url_for('dashboard.admin_toggle_upload_image', user_id=user['id']) }}" class="d-inline">
                                 {% if user['can_upload_image'] %}
-                                    <button type="submit" class="badge badge-published btn-toggle" title="Klik untuk menonaktifkan fitur upload gambar">
-                                        Aktif &check;
+                                    <button type="submit" class="badge badge-published btn-toggle">
+                                        {{ t('admin.images_on') }}
                                     </button>
                                 {% else %}
-                                    <button type="submit" class="badge badge-draft btn-toggle" title="Klik untuk mengaktifkan fitur upload gambar">
-                                        Nonaktif &cross;
+                                    <button type="submit" class="badge badge-draft btn-toggle">
+                                        {{ t('admin.images_off') }}
                                     </button>
                                 {% endif %}
                             </form>
@@ -112,12 +112,12 @@
                     <td><span class="text-nowrap">{{ user['created_at'] | tanggal }}</span></td>
                     <td>
                         <div class="post-actions">
-                            <a href="{{ url_for('dashboard.admin_reset_password', user_id=user['id']) }}">Reset Password</a>
+                            <a href="{{ url_for('dashboard.admin_reset_password', user_id=user['id']) }}">{{ t('admin.reset_pw') }}</a>
                             {% if not user['is_admin'] %}
                             <form method="POST"
                                   action="{{ url_for('dashboard.admin_delete_user', user_id=user['id']) }}"
-                                  data-confirm="Yakin ingin menghapus @{{ user['username'] }} beserta semua datanya? Tindakan ini tidak dapat dibatalkan.">
-                                <button type="submit" class="btn-link btn-hapus">Hapus</button>
+                                  data-confirm="{{ t('admin.confirm_delete_user', username=user['username']) }}">
+                                <button type="submit" class="btn-link btn-hapus">{{ t('dash.delete') }}</button>
                             </form>
                             {% endif %}
                         </div>
@@ -128,11 +128,11 @@
         </table>
     </div>
     {% else %}
-        <p class="empty-state">Belum ada pengguna terdaftar.</p>
+        <p class="empty-state">{{ t('admin.no_users') }}</p>
     {% endif %}
 </section>
 
 <section class="dashboard-nav">
-    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">&larr; Kembali ke Dashboard</a>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">{{ t('pages.back_dash') }}</a>
 </section>
 {% endblock %}

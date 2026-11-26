@@ -19,12 +19,12 @@
 <header class="site-header">
     <a href="{{ url_for('public.index') }}" class="wordmark">Qata</a>
     <div class="header-links">
-        <a href="{{ url_for('public.explore') }}">Jelajahi</a>
+        <a href="{{ url_for('public.explore') }}">{{ t('nav.explore') }}</a>
         {% if current_user.is_authenticated %}
-        <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+        <a href="{{ url_for('dashboard.index') }}">{{ t('nav.dashboard') }}</a>
         {% else %}
-        <a href="{{ url_for('auth.login') }}">Masuk</a>
-        <a href="{{ url_for('auth.register') }}">Daftar</a>
+        <a href="{{ url_for('auth.login') }}">{{ t('nav.login') }}</a>
+        <a href="{{ url_for('auth.register') }}">{{ t('nav.register') }}</a>
         {% endif %}
     </div>
 </header>
@@ -37,14 +37,14 @@
     </div>
     <div class="hero-actions">
         <a href="{{ url_for('auth.register') }}" class="btn-primary">{{ settings.landing_cta }}</a>
-        <span class="landing-login-hint">Sudah punya akun? <a href="{{ url_for('auth.login') }}">Masuk</a></span>
+        <span class="landing-login-hint">{{ t('landing.already_account') }} <a href="{{ url_for('auth.login') }}">{{ t('nav.login') }}</a></span>
     </div>
 </div>
 
 <div class="landing-lists">
     {% if recent_posts %}
     <div>
-        <div class="section-label">Tulisan terbaru</div>
+        <div class="section-label">{{ t('landing.recent_posts') }}</div>
         <div class="post-list">
             {% for post in recent_posts %}
             <article class="post-row">
@@ -58,7 +58,7 @@
                     <span class="dot">&middot;</span>
                     <span>{{ post['created_at'] | waktu_relatif }}</span>
                     <span class="dot">&middot;</span>
-                    <span>{{ post['reading_time'] }} mnt baca</span>
+                    <span>{{ post['reading_time'] }} {{ t('post.min_read') }}</span>
                     {% if post['like_count'] > 0 %}
                     <span class="dot">&middot;</span>
                     <span class="heart-stat">
@@ -75,7 +75,7 @@
 
     {% if popular_posts %}
     <div>
-        <div class="section-label">Tulisan populer</div>
+        <div class="section-label">{{ t('landing.popular_posts') }}</div>
         <div class="post-list">
             {% for post in popular_posts %}
             <article class="post-row">
@@ -89,7 +89,7 @@
                     <span class="dot">&middot;</span>
                     <span>{{ post['created_at'] | waktu_relatif }}</span>
                     <span class="dot">&middot;</span>
-                    <span>{{ post['reading_time'] }} mnt baca</span>
+                    <span>{{ post['reading_time'] }} {{ t('post.min_read') }}</span>
                     {% if post['like_count'] > 0 %}
                     <span class="dot">&middot;</span>
                     <span class="heart-stat">
@@ -106,6 +106,6 @@
 </div>
 
 <div class="landing-explore-cta">
-    <a href="{{ url_for('public.explore') }}" class="btn btn-secondary">Jelajahi tulisan lainnya &rarr;</a>
+    <a href="{{ url_for('public.explore') }}" class="btn btn-secondary">{{ t('landing.explore_more') }}</a>
 </div>
 {% endblock %}
