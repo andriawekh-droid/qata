@@ -11,14 +11,11 @@ from flask_login import login_required, current_user
 from database import get_db, update_sitemap
 from auth import get_registration_mode, MODE_VALID, PASSWORD_MIN, PASSWORD_MAX_BYTES
 from i18n import t, get_lang
-import requests
-from datetime import datetime as dt
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
 BATAS_UNDANGAN = 5
 BATAS_PAGE = 3
-SDMFSRD_URL = "https://sdmfsrd.web.id"
 MIN_PREMIUM_AMOUNT = 25000
 MIN_PREMIUM_USD = 3
 MAX_PROOF_SIZE = 8 * 1024 * 1024  # 8 MB batas bukti transfer
@@ -67,23 +64,6 @@ def inject_dashboard_context():
         'is_premium_user': is_prem,
         'pending_payments_count': pending_count,
     }
-
-def cek_status_sdmfsrd():
-    try:
-        start = dt.now()
-        resp = requests.get(SDMFSRD_URL, timeout=5)
-        elapsed_ms = round((dt.now() - start).total_seconds() * 1000)
-        return {
-            'online': resp.status_code == 200,
-            'status_code': resp.status_code,
-            'response_time': elapsed_ms
-        }
-    except requests.RequestException:
-        return {
-            'online': False,
-            'status_code': None,
-            'response_time': None
-        }
 
 def generate_slug(title):
     slug = title.lower()
@@ -903,7 +883,6 @@ def sistem():
         'total_drafts': total_drafts,
         'total_views': total_views,
         'total_likes': total_likes,
-        'sdmfsrd': cek_status_sdmfsrd(),
     }
 
     return render_template('dashboard/sistem.html', stats=stats)

@@ -4,6 +4,8 @@ Platform blogging minimalis yang berfokus pada ketenangan tulisan dan kenyamanan
 
 **[qata.blog](https://qata.blog)**
 
+![Tampilan Qata](doc/screenshot.png)
+
 ---
 
 ## Filosofi
@@ -52,7 +54,6 @@ Tidak ada iklan komersial, tidak ada pelacak pihak ketiga (*third-party trackers
 
 ### 6. Administrasi & Donasi
 - **Monitoring Status Server:** Pemantauan metrik sumber daya server VPS secara *real-time* (penggunaan CPU, RAM, Disk, Swap, dan *Uptime*).
-- **Health Check Eksternal:** Pengecekan otomatis latensi dan ketersediaan layanan web pendukung (`sdmfsrd.web.id`).
 - **Editor Beranda:** Administrator dapat menyunting judul, deskripsi, fitur, dan teks panggilan aksi (*CTA*) landing page langsung dari dashboard.
 - **Dukungan & Donasi QRIS:** Halaman donasi sukarela terintegrasi dengan kode QRIS dan fitur salin nomor NMID untuk mendukung biaya operasional dan kelangsungan server.
 
@@ -66,7 +67,7 @@ Tidak ada iklan komersial, tidak ada pelacak pihak ketiga (*third-party trackers
 - **Markdown Parser:** Mistune (ekstensi tabel & coret teks)
 - **Pengolah Gambar:** Pillow (PIL)
 - **Otentikasi:** Flask-Login + bcrypt
-- **Metrik Sistem:** psutil + requests
+- **Metrik Sistem:** psutil
 - **Server Produksi:** Gunicorn + Nginx (Reverse Proxy & Static Cache)
 - **DNS / SSL:** Cloudflare (Edge SSL & CDN)
 

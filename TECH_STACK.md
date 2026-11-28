@@ -9,11 +9,13 @@ Dokumen ini merangkum keputusan teknis platform Qata agar bisa dipakai ulang seb
 ## 2. Stack Teknologi
 | Komponen         | Pilihan                         |
 |------------------|----------------------------------|
-| Backend          | Python + Flask (SSR monolitik)  |
-| Database         | SQLite (mode WAL)                |
+| Backend          | Python 3.10+ & Flask (SSR monolitik) |
+| Database         | SQLite3 (mode WAL)               |
 | Template engine  | Jinja2                           |
 | Markdown parser  | Mistune                          |
+| Pengolah gambar  | Pillow (PIL)                     |
 | Auth             | Flask-Login + bcrypt             |
+| Metrik sistem    | psutil                           |
 | App server       | Gunicorn                         |
 | Reverse proxy    | Nginx                            |
 | SSL/DNS/CDN      | Cloudflare (mode Full Strict)    |
@@ -21,12 +23,12 @@ Dokumen ini merangkum keputusan teknis platform Qata agar bisa dipakai ulang seb
 | Dev lokal        | Windows + VS Code                |
 
 ## 3. Keputusan Desain Kunci
-- Konten teks saja, tanpa upload gambar.
-- Sistem undangan (invite code) sekali pakai, maksimal 5 kode per user non-admin.
+- Mendukung upload gambar untuk pengguna berizin/premium dengan kompresi otomatis ke format WebP (lebar maks 1200px) via Pillow, terisolasi di `/static/uploads/<username>/`.
+- Mode pendaftaran dinamis (*Open*, *Invite Only* dengan maksimal 5 kode undangan sekali pakai per user non-admin, atau *Closed*).
 - URL berbasis path: `domain.com/username/slug`.
-- Like/reaksi disimpan via hash IP (bukan IP mentah) untuk privasi.
-- Bahasa antarmuka: Bahasa Indonesia.
-- Estetika minimal, font serif (Georgia).
+- Like/reaksi disimpan via hash IP SHA-256 (bukan IP mentah) untuk privasi.
+- Dukungan dwibahasa antarmuka: Bahasa Indonesia & Inggris (`i18n.py`).
+- Estetika minimal dengan 4 tema (Light, Dark, Sepia, Forest) dan tipografi lokal mandiri (*self-hosted* `.woff2`: Literata & IBM Plex Sans).
 
 ## 4. Struktur File & Deployment
 - Repo publik di GitHub, `SECRET_KEY` Flask disimpan sebagai environment variable, bukan hardcode di kode.
